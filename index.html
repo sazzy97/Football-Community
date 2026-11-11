@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Football Community — Mobile Prototype</title>
+<style>
+/* ===== Design tokens (light / dark) ===== */
+/* ===== Design system tokens (provided) ===== */
+:root{
+  --color-primary:#123D2B; --color-primary-hover:#26734D; --color-accent:#B8F34A; --color-accent-hover:#A6DF3E;
+  --color-background:#F4F4F4; --color-surface:#FFFFFF; --color-surface-muted:#E9F5EC;
+  --color-text-primary:#17211B; --color-text-secondary:#455149; --color-text-muted:#87928A;
+  --color-border:#E5EAE5;
+  --color-success:#16834A; --color-warning:#D98B16; --color-error:#D94343; --color-info:#2878C7;
+  --font-family:"Inter",sans-serif;
+  --space-1:4px; --space-2:8px; --space-3:12px; --space-4:16px; --space-5:20px; --space-6:24px; --space-8:32px; --space-10:40px; --space-12:48px;
+  --radius-sm:8px; --radius-md:10px; --radius-lg:12px; --radius-xl:16px; --radius-modal:20px; --radius-full:999px;
+
+  /* app aliases (light) — page background kept at #F4F4F4 per earlier instruction */
+  --bg:var(--color-background); --surface:var(--color-surface); --surface2:var(--color-surface-muted); --text:var(--color-text-primary); --muted:var(--color-text-muted); --sec:var(--color-text-secondary); --line:var(--color-border);
+  --brand:var(--color-primary); --brand-ink:#FFFFFF; --accent:var(--color-accent); --accent-ink:var(--color-primary); --hero:var(--color-primary); --hero-ink:#FFFFFF;
+  --ok:var(--color-success); --warn:var(--color-warning); --bad:var(--color-error); --info:var(--color-info);
+  --shadow:0 6px 20px rgba(23,33,27,.08); --nav:rgba(255,255,255,.94);
+}
+/* dark: derived from the same palette (design system defines no dark tokens) */
+[data-theme=dark]{
+  --bg:#0C130F; --surface:#15201A; --surface2:#1F2D25; --text:#F1F6F2; --muted:#8FA096; --sec:#B5C2BA; --line:#263329;
+  --brand:var(--color-accent); --brand-ink:var(--color-primary); --accent:var(--color-accent); --accent-ink:var(--color-primary); --hero:var(--color-primary); --hero-ink:#F1F6F2;
+  --ok:#4CD08A; --warn:#EDA83A; --bad:#FF7070; --info:#5BA6EB; --shadow:0 6px 20px rgba(0,0,0,.45); --nav:rgba(21,32,26,.95);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--font-family),-apple-system,"Segoe UI",sans-serif;background:#d9dcda;color:var(--text);min-height:100vh;display:flex;gap:32px;align-items:center;justify-content:center;padding:24px;flex-wrap:wrap}
+body[data-theme=dark]{background:#050806}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,select{font:inherit;color:var(--text)}
+/* side panel */
+.panel{width:260px;background:var(--surface);color:var(--text);border-radius:20px;padding:20px;box-shadow:var(--shadow);font-size:13px;line-height:1.5}
+.panel h2{font-size:16px;margin-bottom:6px}
+.panel p{color:var(--muted);margin-bottom:12px}
+.seg{display:flex;background:var(--surface2);border-radius:999px;padding:3px;margin-bottom:14px}
+.seg button{flex:1;padding:8px;border-radius:999px;font-weight:600;font-size:13px;color:var(--muted)}
+.seg button.on{background:var(--brand);color:var(--brand-ink)}
+.panel a{display:block;color:var(--brand);font-weight:600;margin:4px 0;cursor:pointer}
+/* phone */
+.phone{width:390px;height:812px;background:var(--bg);border-radius:46px;border:10px solid #111;position:relative;overflow:hidden;box-shadow:0 30px 60px rgba(0,0,0,.35);display:flex;flex-direction:column}
+.status{height:44px;padding:14px 28px 0;display:flex;justify-content:space-between;font-size:14px;font-weight:600;flex:none}
+.notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:110px;height:28px;background:#000;border-radius:20px;z-index:20}
+.screen{flex:1;overflow-y:auto;padding:8px 18px 110px;scrollbar-width:none}
+.screen::-webkit-scrollbar{display:none}
+.screen.noNav{padding-bottom:100px}
+/* nav */
+.nav{position:absolute;left:18px;right:18px;bottom:16px;height:62px;background:var(--nav);backdrop-filter:blur(14px);border-radius:999px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-around;padding:0 8px;border:1px solid var(--line);z-index:10}
+.nav button{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 10px;border-radius:999px;color:var(--muted);font-size:10px;font-weight:600}
+.nav button.on{background:var(--brand);color:var(--brand-ink)}
+.nav svg{width:20px;height:20px}
+/* type & layout */
+h1{font-size:24px;letter-spacing:-.4px}h2.sec{font-size:17px;margin:20px 0 10px;display:flex;justify-content:space-between;align-items:center}
+h2.sec a{font-size:13px;font-weight:600;color:var(--muted);cursor:pointer}
+.sub{color:var(--muted);font-size:13px}.small{font-size:12px}.muted{color:var(--muted)}.b{font-weight:700}
+.row{display:flex;align-items:center;gap:10px}.sp{justify-content:space-between}.col{display:flex;flex-direction:column;gap:10px}.grow{flex:1}
+.card{background:var(--surface);border-radius:var(--radius-xl);padding:14px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.hero{background:var(--hero);color:var(--hero-ink);border-radius:var(--radius-xl);padding:16px;position:relative;overflow:hidden}
+.hero .sub{color:rgba(255,255,255,.7)}
+.hscroll{display:flex;gap:12px;overflow-x:auto;margin:0 -18px;padding:2px 18px 8px;scrollbar-width:none}
+.hscroll::-webkit-scrollbar{display:none}
+.hscroll>*{flex:none}
+.chip{padding:8px 14px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;white-space:nowrap}
+.chip.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;background:var(--surface2);color:var(--text)}
+.tag.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.tag.warn{background:color-mix(in srgb,var(--warn) 20%,transparent);color:var(--warn)}
+.tag.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.tag.gold{background:color-mix(in srgb,var(--accent) 25%,transparent);color:var(--accent)}
+.tag.live{background:var(--bad);color:#fff}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:15px;border-radius:999px;background:var(--brand);color:var(--brand-ink);font-weight:700;font-size:15px}
+.btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--line)}
+.btn.sm{width:auto;padding:9px 16px;font-size:13px}
+.btn.gold{background:var(--accent);color:var(--accent-ink)}
+.ico{width:20px;height:20px;flex:none}
+.round{width:40px;height:40px;border-radius:50%;background:var(--surface);border:1px solid var(--line);display:grid;place-items:center;flex:none}
+.img{border-radius:var(--radius-lg);background:linear-gradient(135deg,#1c6b4d,#0d3526);position:relative;display:flex;align-items:flex-end;padding:10px;color:#fff;font-weight:700}
+.img.b2{background:linear-gradient(135deg,#7a6330,#2d2411)}.img.b3{background:linear-gradient(135deg,#2f5d8a,#10243a)}.img.b4{background:linear-gradient(135deg,#6a3a7a,#24122c)}
+.av{width:42px;height:42px;border-radius:50%;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:800;font-size:14px;flex:none}
+.av.sm{width:30px;height:30px;font-size:11px}.av.lg{width:76px;height:76px;font-size:26px}
+.badge{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:13px;color:#fff;flex:none}
+.search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:12px 16px;color:var(--muted)}
+.search input{background:none;border:0;outline:0;flex:1}
+.tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:12px 0}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{padding:9px 16px;border-radius:999px;background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.tabs button.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+.list>*+*{margin-top:12px}
+.kv{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);font-size:14px}
+.kv:last-child{border:0}
+.slot{padding:12px 6px;text-align:center;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--line);font-size:13px;font-weight:700}
+.slot.on{background:var(--brand);color:var(--brand-ink)}
+.slot.off{opacity:.4;text-decoration:line-through;pointer-events:none}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.day{padding:10px 0;text-align:center;border-radius:var(--radius-lg);background:var(--surface);border:1px solid var(--line);font-size:12px;flex:none;width:54px}
+.day b{display:block;font-size:17px}.day.on{background:var(--brand);color:var(--brand-ink)}
+.map{height:200px;border-radius:var(--radius-xl);background:var(--surface2);position:relative;overflow:hidden;border:1px solid var(--line);background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:36px 36px}
+.pin{position:absolute;background:var(--brand);color:var(--brand-ink);padding:5px 10px;border-radius:999px;font-size:11px;font-weight:800;box-shadow:var(--shadow)}
+.bar{height:8px;border-radius:99px;background:var(--surface2);overflow:hidden}.bar i{display:block;height:100%;background:var(--brand)}
+.opt{display:flex;gap:12px;align-items:center;padding:14px;border-radius:var(--radius-xl);background:var(--surface);border:2px solid var(--line)}
+.opt.on{border-color:var(--brand)}
+.radio{width:20px;height:20px;border-radius:50%;border:2px solid var(--muted);flex:none}.opt.on .radio{border:6px solid var(--brand)}
+.top{display:flex;align-items:center;gap:12px;margin:4px 0 14px}
+.top h1{font-size:19px;flex:1}
+.sheet{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:30;display:flex;align-items:flex-end}
+.sheet>div{background:var(--bg);width:100%;border-radius:var(--radius-modal) var(--radius-modal) 0 0;padding:20px 18px 30px;max-height:80%;overflow:auto}
+.field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;font-size:13px;font-weight:600}
+.field input,.field select{padding:13px 14px;border-radius:var(--radius-lg);border:1px solid var(--line);background:var(--surface);font-weight:400}
+.tog{width:44px;height:26px;border-radius:99px;background:var(--surface2);position:relative;flex:none;border:1px solid var(--line)}
+.tog i{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:.2s}
+.tog.on{background:var(--brand)}.tog.on i{left:20px;background:var(--brand-ink)}
+.score{font-size:30px;font-weight:800;letter-spacing:2px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bad);display:inline-block}
+table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:8px 4px;text-align:center}th:nth-child(2),td:nth-child(2){text-align:left}
+th{color:var(--muted);font-weight:600}tr+tr td{border-top:1px solid var(--line)}
+.toast{position:absolute;left:24px;right:24px;top:56px;background:var(--text);color:var(--bg);padding:12px 16px;border-radius:16px;font-size:13px;font-weight:600;z-index:40;box-shadow:var(--shadow)}
+.cta{position:sticky;bottom:12px;margin-top:20px;background:var(--nav);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:999px;padding:10px 12px 10px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow)}
+.note{font-size:11px;color:var(--muted);background:var(--surface2);border-radius:12px;padding:8px 10px}
+.sub{color:var(--sec)}
+.img.has{background-size:cover!important;background-position:center!important;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.img.has::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.55))}
+.img.has>*{position:relative}
+.hero .sub{color:rgba(255,255,255,.75)}
+@keyframes inUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.screen.anim>*{animation:inUp .28s ease both}
+.btn,.card,.chip,.opt,.slot,.day,.round{transition:transform .12s,box-shadow .12s,background .15s}
+.btn:active,.card:active,.opt:active,.slot:active,.round:active{transform:scale(.97)}
+.btn:hover{background:var(--color-primary-hover);color:#fff}
+[data-theme=dark] .btn:hover{background:var(--color-accent-hover);color:var(--color-primary)}
+.btn.ghost:hover{background:var(--surface2);color:var(--text)}
+.spinner{width:56px;height:56px;border-radius:50%;border:5px solid var(--surface2);border-top-color:var(--brand);animation:spin .9s linear infinite;margin:0 auto}
+.welcome{margin:-8px -18px -110px;height:calc(100% + 118px);position:relative;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:24px;background:linear-gradient(180deg,rgba(18,61,43,.1) 0%,rgba(18,61,43,.92) 62%),url(img/game1.jpg) center/cover}
+.welcome h1{font-size:34px;line-height:1.1;margin:10px 0}
+.welcome .btn.ghost{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.3)}
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body data-theme="light">
+
+<div class="panel">
+  <h2>Football Community</h2>
+  <p>Consumer mobile app prototype (placeholder name, PRD §23). All data is sample data.</p>
+  <div class="seg" id="themeSeg">
+    <button data-t="light" class="on">Light</button><button data-t="dark">Dark</button>
+  </div>
+  <p style="margin:0 0 6px"><b>Jump to journey</b> (PRD §8)</p>
+  <a onclick="jump('onb')">Onboarding (§11.1)</a>
+  <a onclick="jump('venues')">A · Discover &amp; book a pitch</a>
+  <a onclick="jump('createGame')">B · Create an open game</a>
+  <a onclick="jump('games')">C · Join an open game</a>
+  <a onclick="jump('events')">D · Discover a football event</a>
+  <a onclick="jump('createTeam')">E · Create a team</a>
+  <a onclick="jump('notifs')">Notifications (§6.3.7)</a><a onclick="S.fail=true;toast('Next payment will fail')">Simulate a failed payment</a><a onclick="S.stack=[{s:'welcome'}];render()">Welcome screen</a>
+  <p class="small" style="margin-top:14px">Nothing here adds requirements beyond the PRD. Items marked P1 are designed in per PRD §10 note.</p>
+</div>
+
+<div class="phone" id="phone">
+  <div class="notch"></div>
+  <div class="status"><span>9:41</span><span>●●● 5G ▮</span></div>
+  <div class="screen" id="screen"></div>
+  <div class="nav" id="nav"></div>
+</div>
+
+<script>
+/* ===== icons ===== */
+const P={
+home:'<path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+search:'<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+users:'<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M17 4a4 4 0 0 1 0 8M22 21c0-3-1.5-4.7-4-5.5"/>',
+cal:'<rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+user:'<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>',
+bell:'<path d="M6 9a6 6 0 0 1 12 0c0 6 3 7 3 8H3c0-1 3-2 3-8zM10 21h4"/>',
+back:'<path d="M15 5l-7 7 7 7"/>',pin:'<path d="M12 22s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/>',
+star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+check:'<path d="M5 12l5 5 9-10"/>',plus:'<path d="M12 5v14M5 12h14"/>',
+share:'<path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7M12 3v13M7 8l5-5 5 5"/>',
+heart:'<path d="M12 21s-8-5-8-11a4.5 4.5 0 0 1 8-2.7A4.5 4.5 0 0 1 20 10c0 6-8 11-8 11z"/>',
+ticket:'<path d="M3 9a2 2 0 0 0 0 6v3h18v-3a2 2 0 0 1 0-6V6H3z"/><path d="M14 6v12" stroke-dasharray="2 3"/>',
+clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+filter:'<path d="M3 5h18M6 12h12M10 19h4"/>',
+shield:'<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/>',
+ball:'<circle cx="12" cy="12" r="9"/><path d="M12 7l4 3-1.5 5h-5L8 10z"/>',
+trophy:'<path d="M7 4h10v5a5 5 0 0 1-10 0zM7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 21h8"/>',
+list:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',mapi:'<path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+cog:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>',
+card:'<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/>',chev:'<path d="M9 5l7 7-7 7"/>',
+flag:'<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',lock:'<rect x="4" y="10" width="16" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>',
+more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>',
+logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
+help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/>',
+qr:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v7M14 20h3"/>'
+};
+const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
+const pic=(n,h)=>`class="img has" style="height:${h}px;background-image:url(img/${n}.jpg)"`;
+const crest=(n,z=44)=>{const c=['#123D2B','#2878C7','#D94343','#7A3FA0','#D98B16','#16834A','#26734D'];let h=0;for(const ch of n)h=(h*31+ch.charCodeAt(0))%c.length;
+ return `<svg width="${z}" height="${z*1.1}" viewBox="0 0 40 44" style="flex:none"><path d="M3 3h34v20c0 10-8 15-17 18C11 38 3 33 3 23z" fill="${c[h]}" stroke="#B8F34A" stroke-width="2"/><text x="20" y="26" text-anchor="middle" fill="#fff" font-size="14" font-weight="800" font-family="Inter,sans-serif">${ini(n)}</text></svg>`};
+const ini=s=>s.split(' ').map(w=>w[0]).slice(0,2).join('');
+const N=n=>'₦'+n.toLocaleString('en-NG');
+
+/* ===== sample data (illustrative only) ===== */
+const venues=[
+ {im:"venue1",id:0,name:"Lekki Goal Arena",area:'Lekki Phase 1',km:2.1,rating:4.7,rev:128,from:25000,verified:true,fmts:['5-a-side','7-a-side'],fac:['Floodlights','Changing rooms','Parking','Refreshments'],hours:'07:00 – 23:00',policy:'Free cancellation up to 24 hours before kickoff. Within 24 hours: 50% refund. Within 6 hours: no refund.',deposit:true,pitches:[{n:'Pitch A',f:'5-a-side',p:25000},{n:'Pitch B',f:'5-a-side',p:25000},{n:'Pitch C',f:'7-a-side',p:40000}]},
+ {im:"venue2",id:1,name:"Yaba Turf Club",area:'Yaba',km:4.8,rating:4.4,rev:64,from:18000,verified:true,fmts:['5-a-side'],fac:['Floodlights','Parking'],hours:'08:00 – 22:00',policy:'Free cancellation up to 12 hours before kickoff.',deposit:false,pitches:[{n:'Pitch 1',f:'5-a-side',p:18000},{n:'Pitch 2',f:'5-a-side',p:18000}]},
+ {im:"venue3",id:2,name:"Ikeja Sports Ground",area:'Ikeja GRA',km:7.3,rating:4.2,rev:41,from:30000,verified:false,fmts:['7-a-side','9-a-side','11-a-side'],fac:['Changing rooms','Seating'],hours:'07:00 – 21:00',policy:'Cancellation policy set by venue. Contact venue for refunds.',deposit:true,pitches:[{n:'Main Pitch',f:'11-a-side',p:90000},{n:'Mini Pitch',f:'7-a-side',p:30000}]}
+];
+const games=[
+ {id:0,title:'Thursday Night 5s',v:0,pitch:'Pitch A',when:'Thu 12 Nov · 20:00–21:00',fmt:'5-a-side',need:10,left:2,price:2500,org:'Tunde A.',level:'Intermediate',approval:false},
+ {id:1,title:'Sunday Kickabout',v:1,pitch:'Pitch 1',when:'Sun 15 Nov · 16:00–17:30',fmt:'5-a-side',need:10,left:4,price:2000,org:'Chidi O.',level:'All levels',approval:true},
+ {id:2,title:'Lekki 7s Friendly',v:0,pitch:'Pitch C',when:'Sat 14 Nov · 18:00–19:00',fmt:'7-a-side',need:14,left:5,price:3500,org:'Femi K.',level:'Beginner friendly',approval:false}
+];
+const events=[
+ {im:"event1",id:0,title:"Lagos Grassroots Cup — Final",cat:'Grassroots competition',trust:'Verified event',venue:'Teslim Balogun Stadium',when:'Sat 14 Nov · 15:00',fee:'₦1,500',status:'Upcoming',org:'Lagos Grassroots Football Assoc.',tix:true,left:240,comp:0,b:''},
+ {im:"event2",id:1,title:"Campus 7s Tournament",cat:'University competition',trust:'Organiser-published',venue:'UNILAG Sports Centre',when:'Sun 22 Nov · 10:00',fee:'Free',status:'Upcoming',org:'Campus Football League',tix:false,left:0,comp:1,b:'b3'},
+ {im:"event3",id:2,title:"Charity Match for Education",cat:'Charity match',trust:'Community-submitted',venue:'Surulere Playground',when:'Sat 28 Nov · 14:00',fee:'₦1,000',status:'Pending review',org:'Submitted by a community member',tix:false,left:0,comp:-1,b:'b2'},
+ {im:"event4",id:3,title:"Youth Academy Trials",cat:'Football trial',trust:'Organiser-published',venue:'Ikeja Sports Ground',when:'Sat 5 Dec · 09:00',fee:'Free',status:'Upcoming',org:'Eagle Academy',tix:false,left:0,comp:-1,b:'b4'}
+];
+const comps=[{id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8},{id:1,name:'Campus 7s League',type:'University competition',season:'2026/27',teams:6}];
+const standings=[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]];
+const fixtures=[{h:'Mainland FC',a:'Surulere United',t:'Sat 14 Nov · 15:00',s:'Upcoming',v:'Teslim Balogun Stadium'},{h:'Lekki Lions',a:'Yaba Rovers',t:'Today · 16:00',s:'Live',sc:'1 : 1',v:'Lagos Arena'},{h:'Ikeja Stars',a:'Mainland FC',t:'Sat 7 Nov',s:'Completed',sc:'0 : 3',v:'Ikeja Sports Ground'}];
+const teams=[{id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:'Captain'},{id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},{id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null}];
+const players=[{n:'Emeka Obi',pos:'Midfielder',fmt:'5-a-side',area:'Lekki',av:'Weekday evenings'},{n:'Ayo Bello',pos:'Goalkeeper',fmt:'7-a-side',area:'Yaba',av:'Weekends'},{n:'Sadiq Musa',pos:'Striker',fmt:'5-a-side',area:'Ikeja',av:'Flexible'}];
+
+/* ===== state & routing ===== */
+const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview'},
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list'},saved:{},followed:{},joined:{},onb:0,sheet:null,toast:null};
+const $=id=>document.getElementById(id);
+const go=(s,a)=>{S.stack.push({s,a});render()};
+const back=()=>{S.stack.pop();render()};
+const tab=t=>{S.tab=t;S.stack=[];render()};
+const sub=(k,v)=>{S.sub[k]=v;render()};
+const toast=m=>{S.toast=m;render();setTimeout(()=>{S.toast=null;render()},1800)};
+const jump=s=>{S.stack=[];S.tab=s==='createGame'||s==='games'||s==='venues'||s==='events'?'explore':'home';
+  if(s==='onb'){S.stack=[{s:'onb'}]}
+  else if(s==='venues'){tab('explore');S.sub.explore='Pitches'}
+  else if(s==='games'){tab('explore');S.sub.explore='Open Games'}
+  else if(s==='events'){tab('explore');S.sub.explore='Matches & Events'}
+  else if(s==='createGame'){go('createGame')}
+  else if(s==='createTeam'){S.tab='community';S.stack=[{s:'createTeam'}]}
+  else if(s==='notifs'){S.stack=[{s:'notifs'}]}
+  render()};
+
+/* ===== reusable ui ===== */
+const hdr=(title,right='')=>`<div class="top"><button class="round" onclick="back()">${ic('back')}</button><h1>${title}</h1>${right}</div>`;
+const tabsUI=(k,items)=>`<div class="tabs">${items.map(i=>`<button class="${S.sub[k]===i?'on':''}" onclick="sub('${k}','${i}')">${i}</button>`).join('')}</div>`;
+const trust=t=>t==='Verified event'?`<span class="tag ok">${ic('shield')}Verified event</span>`:t==='Organiser-published'?`<span class="tag gold">Organiser-published</span>`:`<span class="tag warn">Community-submitted</span>`;
+const venueCard=v=>`<div class="card" onclick="go('venue',${v.id})"><div ${pic(v.im,120)}>${v.verified?`<span class="tag ok" style="position:absolute;top:10px;left:10px">${ic('shield')}Verified</span>`:''}${v.name}</div>
+ <div class="row sp" style="margin-top:10px"><div><div class="b">${v.name}</div><div class="sub">${ic('pin')} ${v.area} · ${v.km} km</div></div><div class="b">${ic('star')} ${v.rating}</div></div>
+ <div class="row sp" style="margin-top:8px"><div>${v.fmts.map(f=>`<span class="tag">${f}</span> `).join('')}</div><div class="small">from <b>${N(v.from)}</b>/hr</div></div></div>`;
+const gameCard=g=>`<div class="card" onclick="go('game',${g.id})"><div ${pic("game1",90)}>${g.fmt}</div><div class="row sp" style="margin-top:10px"><div class="b">${g.title}</div><span class="tag ${g.left<=2?'warn':'ok'}">${g.left} slot${g.left>1?'s':''} left</span></div>
+ <div class="sub" style="margin:4px 0 8px">${venues[g.v].name} · ${g.pitch}<br>${g.when}</div>
+ <div class="bar"><i style="width:${(g.need-g.left)/g.need*100}%"></i></div>
+ <div class="row sp" style="margin-top:8px"><span class="tag">${g.fmt}</span><span class="b">${N(g.price)} <span class="muted small">/ player</span></span></div></div>`;
+const eventCard=e=>`<div class="card" onclick="go('event',${e.id})"><div ${pic(e.im,100)}>${e.cat}</div>
+ <div class="row sp" style="margin-top:10px"><div class="b grow">${e.title}</div><button onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'var(--brand)':'var(--muted)'}">${ic('heart')}</button></div>
+ <div class="sub">${e.venue}<br>${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="b small">${e.fee}</span></div></div>`;
+const teamCard=t=>`<div class="card row" onclick="go('team',${t.id})">${crest(t.name,44)}<div class="grow"><div class="b">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div></div>${t.role?`<span class="tag gold">${t.role}</span>`:ic('chev')}</div>`;
+const playerCard=p=>`<div class="card row" onclick="go('player',0)"><div class="av">${ini(p.n)}</div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.pos} · ${p.fmt}<br>${p.area} · ${p.av}</div></div><button class="btn sm ghost" onclick="event.stopPropagation();toast('Connection request sent')">Invite</button></div>`;
+const tog=(on,k)=>`<div class="tog ${on?'on':''}" onclick="S.p=S.p||{};S.p['${k}']=${!on};render()"><i></i></div>`;
+const matchRow=f=>`<div class="card" onclick="go('match',0)"><div class="row sp small muted"><span>${f.t}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div>
+ <div class="row sp" style="margin-top:8px"><span class="row grow">${crest(f.h,26)}<b>${f.h}</b></span><span class="b">${f.sc||'vs'}</span><span class="row grow" style="justify-content:flex-end"><b>${f.a}</b>${crest(f.a,26)}</span></div></div>`;
+
+/* ===== screens ===== */
+const SC={};
+SC.onb=()=>{const st=[
+ ['Create your account','Registration and login (PRD §11.1). One account can be a player, captain and spectator.',`<div class="field">Full name<input placeholder="Your name"></div><div class="field">Email or phone<input placeholder="you@example.com"></div><div class="field">Password<input type="password" placeholder="••••••••"></div>`],
+ ['Select your location','Launching in selected areas of Lagos.',`<div class="list">${['Lekki and Ajah','Yaba and Surulere','Ikeja','Victoria Island and Ikoyi','Festac and Amuwo-Odofin','Ikorodu'].map((a,i)=>`<div class="opt ${i===0?'on':''}"><div class="radio"></div><b>${a}</b></div>`).join('')}</div>`],
+ ['Football preferences','Used to personalise discovery. You can change this later.',`<h2 class="sec" style="margin-top:0">Preferred format</h2><div class="row" style="flex-wrap:wrap">${['5-a-side','7-a-side','9-a-side','11-a-side'].map((f,i)=>`<span class="chip ${i<2?'on':''}">${f}</span>`).join('')}</div><h2 class="sec">Preferred position</h2><div class="row" style="flex-wrap:wrap">${['Goalkeeper','Defender','Midfielder','Forward'].map((f,i)=>`<span class="chip ${i==2?'on':''}">${f}</span>`).join('')}</div>`]][S.onb];
+ return `<div style="padding-top:20px"><div class="row" style="margin-bottom:20px">${[0,1,2].map(i=>`<div class="bar grow"><i style="width:${i<=S.onb?100:0}%"></i></div>`).join('')}</div><h1>${st[0]}</h1><p class="sub" style="margin:6px 0 22px">${st[1]}</p>${st[2]}
+ <div style="margin-top:26px"><button class="btn" onclick="if(S.onb<2){S.onb++;render()}else{S.onb=0;S.stack=[];S.tab='home';render()}">${S.onb<2?'Continue':'Finish'}</button></div></div>`};
+
+SC.home=()=>`<div class="row sp"><div class="row"><div class="av">TA</div><div><div class="sub">Hi, welcome back</div><div class="b">${ic('pin')} Lekki, Lagos</div></div></div><button class="round" onclick="go('notifs')">${ic('bell')}</button></div>
+ <div class="search" style="margin:16px 0" onclick="tab('explore')">${ic('search')}<span>Search pitches, games, events</span></div>
+ <div class="hero img has" style="height:auto;display:block;background-image:url(img/game1.jpg)" onclick="go('game',0)"><span class="tag gold">Open game · 2 slots left</span><div style="font-size:21px;font-weight:800;margin:10px 0 4px">Thursday Night 5s</div><div class="sub">Lekki Goal Arena · Thu 12 Nov · 20:00</div><button class="btn gold sm" style="margin-top:14px">Join now · ${N(2500)}</button></div>
+ <div class="grid4" style="margin-top:14px">${[['Book','pin',"tab('explore')"],['Create Game','plus',"go('createGame')"],['Events','cal',"jump('events')"],['Teams','users',"tab('community')"]].map(a=>`<button class="col" style="align-items:center;gap:6px;font-size:12px;font-weight:600" onclick="${a[2]}"><div class="round" style="width:54px;height:54px;border-radius:18px;color:var(--brand)">${ic(a[1])}</div>${a[0]}</button>`).join('')}</div>
+ <h2 class="sec">Nearby pitches <a onclick="jump('venues')">See all</a></h2><div class="hscroll">${venues.map(v=>`<div style="width:260px">${venueCard(v)}</div>`).join('')}</div>
+ <h2 class="sec">Open games you can join <a onclick="jump('games')">See all</a></h2><div class="list">${games.slice(0,2).map(gameCard).join('')}</div>
+ <h2 class="sec">Upcoming football events <a onclick="jump('events')">See all</a></h2><div class="hscroll">${events.slice(0,3).map(e=>`<div style="width:260px">${eventCard(e)}</div>`).join('')}</div>
+ <h2 class="sec">Popular competitions</h2><div class="list">${comps.map(c=>`<div class="card row" onclick="go('comp',${c.id})"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div>${ic('chev')}</div>`).join('')}</div>
+ <h2 class="sec">Followed teams</h2><div class="list">${teamCard(teams[1])}</div>
+ <h2 class="sec">Recent community activity <a onclick="tab('community')">See all</a></h2><div class="card small">Lekki Lions created a new game · <span class="muted">12 min ago</span></div>`;
+
+SC.explore=()=>{const k=S.sub.explore;let body='';
+ const fmts=['All','5-a-side','7-a-side','9-a-side','11-a-side'];
+ if(k==='Pitches'){body=`<div class="row"><div class="grow search">${ic('search')}<input placeholder="Search location or venue name"></div><button class="round" onclick="S.sheet='filter';render()">${ic('filter')}</button></div>
+  <div class="hscroll" style="margin-top:10px">${fmts.map(f=>`<span class="chip ${S.fil.fmt===f?'on':''}" onclick="S.fil.fmt='${f}';render()">${f}</span>`).join('')}</div>
+  <div class="row sp" style="margin:4px 0 12px"><span class="sub">${venues.filter(v=>S.fil.fmt==='All'||v.fmts.includes(S.fil.fmt)).length} venues</span><div class="seg" style="margin:0;width:150px"><button class="${S.fil.view==='list'?'on':''}" onclick="S.fil.view='list';render()">List</button><button class="${S.fil.view==='map'?'on':''}" onclick="S.fil.view='map';render()">Map</button></div></div>
+  ${S.fil.view==='map'?`<div class="map"><span class="pin" style="top:40px;left:60px">${N(25000)}</span><span class="pin" style="top:110px;left:190px">${N(18000)}</span><span class="pin" style="top:60px;left:250px">${N(30000)}</span></div><div class="list" style="margin-top:12px">${venues.slice(0,1).map(venueCard).join('')}</div>`:`<div class="list">${venues.filter(v=>S.fil.fmt==='All'||v.fmts.includes(S.fil.fmt)).map(venueCard).join('')}</div>`}`}
+ if(k==='Open Games')body=`<div class="row"><div class="grow search">${ic('search')}<input placeholder="Search games"></div><button class="round" onclick="S.sheet='filter';render()">${ic('filter')}</button></div><div class="hscroll" style="margin-top:10px">${['Any date','Any time',...fmts.slice(1)].map((f,i)=>`<span class="chip ${i===0?'on':''}">${f}</span>`).join('')}</div><div class="list">${games.map(gameCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="go('createGame')">${ic('plus')}Create Game</button>`;
+ if(k==='Matches & Events')body=`<div class="search">${ic('search')}<input placeholder="Search event or competition name"></div><div class="hscroll" style="margin-top:10px">${['All','Professional matches','Grassroots','Local tournaments','Academy','School','University','Friendly','Festival','Charity','Training','Trials'].map((f,i)=>`<span class="chip ${i===0?'on':''}">${f}</span>`).join('')}</div><div class="list">${events.map(eventCard).join('')}</div><button class="btn ghost" style="margin-top:14px" onclick="go('submitEvent')">Suggest an event</button>`;
+ if(k==='Competitions')body=`<div class="search">${ic('search')}<input placeholder="Search competitions"></div><div class="list" style="margin-top:12px">${comps.map(c=>`<div class="card" onclick="go('comp',${c.id})"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div><div class="row sp" style="margin-top:10px"><span class="small muted">${c.teams} teams</span><button class="btn sm ${S.followed['c'+c.id]?'ghost':''}" onclick="event.stopPropagation();S.followed['c${c.id}']=!S.followed['c${c.id}'];render()">${S.followed['c'+c.id]?'Following':'Follow'}</button></div></div>`).join('')}</div>`;
+ return `<h1>Explore</h1>${tabsUI('explore',['Pitches','Open Games','Matches & Events','Competitions'])}${body}`};
+
+SC.venue=id=>{const v=venues[id],k=S.sub.venue;
+ const b={Overview:`<p class="sub">Floodlit football facility with multiple pitches. Opening hours and pricing are set by the venue.</p><div class="map" style="height:120px;margin:12px 0"><span class="pin" style="top:46px;left:140px">${ic('pin')}</span></div><div class="kv"><span class="muted">Address</span><b>${v.area}, Lagos</b></div><div class="kv"><span class="muted">Opening hours</span><b>${v.hours}</b></div><div class="kv"><span class="muted">Formats</span><b>${v.fmts.join(', ')}</b></div><div class="kv"><span class="muted">Contact</span><b>Call venue</b></div><h2 class="sec">Facilities</h2><div class="row" style="flex-wrap:wrap">${v.fac.map(f=>`<span class="tag">${f}</span>`).join('')}</div><h2 class="sec">Booking policy</h2><div class="note">${v.policy}</div>`,
+  Pitches:`<div class="list">${v.pitches.map(p=>`<div class="card row"><div class="img has" style="width:64px;height:64px;background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.f}</div></div><div class="b">${N(p.p)}<span class="muted small">/hr</span></div></div>`).join('')}</div>`,
+  Reviews:`<div class="row"><span class="score">${v.rating}</span><div class="sub">${v.rev} reviews<br>Verified booking reviews only</div></div><div class="list" style="margin-top:12px">${['Great pitch and lighting.','Easy booking, clean changing rooms.'].map(t=>`<div class="card small"><div class="b">${ic('star')} 5.0</div>${t}</div>`).join('')}</div>`}[k];
+ return `${hdr(v.name,`<button class="round">${ic('share')}</button>`)}<div ${pic(v.im,170)}>${v.verified?`<span class="tag ok" style="position:absolute;top:12px;left:12px">${ic('shield')}Verified venue</span>`:''}${v.name}</div>
+ <div class="row sp" style="margin-top:12px"><div class="sub">${ic('pin')} ${v.area} · ${v.km} km</div><div class="b">${ic('star')} ${v.rating} <span class="muted small">(${v.rev})</span></div></div>
+ <div class="hscroll" style="margin-top:10px">${[1,2,3].map(i=>`<div class="img has" style="width:96px;height:66px;background-image:url(img/venue${i}.jpg)"></div>`).join('')}</div>${tabsUI('venue',['Overview','Pitches','Reviews'])}${b}
+ <div class="cta"><div><div class="small muted">From</div><div class="b">${N(v.from)}/hr</div></div><button class="btn sm" onclick="S.b={v:${id},p:0,d:2,t:null,pay:'full',ref:null};go('book')">Book a pitch</button></div>`};
+
+SC.book=()=>{const v=venues[S.b.v];const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const times=['16:00','17:00','18:00','19:00','20:00','21:00'];
+ return `${hdr('Select pitch and time')}
+ <h2 class="sec" style="margin-top:0">1 · Pitch</h2><div class="list">${v.pitches.map((p,i)=>`<div class="opt ${S.b.p===i?'on':''}" onclick="S.b.p=${i};render()"><div class="radio"></div><div class="grow"><b>${p.n}</b><div class="sub">${p.f}</div></div><b>${N(p.p)}/hr</b></div>`).join('')}</div>
+ <h2 class="sec">2 · Date</h2><div class="hscroll">${days.map((d,i)=>`<div class="day ${S.b.d===i?'on':''}" onclick="S.b.d=${i};render()">${d}<b>${9+i}</b></div>`).join('')}</div>
+ <h2 class="sec">3 · Available time</h2><div class="grid3">${times.map((t,i)=>`<div class="slot ${S.b.t===t?'on':''} ${i===1||i===3?'off':''}" onclick="S.b.t='${t}';render()">${t}</div>`).join('')}</div>
+ <p class="small muted" style="margin-top:8px">Struck-through times are unavailable and cannot be booked.</p>
+ <div style="margin-top:20px"><button class="btn" style="opacity:${S.b.t?1:.4}" onclick="if(S.b.t){S.hold=599;go('review')}">Continue</button></div>`};
+
+SC.review=()=>{const v=venues[S.b.v],p=v.pitches[S.b.p],tot=p.p,dep=Math.round(tot*.3);
+ const opts=[['full','Full payment',`Pay ${N(tot)} now`],...(v.deposit?[['deposit','Deposit',`Pay ${N(dep)} now, balance ${N(tot-dep)} per venue policy`]]:[]),['other','Other venue-approved arrangement','Booking request. Shown as pending until verified']];
+ const now=S.b.pay==='full'?tot:S.b.pay==='deposit'?dep:0;
+ return `${hdr('Review and pay')}
+ <div class="hero row sp" style="padding:12px 16px"><span class="small">${ic('clock')} Slot held for you</span><b id="hold">${Math.floor(S.hold/60)}:${String(S.hold%60).padStart(2,'0')}</b></div>
+ <div class="card" style="margin-top:12px"><div class="b">${v.name}</div><div class="kv"><span class="muted">Pitch</span><b>${p.n} · ${p.f}</b></div><div class="kv"><span class="muted">Date</span><b>Wed ${11+S.b.d-2} Nov</b></div><div class="kv"><span class="muted">Time</span><b>${S.b.t} – ${String(+S.b.t.slice(0,2)+1).padStart(2,'0')}:00 (1 hr)</b></div><div class="kv"><span class="muted">Total price</span><b>${N(tot)}</b></div></div>
+ <h2 class="sec">Payment option</h2><div class="list">${opts.map(o=>`<div class="opt ${S.b.pay===o[0]?'on':''}" onclick="S.b.pay='${o[0]}';render()"><div class="radio"></div><div><b>${o[1]}</b><div class="sub">${o[2]}</div></div></div>`).join('')}</div>
+ ${S.b.pay==='deposit'?`<div class="card" style="margin-top:12px"><div class="kv"><span>Deposit (pay now)</span><b>${N(dep)}</b></div><div class="kv"><span>Outstanding balance</span><b>${N(tot-dep)}</b></div><div class="kv"><span>Payment deadline</span><b>Before kickoff</b></div></div>`:''}
+ <h2 class="sec">Cancellation policy</h2><div class="note">${v.policy}</div>
+ <div style="margin-top:20px"><button class="btn" onclick="payNow()">${S.b.pay==='other'?'Send booking request':'Pay '+N(now)}</button></div>`};
+
+SC.confirm=()=>{const v=venues[S.b.v],pend=S.b.pay==='other';return `<div style="text-align:center;padding-top:30px"><div class="av lg" style="margin:0 auto 16px;background:${pend?'var(--warn)':'var(--ok)'};color:#fff">${pend?ic('clock'):ic('check')}</div><h1>${pend?'Booking pending':'Booking confirmed'}</h1><p class="sub" style="margin:6px 0 20px">${pend?'Unpaid until the venue verifies your arrangement.':'Payment verified by our server.'}</p></div>
+ <div class="card"><div class="kv"><span class="muted">Booking reference</span><b>${S.b.ref}</b></div><div class="kv"><span class="muted">Venue</span><b>${v.name}</b></div><div class="kv"><span class="muted">Pitch</span><b>${v.pitches[S.b.p].n}</b></div><div class="kv"><span class="muted">Time</span><b>${S.b.t}</b></div><div class="kv"><span class="muted">Payment status</span><span class="tag ${pend?'warn':'ok'}">${pend?'Pending':'Successful'}</span></div></div>
+ <div class="col" style="margin-top:20px"><button class="btn" onclick="go('createGame')">Create an open game for this booking</button><button class="btn ghost" onclick="S.sub.activity='Bookings';tab('activity')">View in My Activity</button></div>`};
+
+SC.game=id=>{const g=games[id],v=venues[g.v],j=S.joined[id];return `${hdr('Open game',`<button class="round" onclick="toast('Link copied')">${ic('share')}</button>`)}
+ <div class="hero"><span class="tag gold">${g.fmt}</span><div style="font-size:22px;font-weight:800;margin:8px 0">${g.title}</div><div class="sub">${v.name} · ${g.pitch}<br>${g.when}</div></div>
+ <div class="card" style="margin-top:12px"><div class="row sp"><b>${g.need-g.left} of ${g.need} players</b><span class="tag ${g.left<=2?'warn':'ok'}">${g.left} slots left</span></div><div class="bar" style="margin:10px 0"><i style="width:${(g.need-g.left)/g.need*100}%"></i></div>
+ <div class="kv"><span class="muted">Price per player</span><b>${N(g.price)}</b></div><div class="kv"><span class="muted">Organiser</span><b>${g.org}</b></div><div class="kv"><span class="muted">Experience</span><b>${g.level}</b></div><div class="kv"><span class="muted">Joining</span><b>${g.approval?'Organiser approval':'Join directly'}</b></div></div>
+ <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div>
+ <div style="margin-top:18px"><button class="btn" onclick="S.joined[${id}]=true;toast('${g.approval?'Request sent to organiser':'You joined this game'}');render()">${j?(g.approval?'Request pending':'Joined · view in My Activity'):(g.approval?'Request to join':'Join · '+N(g.price))}</button></div>`};
+
+SC.createGame=()=>`${hdr('Create open game')}<div class="field">Game title<input placeholder="e.g. Thursday Night 5s"></div><div class="field">Venue or existing booking<select><option>Lekki Goal Arena</option><option>My booking · FCP-482913</option></select></div><div class="field">Pitch<select><option>Pitch A · 5-a-side</option></select></div>
+ <div class="row"><div class="field grow">Date<input value="Thu 12 Nov"></div><div class="field grow">Start – end<input value="20:00 – 21:00"></div></div>
+ <div class="row"><div class="field grow">Players required<input type="number" value="10"></div><div class="field grow">Available slots<input type="number" value="2"></div></div>
+ <div class="row"><div class="field grow">Price per player (₦)<input value="2500"></div><div class="field grow">Football format<select><option>5-a-side</option><option>7-a-side</option></select></div></div>
+ <div class="field">Skill or experience preference (optional)<select><option>All levels</option><option>Beginner</option><option>Intermediate</option></select></div><div class="field">Additional instructions<input placeholder="Bring bibs, white and dark shirts…"></div>
+ <div class="opt" style="margin-bottom:8px"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(false,'appr')}</div><div class="opt"><div class="grow"><b>Public game</b><div class="sub">Visibility</div></div>${tog(true,'pub')}</div>
+ <div style="margin-top:18px"><button class="btn" onclick="toast('Game published');S.stack=[];S.tab='explore';S.sub.explore='Open Games';render()">Publish game</button></div>`;
+
+SC.event=id=>{const e=events[id];return `${hdr('Event',`<button class="round" onclick="S.saved[${id}]=!S.saved[${id}];render()" style="color:${S.saved[id]?'var(--brand)':'inherit'}">${ic('heart')}</button>`)}
+ <div ${pic(e.im,160)}>${e.cat}</div><div class="row" style="margin:12px 0 6px;flex-wrap:wrap">${trust(e.trust)}<span class="tag">${e.status}</span></div>
+ <h1>${e.title}</h1>${e.trust==='Community-submitted'?`<div class="note" style="margin-top:10px">Community-submitted. Not an officially verified event.</div>`:''}
+ <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Date and time</span><b>${e.when}</b></div><div class="kv"><span class="muted">Venue</span><b>${e.venue}</b></div><div class="kv"><span class="muted">Organiser</span><b style="text-align:right;max-width:190px">${e.org}</b></div><div class="kv"><span class="muted">Entry</span><b>${e.fee}</b></div>${e.tix?`<div class="kv"><span class="muted">Tickets available</span><b>${e.left}</b></div>`:''}</div>
+ <h2 class="sec">About</h2><p class="sub">Description, entry requirements and contact information appear here as provided by the organiser.</p>
+ ${e.comp>=0?`<h2 class="sec">Competition</h2><div class="card row" onclick="go('comp',${e.comp})"><div class="grow b">${comps[e.comp].name}</div>${ic('chev')}</div>`:''}
+ <div class="map" style="height:110px;margin-top:14px"><span class="pin" style="top:40px;left:150px">${ic('pin')}</span></div>
+ <div class="row" style="margin-top:16px"><button class="btn ghost" onclick="toast('Reminder set')">Remind me</button>${e.tix?`<button class="btn" onclick="go('ticket',${id})">Get tickets</button>`:''}</div>`};
+
+SC.ticket=id=>{const e=events[id];return `${hdr('Tickets')}<div class="card"><div class="b">${e.title}</div><div class="sub">${e.when}</div>
+ <div class="kv" style="margin-top:8px"><div><b>General entry</b><div class="small muted">${e.fee} each</div></div><div class="row"><button class="round" style="width:32px;height:32px">−</button><b>2</b><button class="round" style="width:32px;height:32px">+</button></div></div>
+ <div class="kv"><span class="muted">Tickets (2 × ₦1,500)</span><b>₦3,000</b></div><div class="kv"><span class="muted">Service fee (shown before checkout)</span><b>₦150</b></div><div class="kv"><b>Total</b><b>₦3,150</b></div></div>
+ <div style="margin-top:18px"><button class="btn" onclick="S.sub.activity='Tickets';S.stack=[];S.tab='activity';toast('Tickets issued');render()">Pay ₦3,150</button></div>`};
+
+SC.comp=id=>{const c=comps[id],k=S.sub.compTab;const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
+ Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
+ Teams:`<div class="list">${teams.map(teamCard).join('')}</div>`,Updates:`<div class="card small">Fixtures published for the next round. <span class="muted">· 2 days ago</span></div>`}[k];
+ return `${hdr('Competition',`<button class="btn sm ${S.followed['c'+id]?'ghost':''}" onclick="S.followed['c${id}']=!S.followed['c${id}'];render()">${S.followed['c'+id]?'Following':'Follow'}</button>`)}
+ <div class="hero"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div><div style="font-size:19px;font-weight:800">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div></div>
+ ${tabsUI('compTab',['Fixtures','Results','Standings','Teams','Updates'])}${body}`};
+
+SC.match=()=>`${hdr('Match centre')}<div class="hero" style="text-align:center"><span class="tag live">LIVE · 54'</span><div class="sub" style="margin:8px 0">Lagos Grassroots Cup · Lagos Arena</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Lekki Lions',44)}</div><b>Lekki Lions</b></div><span class="score">1 : 1</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Yaba Rovers',44)}</div><b>Yaba Rovers</b></div></div></div>
+ <h2 class="sec">Match updates</h2><div class="list">${['54\' Update entered by match official','31\' Goal · Yaba Rovers','12\' Goal · Lekki Lions','Kick-off'].map(t=>`<div class="card small row"><span class="dot"></span>${t}</div>`).join('')}</div>
+ <div class="note" style="margin-top:12px">Updates are entered by verified organisers or authorised match officials.</div>`;
+
+SC.community=()=>{const k=S.sub.community;let body='';
+ if(k==='Activity')body=`<div class="list">${['Lekki Lions created a new game','Emeka joined Thursday Night 5s','Lagos Grassroots Cup published fixtures','Mainland FC completed a match','Eagle Academy published a new event','Surulere Social has an upcoming match'].map(t=>`<div class="card row"><div class="av sm">${ic('ball')}</div><div class="grow small"><b>${t}</b><div class="muted">Just now</div></div></div>`).join('')}</div>`;
+ if(k==='Teams')body=`<div class="list">${teams.map(teamCard).join('')}</div>`;
+ if(k==='Discover Players')body=`<div class="search">${ic('search')}<input placeholder="Search players"></div><div class="hscroll" style="margin-top:10px">${['Location','Position','Format','Availability','Area'].map(f=>`<span class="chip">${f}</span>`).join('')}</div><div class="list">${players.map(playerCard).join('')}</div>`;
+ if(k==='My Teams')body=`<div class="list">${teamCard(teams[0])}</div><button class="btn" style="margin-top:14px" onclick="go('createTeam')">${ic('plus')}Create Team</button>`;
+ if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="toast('Declined')">Decline</button><button class="btn sm" onclick="toast('Joined Mainland FC')">Accept</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Tunde A. invited you to Thursday Night 5s</div><div class="row" style="margin-top:10px"><button class="btn sm ghost">Decline</button><button class="btn sm" onclick="go('game',0)">View</button></div></div></div>`;
+ return `<h1>Community</h1>${tabsUI('community',['Activity','Teams','Discover Players','My Teams','Invitations'])}${body}`};
+
+SC.team=id=>{const t=teams[id];return `${hdr('Team',`<button class="round">${ic('more')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><button class="btn gold sm" style="margin:12px auto 0" onclick="S.followed['t${id}']=!S.followed['t${id}'];render()">${S.followed['t'+id]?'Following':t.role?'Invite players':'Follow team'}</button></div>
+ <h2 class="sec">Members</h2><div class="list">${[['Tunde A.','Owner'],['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player']].map(m=>`<div class="card row"><div class="av sm">${ini(m[0])}</div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`).join('')}</div>
+ <h2 class="sec">Upcoming games</h2>${gameCard(games[0])}<h2 class="sec">Match history</h2><div class="list">${matchRow(fixtures[2])}</div>
+ <button class="btn ghost" style="margin-top:14px" onclick="toast('Join request sent')">Request to join</button><div style="text-align:center;margin-top:10px"><a class="small muted" onclick="toast('Report submitted')">Report team</a></div>`};
+
+SC.createTeam=()=>`${hdr('Create team')}<div class="row"><div class="av lg" style="background:var(--surface2);color:var(--muted)">${ic('plus')}</div><div class="sub">Upload team logo and cover image</div></div><div style="height:14px"></div>
+ <div class="field">Team name<input placeholder="e.g. Lekki Lions"></div><div class="field">Description<input placeholder="About your team"></div><div class="field">Location<input value="Lekki"></div><div class="field">Preferred football format<select><option>7-a-side</option><option>5-a-side</option></select></div>
+ <div class="opt"><div class="grow"><b>Team visibility</b><div class="sub">Public teams can be found by players</div></div>${tog(true,'tv')}</div><p class="small muted" style="margin:10px 0">You will become the team owner or captain and can invite players afterwards.</p>
+ <button class="btn" onclick="toast('Team created');S.stack=[{s:'team',a:0}];render()">Create team</button>`;
+
+SC.player=()=>`${hdr('Player profile')}<div style="text-align:center"><div class="av lg" style="margin:0 auto 10px">EO</div><h1>Emeka Obi</h1><div class="sub">Midfielder · 5-a-side, 7-a-side</div></div>
+ <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Area</span><b>Lekki</b></div><div class="kv"><span class="muted">Availability</span><b>Weekday evenings</b></div><div class="kv"><span class="muted">Experience</span><b>Self-reported: 5 years</b></div><div class="kv"><span class="muted">Teams</span><b>Lekki Lions</b></div></div>
+ <div class="row" style="margin-top:14px"><button class="btn ghost" onclick="toast('Reported')">Report</button><button class="btn" onclick="toast('Invitation sent')">Invite</button></div>`;
+
+SC.activity=()=>{const k=S.sub.activity;let body='';
+ const bk=(n,s,c,pay)=>`<div class="card"><div class="row sp"><b>${n}</b><span class="tag ${c}">${s}</span></div><div class="sub" style="margin:4px 0">Wed 11 Nov · 18:00 · Pitch A</div><div class="row sp small"><span class="muted">Ref FCP-482913</span><span>${pay}</span></div></div>`;
+ if(k==='Bookings')body=`<div class="list">${bk('Lekki Goal Arena','Confirmed','ok','Paid in full')}${bk('Yaba Turf Club','Awaiting payment','warn','Pay before 5:00 PM')}${bk('Ikeja Sports Ground','Pending approval','warn','Deposit paid · balance ₦21,000')}</div>
+  <h2 class="sec">Past</h2><div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Cancelled','bad','Refund pending')}</div>`;
+ if(k==='Games Joined')body=`<div class="list">${gameCard(games[1])}</div>`;
+ if(k==='Games Created')body=`<div class="list">${gameCard(games[0])}<div class="card"><div class="b">Join requests (1)</div><div class="row sp" style="margin-top:8px"><span class="small">Emeka O. wants to join</span><div class="row"><button class="btn sm ghost">Decline</button><button class="btn sm" onclick="toast('Approved')">Approve</button></div></div></div></div>`;
+ if(k==='Events')body=`<div class="list">${eventCard(events[0])}</div>`;
+ if(k==='Tickets')body=`<div class="card" style="text-align:center"><div class="b">Lagos Grassroots Cup — Final</div><div class="sub">2 × General entry</div><div style="margin:14px auto;width:130px;height:130px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:90px;height:90px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><span class="tag ok">Valid · show at entry</span></div>`;
+ if(k==='History')body=`<div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Completed','','Paid in full')}</div>`;
+ if(k==='Payments')body=`<div class="list">${[['Lekki Goal Arena',N(25000),'Successful','ok'],['Yaba Turf Club',N(5400),'Pending','warn'],['Yaba Turf Club',N(18000),'Refunded','']].map(p=>`<div class="card row sp"><div><b>${p[0]}</b><div class="small muted">Ref TX-${Math.floor(Math.random()*90000+10000)}</div></div><div style="text-align:right"><b>${p[1]}</b><div><span class="tag ${p[3]}">${p[2]}</span></div></div></div>`).join('')}</div>`;
+ return `<h1>My Activity</h1>${tabsUI('activity',['Bookings','Games Joined','Games Created','Events','Tickets','History','Payments'])}${body}`};
+
+SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
+ return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">TA</div><h1>Tunde Adeyemi</h1><div class="sub">Player · Team captain · Spectator</div></div>
+ <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details')}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
+ <h2 class="sec">Settings</h2><div class="list">${it('cog','Preferences')}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events')}${it('help','Help and support')}${it('logout','Sign out')}</div>
+ <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
+
+SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others can view your football profile',true],['Discoverable by players','Appear in player discovery',true],['Show public activity','Games and teams on your profile',false]].map((r,i)=>`<div class="opt"><div class="grow"><b>${r[0]}</b><div class="sub">${r[1]}</div></div>${tog(r[2],'pv'+i)}</div>`).join('')}</div><div class="note" style="margin-top:12px">Sensitive personal information is not shown publicly by default. You can also block or report users.</div>`;
+
+SC.notifs=()=>`${hdr('Notifications')}<div class="list">${[['Booking confirmed','Lekki Goal Arena · Wed 18:00','ok'],['Payment confirmed',N(25000)+' received','ok'],['Booking reminder','Tomorrow 18:00 at Lekki Goal Arena',''],['Join approved','You are in Thursday Night 5s','ok'],['Team invitation','Mainland FC invited you',''],['Fixture update','Lagos Grassroots Cup: kickoff moved to 15:00','warn'],['Match result','Mainland FC 3 – 0 Ikeja Stars','']].map(n=>`<div class="card row"><span class="tag ${n[2]}">${ic('bell')}</span><div class="grow"><b>${n[0]}</b><div class="small muted">${n[1]}</div></div></div>`).join('')}</div>
+ <h2 class="sec">Preferences</h2><div class="opt"><div class="grow"><b>Booking and payment alerts</b></div>${tog(true,'n1')}</div><div class="opt" style="margin-top:8px"><div class="grow"><b>Event and competition updates</b></div>${tog(true,'n2')}</div>`;
+
+SC.submitEvent=()=>`${hdr('Suggest an event')}<div class="note" style="margin-bottom:12px">Community submissions are reviewed before they appear as confirmed events.</div><div class="field">Event name<input></div><div class="field">Category<select><option>Local tournament</option><option>Friendly match</option><option>Charity match</option></select></div><div class="field">Venue or location<input></div><div class="row"><div class="field grow">Date<input></div><div class="field grow">Time<input></div></div><button class="btn" onclick="toast('Submitted for review');back()">Submit for review</button>`;
+
+function payNow(){S.b.ref='FCP-'+Math.floor(100000+Math.random()*899999);
+  if(S.b.pay==='other'){go('confirm');return}
+  go('processing');setTimeout(()=>{const c=S.stack[S.stack.length-1];if(c&&c.s==='processing'){S.stack.pop();S.stack.push({s:S.fail?'failed':'confirm'});S.fail=false;render()}},1700)}
+SC.processing=()=>`<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Verifying payment</h1><p class="sub" style="margin-top:6px">Please keep the app open. We confirm with our server before marking your booking paid.</p></div>`;
+SC.failed=()=>`<div style="text-align:center;padding-top:60px"><div class="av lg" style="margin:0 auto 16px;background:var(--bad);color:#fff;font-size:34px">!</div><h1>Payment failed</h1><p class="sub" style="margin:6px 0 20px">You have not been charged. Your slot is still held while the timer runs.</p></div>
+ <div class="card"><div class="kv"><span class="muted">Payment status</span><span class="tag bad">Failed</span></div><div class="kv"><span class="muted">Slot hold</span><b id="hold">${Math.floor(S.hold/60)}:${String(S.hold%60).padStart(2,'0')}</b></div></div>
+ <div class="col" style="margin-top:20px"><button class="btn" onclick="S.stack.pop();render()">Try again</button><button class="btn ghost" onclick="S.stack=[];S.tab='home';render()">Back to Home</button></div>`;
+SC.expired=()=>`<div style="text-align:center;padding-top:80px"><div class="av lg" style="margin:0 auto 16px;background:var(--warn);color:#fff">${ic('clock')}</div><h1>Slot hold expired</h1><p class="sub" style="margin:6px 0 20px">The slot was released so others can book it. Please pick a time again.</p></div><button class="btn" onclick="S.stack=[{s:'venue',a:S.b.v},{s:'book'}];render()">Choose a time</button>`;
+SC.welcome=()=>`<div class="welcome"><span class="tag" style="background:var(--color-accent);color:var(--color-primary);align-self:flex-start">Lagos, Nigeria</span><h1>The home of football communities</h1><p style="opacity:.85;margin-bottom:22px">Find places to play, people to play with, and matches to watch.</p><button class="btn" style="background:var(--color-accent);color:var(--color-primary)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Get started</button><button class="btn ghost" style="margin-top:10px" onclick="S.stack=[];render()">I already have an account</button></div>`;
+const NAV=[['home','Home','home'],['explore','Explore','search'],['community','Community','users'],['activity','Activity','cal'],['profile','Profile','user']];
+function render(){
+  const cur=S.stack[S.stack.length-1];let h='';
+  if(cur){h=SC[cur.s](cur.a)}else{h=SC[S.tab]()}
+  const full=cur&&['book','review','confirm','venue','onb'].includes(cur.s);
+  const sc=$('screen');const top0=sc.scrollTop;
+  sc.className='screen'+(cur?' noNav':'');sc.innerHTML=h+(S.sheet?`<div class="sheet" onclick="S.sheet=null;render()"><div onclick="event.stopPropagation()"><h2 class="sec" style="margin-top:0">Filters</h2>${['Distance or area','Football format','Price','Date and time','Facilities'].map(f=>`<div class="kv"><span>${f}</span>${ic('chev')}</div>`).join('')}<button class="btn" style="margin-top:16px" onclick="S.sheet=null;render()">Apply</button></div></div>`:'');
+  $('nav').style.display=cur?'none':'flex';
+  $('nav').innerHTML=NAV.map(n=>`<button class="${S.tab===n[0]?'on':''}" onclick="tab('${n[0]}')">${ic(n[2])}${n[1]}</button>`).join('');
+  const old=document.querySelector('.toast');if(old)old.remove();
+  if(S.toast)$('phone').insertAdjacentHTML('beforeend',`<div class="toast">${S.toast}</div>`);
+  const key=S.tab+'|'+S.stack.length+(cur?cur.s+cur.a:'');
+  if(key!==S.last){sc.classList.remove('anim');void sc.offsetWidth;sc.classList.add('anim');S.last=key;sc.scrollTop=0}else{sc.scrollTop=top0}
+}
+function setTheme(t){S.theme=t;document.body.dataset.theme=t;document.documentElement.dataset.theme=t;
+  document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));render()}
+document.querySelectorAll('#themeSeg button').forEach(b=>b.onclick=()=>setTheme(b.dataset.t));
+setInterval(()=>{const c=S.stack[S.stack.length-1];if(S.hold===1&&c&&c.s==='review'){S.hold=0;S.stack.pop();S.stack.push({s:'expired'});render();return}
+  if(S.hold>0&&$('hold')){S.hold--;$('hold').textContent=Math.floor(S.hold/60)+':'+String(S.hold%60).padStart(2,'0')}},1000);
+if(matchMedia('(prefers-color-scheme: dark)').matches)setTheme('dark');
+render();
+</script>
+</body>
+</html>
