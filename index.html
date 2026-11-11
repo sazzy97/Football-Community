@@ -294,6 +294,30 @@ h2.sec{margin:28px 0 14px}
 .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:6px}
 .tmini{width:176px;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
 .tmini .btn{margin-top:12px;width:100%}
+
+/* ===================== Interactive Onboarding, Share Screen & Success Modals ===================== */
+.modal-backdrop{position:absolute;inset:0;background:rgba(12,19,15,.62);backdrop-filter:blur(8px);z-index:50;display:flex;align-items:center;justify-content:center;padding:22px;animation:fadeIn .2s ease both}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes popIn{from{opacity:0;transform:scale(.92) translateY(12px)}to{opacity:1;transform:none}}
+.modal-card{background:var(--surface);color:var(--text);width:100%;border-radius:24px;padding:24px 20px 20px;box-shadow:var(--sh-2);border:1px solid var(--line);text-align:center;animation:popIn .24s cubic-bezier(.2,.9,.3,1) both}
+.modal-ico{width:68px;height:68px;border-radius:50%;margin:0 auto 16px;display:grid;place-items:center;background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok);box-shadow:0 0 0 8px color-mix(in srgb,var(--ok) 8%,transparent)}
+.modal-ico svg{width:34px;height:34px;stroke-width:2.4}
+.modal-card h2{font-size:20px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+.modal-card .sub{font-size:13px;line-height:1.5;margin-bottom:16px}
+.modal-meta{background:var(--bg);border-radius:16px;padding:12px 14px;text-align:left;margin-bottom:18px;border:1px solid var(--line)}
+.modal-meta .kv{padding:7px 0;font-size:13px}
+.modal-actions{display:flex;flex-direction:column;gap:10px}
+/* Share screen */
+.share-preview{background:var(--hero);color:var(--hero-ink);border-radius:20px;padding:16px;box-shadow:var(--sh-1);margin-bottom:16px}
+.share-link-box{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px;margin-bottom:18px;box-shadow:var(--sh-1)}
+.share-link-box code{font-family:var(--font-family);font-size:12px;font-weight:600;color:var(--sec);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.share-chan{display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 6px;border-radius:18px;background:var(--surface);border:1px solid var(--line);box-shadow:var(--sh-1);font-size:11px;font-weight:700;cursor:pointer;transition:transform .12s}
+.share-chan:active{transform:scale(.95)}
+.share-chan i{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-weight:800;font-size:15px;color:#fff}
+.opt{cursor:pointer;user-select:none}
+.chip{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:6px}
+.chip .chk{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;background:rgba(255,255,255,.22)}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -306,7 +330,7 @@ h2.sec{margin:28px 0 14px}
     <button data-t="light" class="on">Light</button><button data-t="dark">Dark</button>
   </div>
   <p style="margin:0 0 6px"><b>Jump to journey</b> (PRD §8)</p>
-  <a onclick="jump('onb')">Onboarding (§11.1)</a>
+  <a onclick="S.onb=1;jump('onb')">Onboarding — Interactive (§11.1)</a><a onclick="openShare('game',0)">Share screen (Games, Venues, Events)</a>
   <a onclick="jump('venues')">A · Discover &amp; book a pitch</a>
   <a onclick="jump('createGame')">B · Create an open game</a>
   <a onclick="jump('games')">C · Join an open game</a>
@@ -384,13 +408,33 @@ const players=[{n:'Emeka Obi',pos:'Midfielder',fmt:'5-a-side',area:'Lekki',av:'W
 
 /* ===== state & routing ===== */
 const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list'},saved:{},followed:{},joined:{},onb:0,sheet:null,toast:null};
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},onb:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:2,user:{name:'Tunde Adeyemi',email:'tunde@example.com',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 const $=id=>document.getElementById(id);
 const go=(s,a)=>{S.stack.push({s,a});render()};
 const back=()=>{S.stack.pop();render()};
 const tab=t=>{S.tab=t;S.stack=[];render()};
 const sub=(k,v)=>{S.sub[k]=v;render()};
 const toast=m=>{S.toast=m;render();setTimeout(()=>{S.toast=null;render()},1800)};
+const showModal=(cfg)=>{S.modal=cfg;render()};
+const closeModal=(fn)=>{S.modal=null;if(fn)fn();render()};
+const openShare=(type,id)=>{
+  let item={type,id,title:'Football Community',sub:'Lagos, Nigeria',tag:'Football',url:'footballcommunity.ng',img:'game1'};
+  if(type==='venue'){const v=venues[id||0];item={type:'Venue',id:v.id,title:v.name,sub:v.area+' · From '+N(v.from)+'/hr',tag:v.fmts.join(' · '),url:'footballcommunity.ng/v/'+v.name.toLowerCase().replace(/\s+/g,'-'),img:v.im}}
+  else if(type==='game'){const g=games[id||0],v=venues[g.v];item={type:'Open Game',id:g.id,title:g.title,sub:v.name+' · '+g.when,tag:g.fmt+' · '+N(g.price)+'/player',url:'footballcommunity.ng/g/'+g.title.toLowerCase().replace(/\s+/g,'-'),img:'game1'}}
+  else if(type==='event'){const e=events[id||0];item={type:'Event',id:e.id,title:e.title,sub:e.venue+' · '+e.when,tag:e.cat+' · '+e.fee,url:'footballcommunity.ng/e/'+e.title.toLowerCase().replace(/[^a-z0-9]+/g,'-'),img:e.im}}
+  else if(type==='comp'){const c=comps[id||0];item={type:'Competition',id:c.id,title:c.name,sub:c.type+' · '+c.season,tag:c.teams+' teams',url:'footballcommunity.ng/c/'+c.name.toLowerCase().replace(/\s+/g,'-'),img:'event1'}}
+  else if(type==='team'){const t=teams[id||0];item={type:'Team',id:t.id,title:t.name,sub:t.loc+' · '+t.fmt,tag:t.m+' members',url:'footballcommunity.ng/t/'+t.name.toLowerCase().replace(/\s+/g,'-'),img:'event2'}}
+  else if(type==='match'){item={type:'Live Match',id:0,title:'Lekki Lions 1 : 1 Yaba Rovers',sub:'Lagos Grassroots Cup · Lagos Arena',tag:'LIVE · 54\'',url:'footballcommunity.ng/m/ll-vs-yr',img:'event1'}}
+  else if(type==='ticket'){const e=events[0];item={type:'Ticket',id:0,title:e.title,sub:e.venue+' · '+e.when,tag:'General Entry',url:'footballcommunity.ng/tix/FCP-TIX',img:e.im}}
+  S.shareItem=item;
+  go('share');
+};
+const togglePref=(group,val)=>{
+  S.user[group][val]=!S.user[group][val];
+  if(Object.values(S.user[group]).filter(Boolean).length===0)S.user[group][val]=true;
+  render();
+};
+
 const jump=s=>{S.stack=[];S.tab=s==='createGame'||s==='games'||s==='venues'||s==='events'?'explore':'home';
   if(s==='onb'){S.stack=[{s:'onb'}]}
   else if(s==='venues'){tab('explore');S.sub.explore='Pitches'}
@@ -416,19 +460,49 @@ let eventCard=e=>`<div class="card" onclick="go('event',${e.id})"><div ${pic(e.i
  <div class="row sp" style="margin-top:10px"><div class="b grow">${e.title}</div><button onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'var(--brand)':'var(--muted)'}">${ic('heart')}</button></div>
  <div class="sub">${e.venue}<br>${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="b small">${e.fee}</span></div></div>`;
 const teamCard=t=>`<div class="card row" onclick="go('team',${t.id})">${crest(t.name,44)}<div class="grow"><div class="b">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div></div>${t.role?`<span class="tag gold">${t.role}</span>`:ic('chev')}</div>`;
-const playerCard=p=>`<div class="card row" onclick="go('player',0)"><div class="av">${ini(p.n)}</div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.pos} · ${p.fmt}<br>${p.area} · ${p.av}</div></div><button class="btn sm ghost" onclick="event.stopPropagation();toast('Connection request sent')">Invite</button></div>`;
+const playerCard=p=>`<div class="card row" onclick="go('player',0)"><div class="av">${ini(p.n)}</div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.pos} · ${p.fmt}<br>${p.area} · ${p.av}</div></div><button class="btn sm ghost" onclick="event.stopPropagation();showModal({title:'Invitation Sent!',sub:'${p.n} has been invited to connect and join your upcoming football activity.',meta:[['Player','${p.n}'],['Position','${p.pos} · ${p.fmt}'],['Area','${p.area}']],primary:'Done'})">Invite</button></div>`;
 const tog=(on,k)=>`<div class="tog ${on?'on':''}" onclick="S.p=S.p||{};S.p['${k}']=${!on};render()"><i></i></div>`;
 let matchRow=f=>`<div class="card" onclick="go('match',0)"><div class="row sp small muted"><span>${f.t}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div>
  <div class="row sp" style="margin-top:8px"><span class="row grow">${crest(f.h,26)}<b>${f.h}</b></span><span class="b">${f.sc||'vs'}</span><span class="row grow" style="justify-content:flex-end"><b>${f.a}</b>${crest(f.a,26)}</span></div></div>`;
 
 /* ===== screens ===== */
 const SC={};
-SC.onb=()=>{const st=[
- ['Create your account','Registration and login (PRD §11.1). One account can be a player, captain and spectator.',`<div class="field">Full name<input placeholder="Your name"></div><div class="field">Email or phone<input placeholder="you@example.com"></div><div class="field">Password<input type="password" placeholder="••••••••"></div>`],
- ['Select your location','Launching in selected areas of Lagos.',`<div class="list">${['Lekki and Ajah','Yaba and Surulere','Ikeja','Victoria Island and Ikoyi','Festac and Amuwo-Odofin','Ikorodu'].map((a,i)=>`<div class="opt ${i===0?'on':''}"><div class="radio"></div><b>${a}</b></div>`).join('')}</div>`],
- ['Football preferences','Used to personalise discovery. You can change this later.',`<h2 class="sec" style="margin-top:0">Preferred format</h2><div class="row" style="flex-wrap:wrap">${['5-a-side','7-a-side','9-a-side','11-a-side'].map((f,i)=>`<span class="chip ${i<2?'on':''}">${f}</span>`).join('')}</div><h2 class="sec">Preferred position</h2><div class="row" style="flex-wrap:wrap">${['Goalkeeper','Defender','Midfielder','Forward'].map((f,i)=>`<span class="chip ${i==2?'on':''}">${f}</span>`).join('')}</div>`]][S.onb];
- return `<div style="padding-top:20px"><div class="row" style="margin-bottom:20px">${[0,1,2].map(i=>`<div class="bar grow"><i style="width:${i<=S.onb?100:0}%"></i></div>`).join('')}</div><h1>${st[0]}</h1><p class="sub" style="margin:6px 0 22px">${st[1]}</p>${st[2]}
- <div style="margin-top:26px"><button class="btn" onclick="if(S.onb<2){S.onb++;render()}else{S.onb=0;S.stack=[];S.tab='home';render()}">${S.onb<2?'Continue':'Finish'}</button></div></div>`};
+SC.onb=()=>{
+ const locs=['Lekki and Ajah','Yaba and Surulere','Ikeja','Victoria Island and Ikoyi','Festac and Amuwo-Odofin','Ikorodu'];
+ const fmts=['5-a-side','7-a-side','9-a-side','11-a-side'];
+ const positions=['Goalkeeper','Defender','Midfielder','Forward'];
+ const avails=['Weekday mornings','Weekday evenings','Weekends','Flexible'];
+ const exps=['Beginner','Intermediate','Competitive'];
+ const selFmts=Object.keys(S.user.fmts).filter(k=>S.user.fmts[k]);
+ const selPos=Object.keys(S.user.pos).filter(k=>S.user.pos[k]);
+ const selAv=Object.keys(S.user.avail).filter(k=>S.user.avail[k]);
+ const st=[
+  ['Create your account','Registration and login (PRD §11.1). One account can be a player, captain and spectator.',
+   `<div class="field">Full name<input value="${S.user.name}" oninput="S.user.name=this.value" placeholder="Your full name"></div>
+    <div class="field">Email or phone<input value="${S.user.email}" oninput="S.user.email=this.value" placeholder="you@example.com"></div>
+    <div class="field">Password<input type="password" value="••••••••" placeholder="••••••••"></div>
+    <div class="note">Your unified account lets you book pitches, join open games, follow competitions and manage teams.</div>`],
+  ['Select your location','Choose your primary playing area in Lagos. Tap any cluster below to select it.',
+   `<div class="list">${locs.map(a=>{const on=S.user.loc===a;return `<div class="opt ${on?'on':''}" onclick="S.user.loc='${a}';render()"><div class="radio"></div><div class="grow"><b>${a}</b><div class="sub small">Lagos launch cluster</div></div>${on?`<span class="tag ok">${ic('check')}Selected</span>`:''}</div>`}).join('')}</div>`],
+  ['Football preferences','Tap options below to personalise your discovery feed. You can select multiple formats and positions.',
+   `<h2 class="sec" style="margin-top:0">Preferred format <span class="small muted">(${selFmts.length} selected)</span></h2>
+    <div class="row" style="flex-wrap:wrap;gap:8px">${fmts.map(f=>{const on=!!S.user.fmts[f];return `<button class="chip ${on?'on':''}" onclick="togglePref('fmts','${f}')">${on?`${ic('check')}`:''}${f}</button>`}).join('')}</div>
+    <h2 class="sec">Preferred position <span class="small muted">(${selPos.length} selected)</span></h2>
+    <div class="row" style="flex-wrap:wrap;gap:8px">${positions.map(f=>{const on=!!S.user.pos[f];return `<button class="chip ${on?'on':''}" onclick="togglePref('pos','${f}')">${on?`${ic('check')}`:''}${f}</button>`}).join('')}</div>
+    <h2 class="sec">Playing experience</h2>
+    <div class="row" style="flex-wrap:wrap;gap:8px">${exps.map(e=>{const on=S.user.exp===e;return `<button class="chip ${on?'on':''}" onclick="S.user.exp='${e}';render()">${on?`${ic('check')}`:''}${e}</button>`}).join('')}</div>
+    <h2 class="sec">Typical availability <span class="small muted">(${selAv.length} selected)</span></h2>
+    <div class="row" style="flex-wrap:wrap;gap:8px">${avails.map(a=>{const on=!!S.user.avail[a];return `<button class="chip ${on?'on':''}" onclick="togglePref('avail','${a}')">${on?`${ic('check')}`:''}${a}</button>`}).join('')}</div>`]
+ ][S.onb];
+ return `<div style="padding-top:8px">
+  <div class="row sp" style="margin-bottom:14px">
+    <button class="round" onclick="if(S.onb>0){S.onb--;render()}else{S.stack=[{s:'welcome'}];render()}">${ic('back')}</button>
+    <span class="small muted b">Step ${S.onb+1} of 3</span>
+    <button class="small muted b" onclick="S.onb=0;S.stack=[];S.tab='home';render()">Skip</button>
+  </div>
+  <div class="row" style="margin-bottom:20px">${[0,1,2].map(i=>`<div class="bar grow" style="cursor:pointer" onclick="S.onb=${i};render()"><i style="width:${i<=S.onb?100:0}%"></i></div>`).join('')}</div>
+  <h1>${st[0]}</h1><p class="sub" style="margin:6px 0 20px">${st[1]}</p>${st[2]}
+  <div style="margin-top:26px"><button class="btn" onclick="if(S.onb<2){S.onb++;render()}else{S.onb=0;S.stack=[];S.tab='home';showModal({title:'Welcome to Football Community!',sub:'Your profile and football preferences have been saved.',meta:[['Player',S.user.name||'Tunde Adeyemi'],['Location',S.user.loc],['Formats',Object.keys(S.user.fmts).filter(k=>S.user.fmts[k]).join(', ')],['Position',Object.keys(S.user.pos).filter(k=>S.user.pos[k]).join(', ')]],primary:'Start Exploring'})}">${S.onb<2?'Continue':'Finish Setup'}</button></div></div>`};
 
 SC.home=()=>`<div class="row sp"><div class="row"><div class="av">TA</div><div><div class="sub">Hi, welcome back</div><div class="b">${ic('pin')} Lekki, Lagos</div></div></div><button class="round" onclick="go('notifs')">${ic('bell')}</button></div>
  <div class="search" style="margin:16px 0" onclick="tab('explore')">${ic('search')}<span>Search pitches, games, events</span></div>
@@ -456,7 +530,7 @@ SC.venue=id=>{const v=venues[id],k=S.sub.venue;
  const b={Overview:`<p class="sub">Floodlit football facility with multiple pitches. Opening hours and pricing are set by the venue.</p><div class="map" style="height:120px;margin:12px 0"><span class="pin" style="top:46px;left:140px">${ic('pin')}</span></div><div class="kv"><span class="muted">Address</span><b>${v.area}, Lagos</b></div><div class="kv"><span class="muted">Opening hours</span><b>${v.hours}</b></div><div class="kv"><span class="muted">Formats</span><b>${v.fmts.join(', ')}</b></div><div class="kv"><span class="muted">Contact</span><b>Call venue</b></div><h2 class="sec">Facilities</h2><div class="row" style="flex-wrap:wrap">${v.fac.map(f=>`<span class="tag">${f}</span>`).join('')}</div><h2 class="sec">Booking policy</h2><div class="note">${v.policy}</div>`,
   Pitches:`<div class="list">${v.pitches.map(p=>`<div class="card row"><div class="img has" style="width:64px;height:64px;background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.f}</div></div><div class="b">${N(p.p)}<span class="muted small">/hr</span></div></div>`).join('')}</div>`,
   Reviews:`<div class="row"><span class="score">${v.rating}</span><div class="sub">${v.rev} reviews<br>Verified booking reviews only</div></div><div class="list" style="margin-top:12px">${['Great pitch and lighting.','Easy booking, clean changing rooms.'].map(t=>`<div class="card small"><div class="b">${ic('star')} 5.0</div>${t}</div>`).join('')}</div>`}[k];
- return `${hdr(v.name,`<button class="round">${ic('share')}</button>`)}<div ${pic(v.im,170)}>${v.verified?`<span class="tag ok" style="position:absolute;top:12px;left:12px">${ic('shield')}Verified venue</span>`:''}${v.name}</div>
+ return `${hdr(v.name,`<button class="round" onclick="openShare('venue',${id})">${ic('share')}</button>`)}<div ${pic(v.im,170)}>${v.verified?`<span class="tag ok" style="position:absolute;top:12px;left:12px">${ic('shield')}Verified venue</span>`:''}${v.name}</div>
  <div class="row sp" style="margin-top:12px"><div class="sub">${ic('pin')} ${v.area} · ${v.km} km</div><div class="b">${ic('star')} ${v.rating} <span class="muted small">(${v.rev})</span></div></div>
  <div class="hscroll" style="margin-top:10px">${[1,2,3].map(i=>`<div class="img has" style="width:96px;height:66px;background-image:url(img/venue${i}.jpg)"></div>`).join('')}</div>${tabsUI('venue',['Overview','Pitches','Reviews'])}${b}
  <div class="cta"><div><div class="small muted">From</div><div class="b">${N(v.from)}/hr</div></div><button class="btn sm" onclick="S.b={v:${id},p:0,d:2,t:null,pay:'full',ref:null};go('book')">Book a pitch</button></div>`};
@@ -491,36 +565,51 @@ SC.game=id=>{const g=games[id],v=venues[g.v],j=S.joined[id];return `${hdr('Open 
  <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div>
  <div style="margin-top:18px"><button class="btn" onclick="S.joined[${id}]=true;toast('${g.approval?'Request sent to organiser':'You joined this game'}');render()">${j?(g.approval?'Request pending':'Joined · view in My Activity'):(g.approval?'Request to join':'Join · '+N(g.price))}</button></div>`};
 
-SC.createGame=()=>`${hdr('Create open game')}<div class="field">Game title<input placeholder="e.g. Thursday Night 5s"></div><div class="field">Venue or existing booking<select><option>Lekki Goal Arena</option><option>My booking · FCP-482913</option></select></div><div class="field">Pitch<select><option>Pitch A · 5-a-side</option></select></div>
- <div class="row"><div class="field grow">Date<input value="Thu 12 Nov"></div><div class="field grow">Start – end<input value="20:00 – 21:00"></div></div>
- <div class="row"><div class="field grow">Players required<input type="number" value="10"></div><div class="field grow">Available slots<input type="number" value="2"></div></div>
- <div class="row"><div class="field grow">Price per player (₦)<input value="2500"></div><div class="field grow">Football format<select><option>5-a-side</option><option>7-a-side</option></select></div></div>
- <div class="field">Skill or experience preference (optional)<select><option>All levels</option><option>Beginner</option><option>Intermediate</option></select></div><div class="field">Additional instructions<input placeholder="Bring bibs, white and dark shirts…"></div>
- <div class="opt" style="margin-bottom:8px"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(false,'appr')}</div><div class="opt"><div class="grow"><b>Public game</b><div class="sub">Visibility</div></div>${tog(true,'pub')}</div>
- <div style="margin-top:18px"><button class="btn" onclick="toast('Game published');S.stack=[];S.tab='explore';S.sub.explore='Open Games';render()">Publish game</button></div>`;
+SC.createGame=()=>{
+ const f=S.form;if(!f.gtitle)f.gtitle='Friday Floodlit 5s';if(f.gv===undefined)f.gv=0;if(!f.gdate)f.gdate='Fri 13 Nov';if(!f.gtime)f.gtime='19:00–20:00';if(!f.gneed)f.gneed=10;if(!f.gleft)f.gleft=3;if(!f.gprice)f.gprice=2500;if(!f.gfmt)f.gfmt='5-a-side';if(!f.glevel)f.glevel='All levels';
+ return `${hdr('Create open game')}
+ <div class="field">Game title<input value="${f.gtitle}" oninput="S.form.gtitle=this.value" placeholder="e.g. Thursday Night 5s"></div>
+ <div class="field">Venue or existing booking<select onchange="S.form.gv=+this.value;render()">${venues.map((v,i)=>`<option value="${i}" ${f.gv===i?'selected':''}>${v.name} (${v.area})</option>`).join('')}<option value="0">My booking · ${S.b.ref||'FCP-482913'}</option></select></div>
+ <div class="field">Pitch<select>${venues[f.gv||0].pitches.map(p=>`<option>${p.n} · ${p.f}</option>`).join('')}</select></div>
+ <div class="row"><div class="field grow">Date<input value="${f.gdate}" oninput="S.form.gdate=this.value"></div><div class="field grow">Start – end<input value="${f.gtime}" oninput="S.form.gtime=this.value"></div></div>
+ <div class="row"><div class="field grow">Players required<input type="number" value="${f.gneed}" oninput="S.form.gneed=+this.value"></div><div class="field grow">Available slots<input type="number" value="${f.gleft}" oninput="S.form.gleft=+this.value"></div></div>
+ <div class="row"><div class="field grow">Price per player (₦)<input type="number" value="${f.gprice}" oninput="S.form.gprice=+this.value"></div><div class="field grow">Football format<select onchange="S.form.gfmt=this.value"><option ${f.gfmt==='5-a-side'?'selected':''}>5-a-side</option><option ${f.gfmt==='7-a-side'?'selected':''}>7-a-side</option><option ${f.gfmt==='9-a-side'?'selected':''}>9-a-side</option><option ${f.gfmt==='11-a-side'?'selected':''}>11-a-side</option></select></div></div>
+ <div class="field">Skill or experience preference (optional)<select onchange="S.form.glevel=this.value"><option>All levels</option><option>Beginner friendly</option><option>Intermediate</option><option>Competitive</option></select></div>
+ <div class="field">Additional instructions<input placeholder="Bring bibs, white and dark shirts…"></div>
+ <div class="opt" style="margin-bottom:10px" onclick="S.p=S.p||{};S.p.appr=!S.p.appr;render()"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(!!(S.p&&S.p.appr),'appr')}</div>
+ <div class="opt" onclick="S.p=S.p||{};S.p.pub=S.p.pub===undefined?false:!S.p.pub;render()"><div class="grow"><b>Public game</b><div class="sub">Visible in Open Games discovery</div></div>${tog(S.p&&S.p.pub!==undefined?S.p.pub:true,'pub')}</div>
+ <div style="margin-top:20px"><button class="btn" onclick="publishGame()">Publish game</button></div>`};
+function publishGame(){
+ const f=S.form,newId=games.length;
+ const g={id:newId,title:f.gtitle||'Friday Floodlit 5s',v:f.gv||0,pitch:venues[f.gv||0].pitches[0].n,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:f.gneed||10,left:f.gleft||3,price:f.gprice||2500,org:S.user.name.split(' ')[0]+' '+(S.user.name.split(' ')[1]||'A.')[0]+'.',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr)};
+ games.unshift(g);
+ S.stack=[];S.tab='explore';S.sub.explore='Open Games';
+ showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery for players to join.',meta:[['Game',g.title],['Venue',venues[g.v].name+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+N(g.price)+'/player)']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',newId),secondary:'View Open Games'});
+}
 
-SC.event=id=>{const e=events[id];return `${hdr('Event',`<button class="round" onclick="S.saved[${id}]=!S.saved[${id}];render()" style="color:${S.saved[id]?'var(--brand)':'inherit'}">${ic('heart')}</button>`)}
+SC.event=id=>{const e=events[id];return `${hdr('Event',`<div class="row" style="gap:8px"><button class="round" onclick="S.saved[${id}]=!S.saved[${id}];render()" style="color:${S.saved[id]?'#D94343':'inherit'}">${ic('heart')}</button><button class="round" onclick="openShare('event',${id})">${ic('share')}</button></div>`)}
  <div ${pic(e.im,160)}>${e.cat}</div><div class="row" style="margin:12px 0 6px;flex-wrap:wrap">${trust(e.trust)}<span class="tag">${e.status}</span></div>
  <h1>${e.title}</h1>${e.trust==='Community-submitted'?`<div class="note" style="margin-top:10px">Community-submitted. Not an officially verified event.</div>`:''}
  <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Date and time</span><b>${e.when}</b></div><div class="kv"><span class="muted">Venue</span><b>${e.venue}</b></div><div class="kv"><span class="muted">Organiser</span><b style="text-align:right;max-width:190px">${e.org}</b></div><div class="kv"><span class="muted">Entry</span><b>${e.fee}</b></div>${e.tix?`<div class="kv"><span class="muted">Tickets available</span><b>${e.left}</b></div>`:''}</div>
  <h2 class="sec">About</h2><p class="sub">Description, entry requirements and contact information appear here as provided by the organiser.</p>
  ${e.comp>=0?`<h2 class="sec">Competition</h2><div class="card row" onclick="go('comp',${e.comp})"><div class="grow b">${comps[e.comp].name}</div>${ic('chev')}</div>`:''}
  <div class="map" style="height:110px;margin-top:14px"><span class="pin" style="top:40px;left:150px">${ic('pin')}</span></div>
- <div class="row" style="margin-top:16px"><button class="btn ghost" onclick="toast('Reminder set')">Remind me</button>${e.tix?`<button class="btn" onclick="go('ticket',${id})">Get tickets</button>`:''}</div>`};
+ <div class="row" style="margin-top:16px"><button class="btn ghost" onclick="showModal({title:'Event Reminder Set!',sub:'We will notify you 24 hours and 1 hour before kickoff.',meta:[['Event',events[${id}].title],['When',events[${id}].when],['Venue',events[${id}].venue]],primary:'Got It',secondary:'Share Event',secFn:()=>openShare('event',${id})})">Remind me</button>${e.tix?`<button class="btn" onclick="go('ticket',${id})">Get tickets</button>`:`<button class="btn" onclick="openShare('event',${id})">Share event</button>`}</div>`};
 
-SC.ticket=id=>{const e=events[id];return `${hdr('Tickets')}<div class="card"><div class="b">${e.title}</div><div class="sub">${e.when}</div>
- <div class="kv" style="margin-top:8px"><div><b>General entry</b><div class="small muted">${e.fee} each</div></div><div class="row"><button class="round" style="width:32px;height:32px">−</button><b>2</b><button class="round" style="width:32px;height:32px">+</button></div></div>
- <div class="kv"><span class="muted">Tickets (2 × ₦1,500)</span><b>₦3,000</b></div><div class="kv"><span class="muted">Service fee (shown before checkout)</span><b>₦150</b></div><div class="kv"><b>Total</b><b>₦3,150</b></div></div>
- <div style="margin-top:18px"><button class="btn" onclick="S.sub.activity='Tickets';S.stack=[];S.tab='activity';toast('Tickets issued');render()">Pay ₦3,150</button></div>`};
+SC.ticket=id=>{const e=events[id||0],q=S.tixQty||2,unit=1500,subTot=q*unit,fee=q*75,tot=subTot+fee;
+ return `${hdr('Tickets')}<div class="card"><div class="b">${e.title}</div><div class="sub">${e.venue} · ${e.when}</div>
+ <div class="kv" style="margin-top:8px"><div><b>General entry</b><div class="small muted">${N(unit)} each</div></div><div class="row"><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.max(1,(S.tixQty||2)-1);render()">−</button><b>${q}</b><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.min(10,(S.tixQty||2)+1);render()">+</button></div></div>
+ <div class="kv"><span class="muted">Tickets (${q} × ${N(unit)})</span><b>${N(subTot)}</b></div><div class="kv"><span class="muted">Service fee (shown before checkout)</span><b>${N(fee)}</b></div><div class="kv"><b>Total</b><b>${N(tot)}</b></div></div>
+ <div style="margin-top:18px"><button class="btn" onclick="S.sub.activity='Tickets';S.stack=[];S.tab='activity';showModal({title:'Tickets Issued!',sub:'Your entry QR pass is ready in My Activity → Tickets.',meta:[['Event','${e.title}'],['Quantity',q+' × General entry'],['Total Paid','${N(tot)}'],['Ticket Ref','TIX-'+Math.floor(100000+Math.random()*899999)]],primary:'View My Ticket',secondary:'Share Event',secFn:()=>openShare('event',${id||0})})">Pay ${N(tot)}</button></div>`};
 
 SC.comp=id=>{const c=comps[id],k=S.sub.compTab;const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
  Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
  Teams:`<div class="list">${teams.map(teamCard).join('')}</div>`,Updates:`<div class="card small">Fixtures published for the next round. <span class="muted">· 2 days ago</span></div>`}[k];
- return `${hdr('Competition',`<button class="btn sm ${S.followed['c'+id]?'ghost':''}" onclick="S.followed['c${id}']=!S.followed['c${id}'];render()">${S.followed['c'+id]?'Following':'Follow'}</button>`)}
+ return `${hdr('Competition',`<div class="row" style="gap:8px"><button class="btn sm ${S.followed['c'+id]?'ghost':''}" onclick="S.followed['c${id}']=!S.followed['c${id}'];render()">${S.followed['c'+id]?'Following':'Follow'}</button><button class="round" onclick="openShare('comp',${id})">${ic('share')}</button></div>`)}
  <div class="hero"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div><div style="font-size:19px;font-weight:800">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div></div>
  ${tabsUI('compTab',['Fixtures','Results','Standings','Teams','Updates'])}${body}`};
 
-SC.match=()=>`${hdr('Match centre')}<div class="hero" style="text-align:center"><span class="tag live">LIVE · 54'</span><div class="sub" style="margin:8px 0">Lagos Grassroots Cup · Lagos Arena</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Lekki Lions',44)}</div><b>Lekki Lions</b></div><span class="score">1 : 1</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Yaba Rovers',44)}</div><b>Yaba Rovers</b></div></div></div>
+SC.match=()=>`${hdr('Match centre',`<button class="round" onclick="openShare('match',0)">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><span class="tag live">LIVE · 54'</span><div class="sub" style="margin:8px 0">Lagos Grassroots Cup · Lagos Arena</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Lekki Lions',44)}</div><b>Lekki Lions</b></div><span class="score">1 : 1</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Yaba Rovers',44)}</div><b>Yaba Rovers</b></div></div></div>
  <h2 class="sec">Match updates</h2><div class="list">${['54\' Update entered by match official','31\' Goal · Yaba Rovers','12\' Goal · Lekki Lions','Kick-off'].map(t=>`<div class="card small row"><span class="dot"></span>${t}</div>`).join('')}</div>
  <div class="note" style="margin-top:12px">Updates are entered by verified organisers or authorised match officials.</div>`;
 
@@ -529,39 +618,47 @@ SC.community=()=>{const k=S.sub.community;let body='';
  if(k==='Teams')body=`<div class="list">${teams.map(teamCard).join('')}</div>`;
  if(k==='Discover Players')body=`<div class="search">${ic('search')}<input placeholder="Search players"></div><div class="hscroll" style="margin-top:10px">${['Location','Position','Format','Availability','Area'].map(f=>`<span class="chip">${f}</span>`).join('')}</div><div class="list">${players.map(playerCard).join('')}</div>`;
  if(k==='My Teams')body=`<div class="list">${teamCard(teams[0])}</div><button class="btn" style="margin-top:14px" onclick="go('createTeam')">${ic('plus')}Create Team</button>`;
- if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="toast('Declined')">Decline</button><button class="btn sm" onclick="toast('Joined Mainland FC')">Accept</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Tunde A. invited you to Thursday Night 5s</div><div class="row" style="margin-top:10px"><button class="btn sm ghost">Decline</button><button class="btn sm" onclick="go('game',0)">View</button></div></div></div>`;
+ if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="toast('Invitation declined')">Decline</button><button class="btn sm" onclick="showModal({title:'Joined Mainland FC!',sub:'You are now a member of Mainland FC and can participate in team games.',meta:[['Team','Mainland FC'],['Role','Player'],['Format','11-a-side']],primary:'View Team',primaryFn:()=>go('team',1)})">Accept</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Tunde A. invited you to Thursday Night 5s</div><div class="row" style="margin-top:10px"><button class="btn sm ghost">Decline</button><button class="btn sm" onclick="go('game',0)">View</button></div></div></div>`;
  return `<h1>Community</h1>${tabsUI('community',['Activity','Teams','Discover Players','My Teams','Invitations'])}${body}`};
 
-SC.team=id=>{const t=teams[id];return `${hdr('Team',`<button class="round">${ic('more')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><button class="btn gold sm" style="margin:12px auto 0" onclick="S.followed['t${id}']=!S.followed['t${id}'];render()">${S.followed['t'+id]?'Following':t.role?'Invite players':'Follow team'}</button></div>
+SC.team=id=>{const t=teams[id||0];return `${hdr('Team',`<button class="round" onclick="openShare('team',${id||0})">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><div class="row" style="justify-content:center;margin-top:14px"><button class="btn gold sm" onclick="if(${!!t.role}){openShare('team',${id||0})}else{S.followed['t${id}']=!S.followed['t${id}'];render()}">${t.role?'Invite players':S.followed['t'+id]?'Following':'Follow team'}</button><button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team',${id||0})">${ic('share')}Share</button></div></div>
  <h2 class="sec">Members</h2><div class="list">${[['Tunde A.','Owner'],['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player']].map(m=>`<div class="card row"><div class="av sm">${ini(m[0])}</div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`).join('')}</div>
  <h2 class="sec">Upcoming games</h2>${gameCard(games[0])}<h2 class="sec">Match history</h2><div class="list">${matchRow(fixtures[2])}</div>
- <button class="btn ghost" style="margin-top:14px" onclick="toast('Join request sent')">Request to join</button><div style="text-align:center;margin-top:10px"><a class="small muted" onclick="toast('Report submitted')">Report team</a></div>`};
+ <button class="btn ghost" style="margin-top:14px" onclick="showModal({title:'Join Request Sent!',sub:'The team captain will review your request to join '+t.name+'.',meta:[['Team','${t.name}'],['Location','${t.loc}'],['Format','${t.fmt}']],primary:'Done'})">Request to join</button><div style="text-align:center;margin-top:10px"><a class="small muted" style="cursor:pointer" onclick="showModal({title:'Report Submitted',sub:'Thank you. Our moderation team will review this team profile (PRD §15.5).',primary:'Close'})">Report team</a></div>`};
 
-SC.createTeam=()=>`${hdr('Create team')}<div class="row"><div class="av lg" style="background:var(--surface2);color:var(--muted)">${ic('plus')}</div><div class="sub">Upload team logo and cover image</div></div><div style="height:14px"></div>
- <div class="field">Team name<input placeholder="e.g. Lekki Lions"></div><div class="field">Description<input placeholder="About your team"></div><div class="field">Location<input value="Lekki"></div><div class="field">Preferred football format<select><option>7-a-side</option><option>5-a-side</option></select></div>
- <div class="opt"><div class="grow"><b>Team visibility</b><div class="sub">Public teams can be found by players</div></div>${tog(true,'tv')}</div><p class="small muted" style="margin:10px 0">You will become the team owner or captain and can invite players afterwards.</p>
- <button class="btn" onclick="toast('Team created');S.stack=[{s:'team',a:0}];render()">Create team</button>`;
+SC.createTeam=()=>{const f=S.form;if(!f.tname)f.tname='Victoria Island FC';if(!f.tloc)f.tloc=S.user.loc.split(' ')[0]||'Lekki';if(!f.tfmt)f.tfmt='7-a-side';
+ return `${hdr('Create team')}<div class="row"><div class="av lg" style="background:var(--surface2);color:var(--muted)">${ic('plus')}</div><div class="sub">Upload team logo and cover image</div></div><div style="height:14px"></div>
+ <div class="field">Team name<input value="${f.tname}" oninput="S.form.tname=this.value" placeholder="e.g. Lekki Lions"></div><div class="field">Description<input placeholder="About your team"></div><div class="field">Location<input value="${f.tloc}" oninput="S.form.tloc=this.value"></div><div class="field">Preferred football format<select onchange="S.form.tfmt=this.value"><option>7-a-side</option><option>5-a-side</option><option>9-a-side</option><option>11-a-side</option></select></div>
+ <div class="opt" onclick="S.p=S.p||{};S.p.tv=S.p.tv===undefined?false:!S.p.tv;render()"><div class="grow"><b>Team visibility</b><div class="sub">Public teams can be found by players</div></div>${tog(S.p&&S.p.tv!==undefined?S.p.tv:true,'tv')}</div><p class="small muted" style="margin:10px 0">You will become the team owner or captain and can invite players afterwards.</p>
+ <button class="btn" onclick="createNewTeam()">Create team</button>`};
+function createNewTeam(){
+ const f=S.form,newId=teams.length;
+ const t={id:newId,name:f.tname||'Victoria Island FC',loc:f.tloc||'Lekki',fmt:f.tfmt||'7-a-side',m:1,role:'Owner'};
+ teams.unshift(t);
+ S.stack=[{s:'team',a:0}];
+ showModal({title:'Team Created!',sub:'You are now the Owner & Captain of '+t.name+'. Invite players to build your squad.',meta:[['Team',t.name],['Location',t.loc],['Format',t.fmt],['Your Role','Owner & Captain']],primary:'Invite Players',primaryFn:()=>openShare('team',0),secondary:'View Team Profile'});
+}
 
 SC.player=()=>`${hdr('Player profile')}<div style="text-align:center"><div class="av lg" style="margin:0 auto 10px">EO</div><h1>Emeka Obi</h1><div class="sub">Midfielder · 5-a-side, 7-a-side</div></div>
  <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Area</span><b>Lekki</b></div><div class="kv"><span class="muted">Availability</span><b>Weekday evenings</b></div><div class="kv"><span class="muted">Experience</span><b>Self-reported: 5 years</b></div><div class="kv"><span class="muted">Teams</span><b>Lekki Lions</b></div></div>
- <div class="row" style="margin-top:14px"><button class="btn ghost" onclick="toast('Reported')">Report</button><button class="btn" onclick="toast('Invitation sent')">Invite</button></div>`;
+ <div class="row" style="margin-top:14px"><button class="btn ghost" onclick="showModal({title:'Report Submitted',sub:'Our moderation team will review this player profile (PRD §15.5).',primary:'Close'})">Report</button><button class="btn" onclick="showModal({title:'Invitation Sent!',sub:'Emeka Obi has been invited to your team and open game.',meta:[['Player','Emeka Obi'],['Team','Lekki Lions']],primary:'Done'})">Invite to team / game</button></div>`;
 
 SC.activity=()=>{const k=S.sub.activity;let body='';
  const bk=(n,s,c,pay)=>`<div class="card"><div class="row sp"><b>${n}</b><span class="tag ${c}">${s}</span></div><div class="sub" style="margin:4px 0">Wed 11 Nov · 18:00 · Pitch A</div><div class="row sp small"><span class="muted">Ref FCP-482913</span><span>${pay}</span></div></div>`;
  if(k==='Bookings')body=`<div class="list">${bk('Lekki Goal Arena','Confirmed','ok','Paid in full')}${bk('Yaba Turf Club','Awaiting payment','warn','Pay before 5:00 PM')}${bk('Ikeja Sports Ground','Pending approval','warn','Deposit paid · balance ₦21,000')}</div>
   <h2 class="sec">Past</h2><div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Cancelled','bad','Refund pending')}</div>`;
  if(k==='Games Joined')body=`<div class="list">${gameCard(games[1])}</div>`;
- if(k==='Games Created')body=`<div class="list">${gameCard(games[0])}<div class="card"><div class="b">Join requests (1)</div><div class="row sp" style="margin-top:8px"><span class="small">Emeka O. wants to join</span><div class="row"><button class="btn sm ghost">Decline</button><button class="btn sm" onclick="toast('Approved')">Approve</button></div></div></div></div>`;
+ if(k==='Games Created')body=`<div class="list">${gameCard(games[0])}<div class="card"><div class="b">Join requests (1)</div><div class="row sp" style="margin-top:8px"><span class="small">Emeka O. wants to join</span><div class="row"><button class="btn sm ghost" onclick="toast('Declined')">Decline</button><button class="btn sm" onclick="showModal({title:'Player Approved!',sub:'Emeka O. has been added to Thursday Night 5s and notified.',meta:[['Player','Emeka Obi'],['Game','Thursday Night 5s']],primary:'Done'})">Approve</button></div></div></div></div>`;
  if(k==='Events')body=`<div class="list">${eventCard(events[0])}</div>`;
  if(k==='Tickets')body=`<div class="card" style="text-align:center"><div class="b">Lagos Grassroots Cup — Final</div><div class="sub">2 × General entry</div><div style="margin:14px auto;width:130px;height:130px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:90px;height:90px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><span class="tag ok">Valid · show at entry</span></div>`;
  if(k==='History')body=`<div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Completed','','Paid in full')}</div>`;
  if(k==='Payments')body=`<div class="list">${[['Lekki Goal Arena',N(25000),'Successful','ok'],['Yaba Turf Club',N(5400),'Pending','warn'],['Yaba Turf Club',N(18000),'Refunded','']].map(p=>`<div class="card row sp"><div><b>${p[0]}</b><div class="small muted">Ref TX-${Math.floor(Math.random()*90000+10000)}</div></div><div style="text-align:right"><b>${p[1]}</b><div><span class="tag ${p[3]}">${p[2]}</span></div></div></div>`).join('')}</div>`;
  return `<h1>My Activity</h1>${tabsUI('activity',['Bookings','Games Joined','Games Created','Events','Tickets','History','Payments'])}${body}`};
 
-SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
- return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">TA</div><h1>Tunde Adeyemi</h1><div class="sub">Player · Team captain · Spectator</div></div>
- <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details')}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
- <h2 class="sec">Settings</h2><div class="list">${it('cog','Preferences')}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events')}${it('help','Help and support')}${it('logout','Sign out')}</div>
+SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px;cursor:pointer" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
+ return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">${ini(S.user.name||'Tunde Adeyemi')}</div><h1>${S.user.name||'Tunde Adeyemi'}</h1><div class="sub">${S.user.loc} · Player · Captain · Spectator</div></div>
+ <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;go('onb')")}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
+ <h2 class="sec">Settings</h2><div class="list">${it('cog','Football preferences',"S.onb=2;go('onb')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout','Sign out',"S.stack=[{s:'welcome'}];render()")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
 SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others can view your football profile',true],['Discoverable by players','Appear in player discovery',true],['Show public activity','Games and teams on your profile',false]].map((r,i)=>`<div class="opt"><div class="grow"><b>${r[0]}</b><div class="sub">${r[1]}</div></div>${tog(r[2],'pv'+i)}</div>`).join('')}</div><div class="note" style="margin-top:12px">Sensitive personal information is not shown publicly by default. You can also block or report users.</div>`;
@@ -569,17 +666,59 @@ SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others 
 SC.notifs=()=>`${hdr('Notifications')}<div class="list">${[['Booking confirmed','Lekki Goal Arena · Wed 18:00','ok'],['Payment confirmed',N(25000)+' received','ok'],['Booking reminder','Tomorrow 18:00 at Lekki Goal Arena',''],['Join approved','You are in Thursday Night 5s','ok'],['Team invitation','Mainland FC invited you',''],['Fixture update','Lagos Grassroots Cup: kickoff moved to 15:00','warn'],['Match result','Mainland FC 3 – 0 Ikeja Stars','']].map(n=>`<div class="card row"><span class="tag ${n[2]}">${ic('bell')}</span><div class="grow"><b>${n[0]}</b><div class="small muted">${n[1]}</div></div></div>`).join('')}</div>
  <h2 class="sec">Preferences</h2><div class="opt"><div class="grow"><b>Booking and payment alerts</b></div>${tog(true,'n1')}</div><div class="opt" style="margin-top:8px"><div class="grow"><b>Event and competition updates</b></div>${tog(true,'n2')}</div>`;
 
-SC.submitEvent=()=>`${hdr('Suggest an event')}<div class="note" style="margin-bottom:12px">Community submissions are reviewed before they appear as confirmed events.</div><div class="field">Event name<input></div><div class="field">Category<select><option>Local tournament</option><option>Friendly match</option><option>Charity match</option></select></div><div class="field">Venue or location<input></div><div class="row"><div class="field grow">Date<input></div><div class="field grow">Time<input></div></div><button class="btn" onclick="toast('Submitted for review');back()">Submit for review</button>`;
+SC.submitEvent=()=>`${hdr('Suggest an event')}<div class="note" style="margin-bottom:12px">Community submissions are reviewed before they appear as confirmed events.</div><div class="field">Event name<input></div><div class="field">Category<select><option>Local tournament</option><option>Friendly match</option><option>Charity match</option></select></div><div class="field">Venue or location<input></div><div class="row"><div class="field grow">Date<input></div><div class="field grow">Time<input></div></div><button class="btn" onclick="back();showModal({title:'Event Submitted for Review!',sub:'Per platform trust rules (PRD §6.2.6), community-submitted events are reviewed by moderators before appearing as confirmed events.',meta:[['Status','Pending moderation'],['Trust Label','Community-submitted']],primary:'Got It'})">Submit for review</button>`;
 
 function payNow(){S.b.ref='FCP-'+Math.floor(100000+Math.random()*899999);
-  if(S.b.pay==='other'){go('confirm');return}
-  go('processing');setTimeout(()=>{const c=S.stack[S.stack.length-1];if(c&&c.s==='processing'){S.stack.pop();S.stack.push({s:S.fail?'failed':'confirm'});S.fail=false;render()}},1700)}
+  if(S.b.pay==='other'){go('confirm');showModal({title:'Booking Request Sent!',sub:'Your slot request has been sent to the venue. It remains pending until verified.',meta:[['Reference',S.b.ref],['Venue',venues[S.b.v].name],['Pitch',venues[S.b.v].pitches[S.b.p].n],['Time',S.b.t]],primary:'View Booking Details'});return}
+  go('processing');setTimeout(()=>{const c=S.stack[S.stack.length-1];if(c&&c.s==='processing'){const failed=S.fail;S.stack.pop();S.stack.push({s:failed?'failed':'confirm'});S.fail=false;if(!failed){const v=venues[S.b.v],p=v.pitches[S.b.p];showModal({title:'Booking Confirmed!',sub:'Payment verified by our server. Your pitch is reserved.',meta:[['Booking Ref',S.b.ref],['Venue',v.name],['Pitch',p.n+' · '+p.f],['Time',S.b.t],['Status',S.b.pay==='deposit'?'Deposit Paid':'Paid in Full']],primary:'Done',secondary:'Share Booking',secFn:()=>openShare('venue',S.b.v)})}else{render()}}},1700)}
 SC.processing=()=>`<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Verifying payment</h1><p class="sub" style="margin-top:6px">Please keep the app open. We confirm with our server before marking your booking paid.</p></div>`;
 SC.failed=()=>`<div style="text-align:center;padding-top:60px"><div class="av lg" style="margin:0 auto 16px;background:var(--bad);color:#fff;font-size:34px">!</div><h1>Payment failed</h1><p class="sub" style="margin:6px 0 20px">You have not been charged. Your slot is still held while the timer runs.</p></div>
  <div class="card"><div class="kv"><span class="muted">Payment status</span><span class="tag bad">Failed</span></div><div class="kv"><span class="muted">Slot hold</span><b id="hold">${Math.floor(S.hold/60)}:${String(S.hold%60).padStart(2,'0')}</b></div></div>
  <div class="col" style="margin-top:20px"><button class="btn" onclick="S.stack.pop();render()">Try again</button><button class="btn ghost" onclick="S.stack=[];S.tab='home';render()">Back to Home</button></div>`;
 SC.expired=()=>`<div style="text-align:center;padding-top:80px"><div class="av lg" style="margin:0 auto 16px;background:var(--warn);color:#fff">${ic('clock')}</div><h1>Slot hold expired</h1><p class="sub" style="margin:6px 0 20px">The slot was released so others can book it. Please pick a time again.</p></div><button class="btn" onclick="S.stack=[{s:'venue',a:S.b.v},{s:'book'}];render()">Choose a time</button>`;
 SC.welcome=()=>`<div class="welcome"><span class="tag" style="background:var(--color-accent);color:var(--color-primary);align-self:flex-start">Lagos, Nigeria</span><h1>The home of football communities</h1><p style="opacity:.85;margin-bottom:22px">Find places to play, people to play with, and matches to watch.</p><button class="btn" style="background:var(--color-accent);color:var(--color-primary)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Get started</button><button class="btn ghost" style="margin-top:10px" onclick="S.stack=[];render()">I already have an account</button></div>`;
+
+SC.share=()=>{
+  const it=S.shareItem||{type:'Open Game',id:0,title:'Thursday Night 5s',sub:'Lekki Goal Arena · Thu 12 Nov · 20:00',tag:'5-a-side · ₦2,500/player',url:'footballcommunity.ng/g/thursday-night-5s',img:'game1'};
+  const chans=[
+    ['WhatsApp','#25D366','WA'],
+    ['Copy Link','#123D2B','🔗'],
+    ['X / Post','#111714','𝕏'],
+    ['Instagram','#C13584','IG'],
+    ['Telegram','#229ED9','TG'],
+    ['SMS','#2878C7','💬'],
+    ['Email','#D98B16','✉️'],
+    ['More','#455149','⋯']
+  ];
+  return `${hdr('Share '+it.type)}
+  <div class="share-preview">
+    <div class="row">
+      <div class="img has th" style="width:64px;height:64px;border-radius:16px;background-image:url(img/${it.img||'game1'}.jpg)"></div>
+      <div class="grow">
+        <span class="tag gold">${it.type}</span>
+        <div class="b" style="font-size:17px;margin-top:4px">${it.title}</div>
+        <div class="sub small" style="color:rgba(255,255,255,.82)">${it.sub}</div>
+      </div>
+    </div>
+  </div>
+  <div class="share-link-box">
+    <code>https://${it.url}</code>
+    <button class="btn sm" onclick="showModal({title:'Link Copied!',sub:'The share link is on your clipboard and ready to paste anywhere.',meta:[['Item','${it.title}'],['Link','https://${it.url}']],primary:'Done'})">Copy</button>
+  </div>
+  <h2 class="sec" style="margin-top:6px">Share to</h2>
+  <div class="share-grid">
+    ${chans.map(c=>`<button class="share-chan" onclick="showModal({title:'Shared via ${c[0]}!',sub:'Your ${it.type.toLowerCase()} card and link have been prepared for ${c[0]}.',meta:[['Shared','${it.title}'],['Channel','${c[0]}'],['Link','https://${it.url}']],primary:'Done'})"><i style="background:${c[1]}">${c[2]}</i><span>${c[0]}</span></button>`).join('')}
+  </div>
+  <h2 class="sec">Invite players on Football Community</h2>
+  <div class="list">
+    ${players.map((p,idx)=>{const k='p'+idx,sent=!!S.invited[k];return `<div class="card row"><div class="av">${ini(p.n)}</div><div class="grow"><div class="b">${p.n}</div><div class="sub small">${p.pos} · ${p.area}</div></div><button class="btn sm ${sent?'ghost':''}" onclick="S.invited['${k}']=true;showModal({title:'Invitation Sent!',sub:'${p.n} will receive a notification with details for ${it.title}.',meta:[['Recipient','${p.n}'],['Shared Item','${it.title}']],primary:'Done'})">${sent?'Sent ✓':'Send'}</button></div>`}).join('')}
+  </div>
+  <h2 class="sec">Share with a team</h2>
+  <div class="list">
+    ${teams.map((t,idx)=>{const k='t'+idx,sent=!!S.invited[k];return `<div class="card row">${crest(t.name,42)}<div class="grow"><div class="b">${t.name}</div><div class="sub small">${t.loc} · ${t.m} members</div></div><button class="btn sm ${sent?'ghost':''}" onclick="S.invited['${k}']=true;showModal({title:'Shared with ${t.name}!',sub:'All ${t.m} team members have been notified about ${it.title}.',meta:[['Team','${t.name}'],['Shared Item','${it.title}']],primary:'Done'})">${sent?'Shared ✓':'Share'}</button></div>`}).join('')}
+  </div>`;
+};
+
 const NAV=[['home','Home','home'],['explore','Explore','search'],['community','Community','users'],['activity','Activity','cal'],['profile','Profile','user']];
 function render(){
   const cur=S.stack[S.stack.length-1];let h='';
@@ -591,6 +730,12 @@ function render(){
   $('nav').innerHTML=NAV.map(n=>`<button class="${S.tab===n[0]?'on':''}" onclick="tab('${n[0]}')">${ic(n[2])}<span>${n[1]}</span></button>`).join('');
   const old=document.querySelector('.toast');if(old)old.remove();
   if(S.toast)$('phone').insertAdjacentHTML('beforeend',`<div class="toast">${S.toast}</div>`);
+  const oldM=document.querySelector('.modal-backdrop');if(oldM)oldM.remove();
+  if(S.modal){
+    const m=S.modal;
+    const metaHtml=m.meta&&m.meta.length?`<div class="modal-meta">${m.meta.map(r=>`<div class="kv"><span class="muted">${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>`:'';
+    $('phone').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" onclick="closeModal()"><div class="modal-card" onclick="event.stopPropagation()"><div class="modal-ico">${ic('check')}</div><h2>${m.title}</h2><div class="sub">${m.sub||''}</div>${metaHtml}<div class="modal-actions"><button class="btn" onclick="closeModal(S.modal&&S.modal.primaryFn)">${m.primary||'Done'}</button>${m.secondary?`<button class="btn ghost" onclick="const fn=S.modal&&S.modal.secFn;closeModal(fn)">${m.secondary}</button>`:''}</div></div></div>`);
+  }
   const key=S.tab+'|'+S.stack.length+(cur?cur.s+cur.a:'');
   if(key!==S.last){sc.classList.remove('anim');void sc.offsetWidth;sc.classList.add('anim');S.last=key;sc.scrollTop=0}else{sc.scrollTop=top0}
 }
@@ -609,7 +754,7 @@ gameCard=g=>`<div class="card gcard" onclick="go('game',${g.id})"><div ${pic('ga
 eventCard=e=>`<div class="card vcard" onclick="go('event',${e.id})"><div ${pic(e.im,120)}><span class="pill-w l">${e.cat}</span><button class="pill-w sv" onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'#D94343':'#17211B'}">${ic('heart')}</button></div><div class="vbody"><div class="b t1">${e.title}</div><div class="sub">${e.venue}</div><div class="sub">${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="price">${e.fee}</span></div></div></div>`;
 matchRow=f=>`<div class="card mrow" onclick="go('match',0)"><div class="row sp small muted"><span>${f.t}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div><div class="mrow-main"><div class="side">${crest(f.h,40)}<b>${f.h}</b></div><div class="mid">${f.sc?`<span class="scorepill">${f.sc}</span>`:`<span class="timepill">${f.t.split('·').pop().trim()}</span>`}</div><div class="side">${crest(f.a,40)}<b>${f.a}</b></div></div><div class="small muted" style="text-align:center">${f.v}</div></div>`;
 
-SC.home=()=>`<div class="row sp"><div class="row"><div class="av ring">TA</div><div><div class="sub small">Good evening 👋</div><div class="b" style="font-size:16px">Tunde Adeyemi</div></div></div><div class="row"><button class="loc">${ic('pin')}Lekki, Lagos</button><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div></div>
+SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Tunde Adeyemi')}</div><div><div class="sub small">Good evening 👋</div><div class="b" style="font-size:16px">${S.user.name||'Tunde Adeyemi'}</div></div></div><div class="row"><button class="loc" onclick="S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos</button><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div></div>
 <div class="search full" onclick="tab('explore')" style="margin:20px 0 0">${ic('search')}<span>Search pitches, games or events</span></div>
 <h2 class="sec">Recommended for you <a onclick="jump('venues')">See all ${ic('chev')}</a></h2>
 <div class="deck" onclick="go('venue',0)"><div ${pic('venue1',200)}><span class="pill-w">2.1 km</span><div class="dk"><div><div class="dkt">Lekki Goal Arena</div><div class="dks">${ic('pin')} Lekki Phase 1 · ${ic('star')} 4.7</div></div><div class="dkp">${N(25000)}<small>/hr</small></div></div></div></div>
@@ -621,14 +766,14 @@ SC.home=()=>`<div class="row sp"><div class="row"><div class="av ring">TA</div><
 <h2 class="sec">Teams <a onclick="S.sub.community='Teams';tab('community')">See all ${ic('chev')}</a></h2><div class="hscroll">${teams.map(teamMini).join('')}</div>
 <h2 class="sec">Recent community activity <a onclick="tab('community')">See all ${ic('chev')}</a></h2><div class="card small">Lekki Lions created a new game · <span class="muted">12 min ago</span></div>`;
 
-SC.game=id=>{const g=games[id],v=venues[g.v],j=S.joined[id],filled=g.need-g.left;return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="back()">${ic('back')}</button><button class="round ov r" onclick="toast('Link copied')">${ic('share')}</button></div>
+SC.game=id=>{const g=games[id||0],v=venues[g.v],j=S.joined[id||0],filled=g.need-g.left;return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="back()">${ic('back')}</button><button class="round ov r" onclick="openShare('game',${id||0})">${ic('share')}</button></div>
 <div class="sheetcard"><div class="row sp"><h1 style="font-size:22px">${g.title}</h1><span class="tag gold">${g.fmt}</span></div><div class="row" style="margin:8px 0 14px"><span class="tag">${g.level}</span><span class="tag ${g.left<=2?'warn':'ok'}">${g.left} slots left</span></div>
 <div class="card row"><div class="av">${ini(g.org)}</div><div class="grow"><div class="small muted">Hosted by</div><div class="b">${g.org}</div></div><button class="btn sm ghost" onclick="go('player')">View Profile</button></div>
 <div class="tiles"><div class="tile">${ic('clock')}<small>Date &amp; time</small><b>${g.when}</b></div><div class="tile">${ic('users')}<small>Players</small><b>${filled} of ${g.need} joined</b></div><div class="tile">${ic('ball')}<small>Format</small><b>${g.fmt}</b></div><div class="tile">${ic('card')}<small>Price per player</small><b>${N(g.price)}</b></div></div>
 <div class="card vrow" style="margin-top:12px" onclick="go('venue',${g.v})">${ic('pin')}<div class="grow"><div class="b">${v.name}</div><div class="sub small">${g.pitch} · ${v.area}</div></div>${ic('chev')}</div>
 <div class="card" style="margin-top:12px"><div class="row sp"><b>Players</b>${faces(5,Math.max(filled-5,0))}</div><div class="bar" style="margin:10px 0 6px"><i style="width:${filled/g.need*100}%"></i></div><div class="small muted">${g.approval?'Organiser approval required to join':'Join directly'} · ${g.left} slots left</div></div>
 <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div></div>
-<div class="stick"><button class="btn big" onclick="S.joined[${id}]=true;toast('${g.approval?'Request sent to organiser':'You joined this game'}');render()"><span>${j?(g.approval?'Request pending':'Joined'):(g.approval?'Request to join':'Join Game · '+N(g.price))}</span><i class="arrow">${ic('chev')}</i></button></div>`};
+<div class="stick"><button class="btn big" onclick="S.joined[${id||0}]=true;showModal({title:g.approval?'Join Request Sent!':'Spot Reserved!',sub:g.approval?'The organiser ('+g.org+') will review your request and notify you.':'Your player slot is confirmed for '+g.title+'.',meta:[['Game',g.title],['Venue',v.name+' · '+g.pitch],['When',g.when],['Contribution',N(g.price)]],primary:'View in My Activity',primaryFn:()=>{S.sub.activity='Games Joined';S.stack=[];S.tab='activity'},secondary:'Share Game',secFn:()=>openShare('game',${id||0})})"><span>${j?(g.approval?'Request pending':'Joined · View Activity'):(g.approval?'Request to join':'Join Game · '+N(g.price))}</span><i class="arrow">${ic('chev')}</i></button></div>`};
 
 SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];render()">Skip</button><h1>Find Football<br><em>Matches Near You</em></h1><p>Discover nearby games, check available slots, and join matches instantly.</p>
 <div class="float card"><div class="row"><div class="img has th" style="background-image:url(img/venue1.jpg)"></div><div><span class="tag gold">5-a-side</span><div class="b" style="margin-top:3px">Evening Kickoff</div><div class="sub small">Lekki Goal Arena · Today, 7:00 PM</div></div></div><div class="row sp" style="margin-top:10px">${faces(3,5)}<span class="small muted">8 players joined</span><span class="price">${N(2500)}</span></div></div>
