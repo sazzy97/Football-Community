@@ -1,7 +1,8 @@
-const CACHE_NAME = 'football-community-v2';
+const CACHE_NAME = 'football-community-v3';
 const CORE_ASSETS = [
   './',
   './index.html',
+  './fc-data.js',
   './manifest.json',
   './img/icon-192.png',
   './img/icon-512.png',
@@ -39,7 +40,6 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
 
   const url = new URL(req.url);
-  // Bypass caching for Supabase & PostHog API calls
   if (
     url.hostname.includes('supabase.co') ||
     url.hostname.includes('posthog.com')
@@ -47,8 +47,14 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Network-first for HTML navigation so updates appear immediately
-  if (req.mode === 'navigate' || req.destination === 'document') {
+  // Network-first for HTML and JS so code updates appear immediately
+  if (
+    req.mode === 'navigate' ||
+    req.destination === 'document' ||
+    req.destination === 'script' ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.html')
+  ) {
     event.respondWith(
       fetch(req)
         .then((res) => {
@@ -56,12 +62,12 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));
           return res;
         })
-        .catch(() => caches.match('./index.html'))
+        .catch(() => caches.match(req).then((c) => c || caches.match('./index.html')))
     );
     return;
   }
 
-  // Cache-first for static assets & images
+  // Cache-first for images and icons
   event.respondWith(
     caches.match(req).then((cached) => {
       if (cached) return cached;

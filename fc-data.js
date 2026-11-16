@@ -46,10 +46,15 @@ const FCData = {
       }
       this.cfg.supabaseUrl = normalizeSupabaseUrl(this.cfg.supabaseUrl);
       const savedDb = localStorage.getItem('fc_local_db');
-      if (savedDb) this.db = { ...this.db, ...JSON.parse(savedDb) };
+      if (savedDb) {
+        this.db = { ...this.db, ...JSON.parse(savedDb) };
+        this.mergeLiveIntoUI();
+      }
     } catch (e) {
       console.warn('Storage init warning:', e);
     }
+
+    this.handleUrlDeepLinks();
 
     if (this.cfg.posthogKey) {
       this.initPostHog();
@@ -58,7 +63,6 @@ const FCData = {
       this.pullLiveRecords();
     }
     this.registerPWA();
-    this.handleUrlDeepLinks();
   },
 
   isSupabaseConfigured() {
@@ -87,7 +91,6 @@ const FCData = {
 
   initPostHog() {
     if (!this.cfg.posthogKey) return;
-    // Use PostHog HTTP Capture API directly + load web SDK for session replay
     if (!document.getElementById('ph-sdk-script')) {
       const s = document.createElement('script');
       s.id = 'ph-sdk-script';
@@ -131,7 +134,6 @@ const FCData = {
       }
     };
 
-    // 1. Send via PostHog SDK if loaded, or direct PostHog Capture endpoint
     if (window.posthog && typeof window.posthog.capture === 'function') {
       window.posthog.capture(eventName, payload.properties);
     } else if (this.cfg.posthogKey) {
@@ -143,7 +145,7 @@ const FCData = {
     }
   },
 
-  async record(table, rowData, eventName, eventProps = {}) {
+  async record(table, rowData, eventName, eventProps = {}, uiObjRef = null) {
     const ts = new Date().toISOString();
     const recordWithTime = { ...rowData, created_at: ts };
 
@@ -165,8 +167,8 @@ const FCData = {
     }
 
     if (this.isSupabaseConfigured()) {
-      await Promise.all([
-        this.supabaseInsert(table, rowData),
+      const [inserted] = await Promise.all([
+        this.supabaseInsert(table, rowData, true),
         this.supabaseInsert('app_events', {
           event_name: logItem.event_name,
           screen: logItem.screen,
@@ -174,10 +176,21 @@ const FCData = {
           properties: logItem.properties
         })
       ]);
+      if (inserted && inserted.id && uiObjRef) {
+        const oldId = uiObjRef.id;
+        uiObjRef.id = inserted.id;
+        recordWithTime.id = inserted.id;
+        this.persistLocal();
+        if (window.S && S.shareItem && String(S.shareItem.id) === String(oldId)) {
+          openShare('game', inserted.id);
+        } else {
+          render();
+        }
+      }
     }
   },
 
-  async supabaseInsert(table, row) {
+  async supabaseInsert(table, row, returnRow = false) {
     if (!this.isSupabaseConfigured()) return null;
     const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
     try {
@@ -187,14 +200,102 @@ const FCData = {
           'Content-Type': 'application/json',
           apikey: this.cfg.supabaseKey,
           Authorization: `Bearer ${this.cfg.supabaseKey}`,
-          Prefer: 'return=minimal'
+          Prefer: returnRow ? 'return=representation' : 'return=minimal'
         },
         body: JSON.stringify(row)
       });
-      return res.ok;
+      if (!res.ok) return null;
+      if (returnRow) {
+        const data = await res.json();
+        return Array.isArray(data) ? data[0] : data;
+      }
+      return true;
     } catch (e) {
       console.warn('Supabase sync deferred:', e);
-      return false;
+      return null;
+    }
+  },
+
+  async supabasePatchGameSlots(gameId, newSlotsLeft) {
+    if (!this.isSupabaseConfigured() || !gameId) return;
+    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+    try {
+      await fetch(`${baseUrl}/rest/v1/open_games?id=eq.${encodeURIComponent(gameId)}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: this.cfg.supabaseKey,
+          Authorization: `Bearer ${this.cfg.supabaseKey}`,
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ slots_left: newSlotsLeft })
+      });
+    } catch (e) {}
+  },
+
+  rowToUiGame(row) {
+    let vIdx = 0;
+    if (window.venues && row.venue_name) {
+      const foundIdx = venues.findIndex((v) => v.name.toLowerCase() === String(row.venue_name).toLowerCase());
+      if (foundIdx >= 0) vIdx = foundIdx;
+    }
+    return {
+      id: row.id || 'g_' + (row.created_at || Date.now()),
+      title: row.title || 'Open Game',
+      v: vIdx,
+      venueName: row.venue_name || (window.venues ? venues[vIdx].name : 'Lagos Pitch'),
+      pitch: row.pitch_name || 'Main Pitch',
+      when: row.match_when || 'Upcoming',
+      fmt: row.format || '5-a-side',
+      need: +row.players_needed || 10,
+      left: row.slots_left !== undefined && row.slots_left !== null ? +row.slots_left : 4,
+      price: row.price_ngn !== undefined && row.price_ngn !== null ? +row.price_ngn : 0,
+      org: row.organiser_name || 'Organiser',
+      level: row.skill_level || 'All levels',
+      approval: Boolean(row.requires_approval),
+      fromCloud: true
+    };
+  },
+
+  mergeLiveIntoUI() {
+    if (!window.games) return;
+    const cloudGames = (this.db.open_games || []).map((r) => this.rowToUiGame(r));
+    if (cloudGames.length > 0) {
+      // Remove any existing versions of these cloud games by id or (title + when + org)
+      for (let i = cloudGames.length - 1; i >= 0; i--) {
+        const cg = cloudGames[i];
+        const existingIdx = games.findIndex(
+          (x) =>
+            String(x.id) === String(cg.id) ||
+            (x.title === cg.title && x.when === cg.when && x.org === cg.org)
+        );
+        if (existingIdx >= 0) {
+          games[existingIdx] = { ...games[existingIdx], ...cg };
+          // Move to front if it's the newest cloud game
+          const [item] = games.splice(existingIdx, 1);
+          games.unshift(item);
+        } else {
+          games.unshift(cg);
+        }
+      }
+    }
+
+    if (window.teams && Array.isArray(this.db.teams) && this.db.teams.length > 0) {
+      for (let i = this.db.teams.length - 1; i >= 0; i--) {
+        const rt = this.db.teams[i];
+        if (!rt.team_name) continue;
+        const exists = teams.some((t) => t.name.toLowerCase() === rt.team_name.toLowerCase());
+        if (!exists) {
+          teams.unshift({
+            id: rt.id || 't_' + i,
+            name: rt.team_name,
+            loc: rt.location || 'Lagos',
+            fmt: rt.format || '7-a-side',
+            m: 1,
+            role: 'Owner'
+          });
+        }
+      }
     }
   },
 
@@ -206,19 +307,42 @@ const FCData = {
       Authorization: `Bearer ${this.cfg.supabaseKey}`
     };
     try {
-      const tables = ['users', 'bookings', 'open_games', 'game_joins', 'ticket_orders', 'teams', 'event_submissions'];
+      const tables = ['open_games', 'users', 'bookings', 'game_joins', 'ticket_orders', 'teams', 'event_submissions'];
       for (const t of tables) {
         const res = await fetch(`${baseUrl}/rest/v1/${t}?select=*&order=created_at.desc&limit=50`, { headers });
         if (res.ok) {
           const rows = await res.json();
-          if (Array.isArray(rows) && rows.length > 0) {
+          if (Array.isArray(rows)) {
             this.db[t] = rows;
           }
         }
+        if (t === 'open_games') {
+          this.mergeLiveIntoUI();
+          this.refreshActiveDeepLinkGame();
+          if (typeof render === 'function') render();
+        }
       }
+      this.mergeLiveIntoUI();
       this.persistLocal();
+      if (typeof render === 'function') render();
     } catch (e) {
       console.warn('Supabase pull warning:', e);
+    }
+  },
+
+  refreshActiveDeepLinkGame() {
+    if (!window.S || !S.stack || !S.stack.length) return;
+    const topItem = S.stack[S.stack.length - 1];
+    if (topItem && topItem.s === 'game') {
+      const params = new URLSearchParams(window.location.search);
+      const qGame = params.get('game');
+      // If friend opened ?game=0 (or a cloud game id), ensure it points to the latest matching game
+      if ((qGame === '0' || qGame === '') && !params.has('g') && games.length > 0) {
+        topItem.a = games[0].id;
+      } else if (qGame) {
+        const found = findGame(qGame);
+        if (found) topItem.a = found.id;
+      }
     }
   },
 
@@ -300,12 +424,33 @@ const FCData = {
   handleUrlDeepLinks() {
     try {
       const params = new URLSearchParams(window.location.search);
+      // 1. Check if instant encoded game payload (?g=...) is present
+      if (params.has('g')) {
+        try {
+          const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('g')))));
+          if (decoded && decoded.title) {
+            const existingIdx = games.findIndex((x) => String(x.id) === String(decoded.id));
+            if (existingIdx >= 0) {
+              games[existingIdx] = { ...games[existingIdx], ...decoded };
+            } else {
+              games.unshift(decoded);
+            }
+            S.stack = [{ s: 'game', a: decoded.id }];
+            render();
+            return;
+          }
+        } catch (err) {
+          console.warn('Could not decode game param:', err);
+        }
+      }
+
       if (params.has('admin') || window.location.hash === '#admin') {
         S.stack = [{ s: 'admin' }];
         render();
       } else if (params.has('game')) {
-        const id = +params.get('game') || 0;
-        S.stack = [{ s: 'game', a: id }];
+        const rawId = params.get('game');
+        const g = findGame(rawId);
+        S.stack = [{ s: 'game', a: g ? g.id : rawId }];
         render();
       } else if (params.has('venue')) {
         const id = +params.get('venue') || 0;
@@ -316,8 +461,9 @@ const FCData = {
         S.stack = [{ s: 'event', a: id }];
         render();
       } else if (params.has('team')) {
-        const id = +params.get('team') || 0;
-        S.stack = [{ s: 'team', a: id }];
+        const rawId = params.get('team');
+        const t = findTeam(rawId);
+        S.stack = [{ s: 'team', a: t ? t.id : rawId }];
         render();
       } else if (params.has('screen')) {
         const sc = params.get('screen');
@@ -369,19 +515,21 @@ window.installPWA = async function () {
 window.shareVia = function (channel) {
   const it = S.shareItem || {
     type: 'Open Game',
-    id: 0,
-    title: 'Thursday Night 5s',
-    sub: 'Lekki Goal Arena · Thu 12 Nov · 20:00',
-    url: 'sazzy97.github.io/Football-Community/?game=0'
+    id: games[0].id,
+    title: games[0].title,
+    sub: (games[0].venueName || venues[games[0].v].name) + ' · ' + games[0].when,
+    url: 'sazzy97.github.io/Football-Community/?game=' + encodeURIComponent(games[0].id)
   };
-  const fullUrl = 'https://' + it.url.replace(/^https?:\/\//, '');
-  const shareText = `⚽ ${it.title} (${it.type})\n📍 ${it.sub}\n👉 Join on Football Community: ${fullUrl}`;
+  const targetUrl = it.fullUrl || it.url;
+  const fullUrl = 'https://' + targetUrl.replace(/^https?:\/\//, '');
+  const displayUrl = 'https://' + it.url.replace(/^https?:\/\//, '');
+  const shareText = `⚽ ${it.title} (${it.type})\n📍 ${it.sub}\n🏷️ ${it.tag || ''}\n👉 Join here: ${fullUrl}`;
 
   FCData.record('app_events', {}, 'content_shared', {
     channel,
     item_type: it.type,
     item_title: it.title,
-    url: fullUrl
+    url: displayUrl
   });
 
   if (channel === 'Copy Link') {
@@ -390,10 +538,11 @@ window.shareVia = function (channel) {
     }
     showModal({
       title: 'Link Copied!',
-      sub: 'The share link is on your clipboard and ready to paste in WhatsApp or anywhere.',
+      sub: 'The live share link is on your clipboard and ready to paste in WhatsApp or anywhere.',
       meta: [
         ['Item', it.title],
-        ['Link', fullUrl]
+        ['Details', it.sub],
+        ['Link', displayUrl]
       ],
       primary: 'Done'
     });
@@ -413,11 +562,11 @@ window.shareVia = function (channel) {
 
   showModal({
     title: 'Shared via ' + channel + '!',
-    sub: 'Your ' + it.type.toLowerCase() + ' invite link is ready.',
+    sub: 'Your live ' + it.type.toLowerCase() + ' link has been prepared for ' + channel + '.',
     meta: [
       ['Shared', it.title],
       ['Channel', channel],
-      ['Link', fullUrl]
+      ['Link', displayUrl]
     ],
     primary: 'Done'
   });
@@ -425,21 +574,28 @@ window.shareVia = function (channel) {
 
 /* ===== Join Open Game Helper ===== */
 window.joinOpenGame = function (id) {
-  const g = games[id || 0], v = venues[g.v];
-  S.joined[id || 0] = true;
+  const g = findGame(id);
+  const v = venues[g.v] || venues[0];
+  const vName = g.venueName || v.name;
+  if (!S.joined[g.id] && g.left > 0) {
+    g.left = Math.max(0, g.left - 1);
+    FCData.supabasePatchGameSlots(g.id, g.left);
+  }
+  S.joined[g.id] = true;
+  const isFree = !g.price || +g.price === 0;
   FCData.record(
     'game_joins',
     {
       game_title: g.title,
-      venue_name: v.name + ' · ' + g.pitch,
+      venue_name: vName + ' · ' + g.pitch,
       match_when: g.when,
       player_name: S.user.name,
       player_contact: S.user.email,
-      price_ngn: g.price,
+      price_ngn: +g.price || 0,
       status: g.approval ? 'pending_approval' : 'confirmed'
     },
     'open_game_joined',
-    { game_title: g.title, venue: v.name, price_ngn: g.price }
+    { game_title: g.title, venue: vName, price_ngn: +g.price || 0 }
   );
   showModal({
     title: g.approval ? 'Join Request Sent!' : 'Spot Reserved!',
@@ -448,9 +604,9 @@ window.joinOpenGame = function (id) {
       : 'Your player slot is confirmed for ' + g.title + '.',
     meta: [
       ['Game', g.title],
-      ['Venue', v.name + ' · ' + g.pitch],
+      ['Venue', vName + ' · ' + g.pitch],
       ['When', g.when],
-      ['Contribution', N(g.price)]
+      ['Contribution', isFree ? 'Free' : N(g.price)]
     ],
     primary: 'View in My Activity',
     primaryFn: () => {
@@ -459,7 +615,7 @@ window.joinOpenGame = function (id) {
       S.tab = 'activity';
     },
     secondary: 'Share Game',
-    secFn: () => openShare('game', id || 0)
+    secFn: () => openShare('game', g.id)
   });
 };
 
@@ -495,25 +651,25 @@ SC.admin = () => {
         <div class="b">Where do I see all my data?</div>
         <div class="sub small" style="margin-top:6px">
           1. <b>Right here in Live Records:</b> Every signup, pitch booking, game creation, and ticket order is stored immediately and can be exported to Excel/CSV.<br>
-          2. <b>Supabase Table Editor:</b> Paste your Supabase URL &amp; Anon Key in the <b>Cloud Keys</b> tab so every user action syncs to your cloud database in real time.<br>
-          3. <b>PostHog Dashboard:</b> Paste your PostHog Project Key to watch video session replays and conversion funnels.
+          2. <b>Supabase Table Editor:</b> Connected to your live Supabase database.<br>
+          3. <b>PostHog Dashboard:</b> Recording live events and user journeys.
         </div>
         <div class="row" style="margin-top:12px">
-          <button class="btn sm" onclick="FCData.adminTab='Cloud Keys';render()">Configure Keys</button>
-          <button class="btn sm ghost" onclick="FCData.syncAllLocalToSupabase()">Sync to Supabase</button>
+          <button class="btn sm" onclick="FCData.pullLiveRecords().then(()=>toast('Synced from Supabase'))">Refresh Live Data</button>
+          <button class="btn sm ghost" onclick="FCData.syncAllLocalToSupabase()">Push Local to Cloud</button>
         </div>
       </div>`;
   } else if (k === 'Live Records') {
     const tbls = [
-      ['bookings', 'Bookings'],
-      ['users', 'Users'],
       ['open_games', 'Games'],
       ['game_joins', 'Joins'],
+      ['bookings', 'Bookings'],
+      ['users', 'Users'],
       ['ticket_orders', 'Tickets'],
       ['teams', 'Teams'],
       ['app_events', 'Activity Log']
     ];
-    const curT = FCData.adminTable || 'bookings';
+    const curT = FCData.adminTable || 'open_games';
     const list = db[curT] || [];
     content = `
       <div class="hscroll">${tbls
@@ -540,7 +696,7 @@ SC.admin = () => {
     content = `
       <div class="note" style="margin-bottom:14px">Enter your project keys from <b>supabase.com/dashboard</b> (Settings → API) and <b>posthog.com</b> (Project Settings).</div>
       <div class="field">Supabase Project URL<input id="cfg_sb_url" value="${FCData.cfg.supabaseUrl}" placeholder="https://xyzcompany.supabase.co"></div>
-      <div class="field">Supabase Anon Public Key<input id="cfg_sb_key" value="${FCData.cfg.supabaseKey}" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6..."></div>
+      <div class="field">Supabase Anon Public Key<input id="cfg_sb_key" value="${FCData.cfg.supabaseKey}" placeholder="sb_publishable_..."></div>
       <div class="field">PostHog Project API Key<input id="cfg_ph_key" value="${FCData.cfg.posthogKey}" placeholder="phc_xxxxxxxxxxxxxxxxxxxxxxxx"></div>
       <div class="field">PostHog Host<input id="cfg_ph_host" value="${FCData.cfg.posthogHost}" placeholder="https://us.i.posthog.com"></div>
       <button class="btn" onclick="saveCloudConfigUI()">Save &amp; Connect Cloud</button>
