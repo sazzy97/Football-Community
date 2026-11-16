@@ -365,7 +365,7 @@ h2.sec{margin:28px 0 14px}
 .wl-go .ico{width:26px;height:26px;stroke-width:2.4}
 .wl-link{position:absolute;left:0;right:0;bottom:32px;text-align:center;color:rgba(255,255,255,.88);font-size:13px;font-weight:600;text-decoration:underline}
 /* real phones: full-screen app, no frame */
-@media(max-width:520px){
+@media(max-width:520px),(hover:none) and (pointer:coarse){
  body{display:block;padding:0;background:var(--bg)}
  .panel{display:none}
  .phone{width:100vw;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}
@@ -374,6 +374,27 @@ h2.sec{margin:28px 0 14px}
  .nav{bottom:calc(14px + env(safe-area-inset-bottom))}
  .wl-skip{top:calc(20px + env(safe-area-inset-top))}
  .wl-copy{top:calc(84px + env(safe-area-inset-top))}
+}
+
+.only-mob{display:none}
+.wl-card .fr{font-weight:700}
+@media(max-width:520px),(hover:none) and (pointer:coarse){
+ .only-desk{display:none}
+ .only-mob{display:block}
+ .wl-card{bottom:calc(190px + env(safe-area-inset-bottom))}
+ .wl-dots{bottom:calc(88px + env(safe-area-inset-bottom))}
+ .wl-go{bottom:calc(62px + env(safe-area-inset-bottom))}
+ .wl-link{bottom:calc(26px + env(safe-area-inset-bottom))}
+}
+@media(max-width:520px) and (max-height:720px){
+ .wl-copy{top:calc(70px + env(safe-area-inset-top))}
+ .wl-copy h1{font-size:28px;margin:12px 0 8px}
+ .wl-copy p{font-size:13px}
+ .wl-card{padding:12px;bottom:calc(168px + env(safe-area-inset-bottom))}
+ .wl-card .th{width:48px;height:48px}
+ .wl-dots{bottom:calc(76px + env(safe-area-inset-bottom))}
+ .wl-go{width:56px;height:56px;bottom:calc(52px + env(safe-area-inset-bottom))}
+ .wl-link{bottom:calc(18px + env(safe-area-inset-bottom))}
 }
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -838,21 +859,22 @@ SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];r
 
 /* ===== Round 6: welcome slides, sign in, sign out ===== */
 const SBW=`<div class="wl-sb"><span>9:41</span><span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 6a15 15 0 0 1 20 0M6 10.5a9 9 0 0 1 12 0M10 15a3 3 0 0 1 4 0"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg></span></div>`;
-const WS=[null,
+const WS=[{tag:'LIVE PITCH RADAR',h1:'Find Football',h2:'Matches Near You',p:'Discover nearby games to watch at your leisure time.',img:'welcome-bg',card:{img:'event1',tag:'11-A-SIDE',title:'KiDave Media Cup',l1:'Oki pry school · Today, 4:00 PM<br>Sat, Nov 15 · 4:00 PM',l2:'',right:'● Free'}},
  {tag:'PLAY · BOOK A PITCH',h1:'Book Pitches',h2:'Anytime, Anywhere',p:'See live availability, pick your slot and pay in full or by deposit in a few taps.',img:'venue1',card:{img:'venue2',tag:'5-A-SIDE',title:'Lekki Goal Arena',l1:'Lekki Phase 1 · 2.1 km away',l2:'From ₦25,000 / hour',right:'4 slots free'}},
  {tag:'CONNECT · OPEN GAMES',h1:'Join Games,',h2:'Build Your Squad',p:'No full team needed. Join open games, create your own and meet players near you.',img:'game1',card:{img:'game1',tag:'5-A-SIDE',title:'Thursday Night 5s',l1:'Lekki Goal Arena · Thu, 8:00 PM',l2:'2 slots left · ₦2,500 / player',right:'₦2,500'}}];
 const wlNext=()=>{if(S.ws<2){S.ws++;render()}else{S.onb=0;S.stack=[{s:'onb'}];render()}};
 const wlSkip=()=>{S.onb=0;S.stack=[{s:'onb'}];render()};
 const wlSignin=()=>{S.stack=[{s:'signin'}];render()};
-SC.welcome=()=>{
- if(S.ws===0)return `<div class="wl img1"><button class="hz" style="left:77%;top:6.8%;width:21%;height:5%" onclick="wlSkip()" aria-label="Skip"></button><button class="hz" style="left:77%;top:82.5%;width:19%;height:9%;border-radius:50%" onclick="wlNext()" aria-label="Next slide"></button><button class="hz" style="left:24%;top:92%;width:52%;height:5%" onclick="wlSignin()" aria-label="I already have an account"></button><button class="hz" style="left:2%;top:86%;width:28%;height:5%" onclick="S.ws=1;render()" aria-label="Slide dots"></button></div>`;
- const d=WS[S.ws],c=d.card;
- return `<div class="wl" style="background-image:linear-gradient(180deg,rgba(6,16,11,.72) 0%,rgba(6,16,11,.12) 38%,rgba(6,16,11,.9) 100%),url(img/${d.img}.jpg)">${SBW}<button class="wl-skip" onclick="wlSkip()">SKIP</button>
+const wlCoded=(d,extra)=>{const c=d.card;
+ return `<div class="wl ${extra||''}" style="background-image:linear-gradient(180deg,rgba(6,16,11,.78) 0%,rgba(6,16,11,.12) 38%,rgba(6,16,11,.92) 100%),url(img/${d.img}.jpg)">${SBW}<button class="wl-skip" onclick="wlSkip()">SKIP</button>
  <div class="wl-copy"><span class="wl-tag"><i></i>${d.tag}</span><h1>${d.h1}<br><em>${d.h2}</em></h1><p>${d.p}</p></div>
- <div class="wl-card"><div class="img has th" style="background-image:url(img/${c.img}.jpg)"></div><div><span class="tg">${c.tag}</span><div class="t">${c.title}</div><div class="s">${c.l1}<br>${c.l2}</div></div><span class="fr">${c.right}</span></div>
+ <div class="wl-card"><div class="img has th" style="background-image:url(img/${c.img}.jpg)"></div><div><span class="tg">${c.tag}</span><div class="t">${c.title}</div><div class="s">${c.l1}${c.l2?'<br>'+c.l2:''}</div></div><span class="fr">${c.right}</span></div>
  <div class="wl-dots">${[0,1,2].map(k=>`<i class="${k===S.ws?'on':''}" onclick="S.ws=${k};render()"></i>`).join('')}</div>
  <button class="wl-go" onclick="wlNext()" aria-label="${S.ws===2?'Create account':'Next slide'}">${ic('chev')}</button>
  <button class="wl-link" onclick="wlSignin()">I already have an account</button></div>`};
+SC.welcome=()=>{
+ if(S.ws===0)return `<div class="wl img1 only-desk"><button class="hz" style="left:77%;top:6.8%;width:21%;height:5%" onclick="wlSkip()" aria-label="Skip"></button><button class="hz" style="left:77%;top:82.5%;width:19%;height:9%;border-radius:50%" onclick="wlNext()" aria-label="Next slide"></button><button class="hz" style="left:24%;top:92%;width:52%;height:5%" onclick="wlSignin()" aria-label="I already have an account"></button><button class="hz" style="left:2%;top:86%;width:28%;height:5%" onclick="S.ws=1;render()" aria-label="Slide dots"></button></div>`+wlCoded(WS[0],'only-mob');
+ return wlCoded(WS[S.ws])};
 SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.ws=0;S.stack=[{s:'welcome'}];render()" aria-label="Back">${ic('back')}</button>
  <h1 style="margin-top:24px;font-size:30px">Welcome back</h1><p class="sub" style="margin:8px 0 26px">Sign in to book pitches, join open games and follow your teams.</p>
  <div class="field">Email or phone<input value="${S.user.email}" oninput="S.user.email=this.value" placeholder="you@example.com"></div>
@@ -861,7 +883,7 @@ SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.ws=
  <button class="btn" onclick="S.stack=[];S.tab='home';toast('Signed in as '+S.user.email);render()">Sign in</button>
  <p class="small muted" style="text-align:center;margin-top:20px">New here? <button class="b" style="color:var(--brand)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Create an account</button></p></div>`;
 const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign in again to book pitches, join games and see your activity.',icon:'logout',tone:'warn',danger:true,primary:'Yes, sign out',secondary:'Cancel',primaryFn:()=>{S.stack=[{s:'signin'}];S.tab='home'}});
-if(matchMedia('(prefers-color-scheme: dark)').matches)setTheme('dark');
+setTheme('light');
 render();
 </script>
 </body>
