@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Football Community Lagos — Cloud Data, Analytics & PWA Module
+   Football Community Lagos — Cloud Data, Analytics, Live Sync & PWA Module
    ========================================================================== */
 
 const DEFAULT_FC_CONFIG = {
@@ -29,11 +29,19 @@ const FCData = {
     app_events: []
   },
   adminTab: 'Overview',
-  adminTable: 'bookings',
+  adminTable: 'open_games',
   swReady: false,
+  loading: true,
+  deepLinkGameId: null,
 
   init() {
+    S.permits = S.permits || {};
+    S.gpayMethod = S.gpayMethod || 'card';
     try {
+      const savedPermits = localStorage.getItem('fc_permits');
+      if (savedPermits) S.permits = { ...S.permits, ...JSON.parse(savedPermits) };
+      const savedJoined = localStorage.getItem('fc_joined');
+      if (savedJoined) S.joined = { ...S.joined, ...JSON.parse(savedJoined) };
       const savedCfg = localStorage.getItem('fc_cloud_config');
       if (savedCfg) {
         const parsed = JSON.parse(savedCfg);
@@ -60,7 +68,21 @@ const FCData = {
       this.initPostHog();
     }
     if (this.isSupabaseConfigured()) {
-      this.pullLiveRecords();
+      this.pullLiveRecords().then(() => {
+        this.loading = false;
+        this.checkDeepLinkFullAlert();
+        if (typeof render === 'function') render();
+      });
+      // Keep laptop & mobile in sync automatically
+      window.addEventListener('focus', () => this.pullLiveRecords());
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') this.pullLiveRecords();
+      });
+      setInterval(() => {
+        if (document.visibilityState === 'visible') this.pullLiveRecords();
+      }, 12000);
+    } else {
+      this.loading = false;
     }
     this.registerPWA();
   },
@@ -86,6 +108,8 @@ const FCData = {
   persistLocal() {
     try {
       localStorage.setItem('fc_local_db', JSON.stringify(this.db));
+      if (window.S && S.permits) localStorage.setItem('fc_permits', JSON.stringify(S.permits));
+      if (window.S && S.joined) localStorage.setItem('fc_joined', JSON.stringify(S.joined));
     } catch (e) {}
   },
 
@@ -177,16 +201,74 @@ const FCData = {
         })
       ]);
       if (inserted && inserted.id && uiObjRef) {
-        const oldId = uiObjRef.id;
         uiObjRef.id = inserted.id;
         recordWithTime.id = inserted.id;
         this.persistLocal();
-        if (window.S && S.shareItem && String(S.shareItem.id) === String(oldId)) {
-          openShare('game', inserted.id);
-        } else {
-          render();
-        }
       }
+    }
+  },
+
+  async updateOpenGame(g) {
+    const vObj = (window.venues && venues[g.v]) || venues[0];
+    const vName = g.venueName || vObj.name;
+    const updatePayload = {
+      game_id: String(g.id),
+      title: g.title,
+      v: g.v || 0,
+      venue_name: vName,
+      pitch_name: g.pitch,
+      match_when: g.when,
+      format: g.fmt,
+      players_needed: +g.need,
+      slots_left: +g.left,
+      price_ngn: +g.price || 0,
+      skill_level: g.level,
+      requires_approval: Boolean(g.approval),
+      notes: g.notes || '',
+      organiser_name: g.org || S.user.name
+    };
+    const ts = new Date().toISOString();
+    this.db.app_events.unshift({
+      event_name: 'open_game_updated',
+      screen: 'createGame',
+      user_contact: (window.S && S.user && S.user.email) || '',
+      properties: updatePayload,
+      created_at: ts
+    });
+    this.persistLocal();
+    this.captureAnalytics('open_game_updated', updatePayload);
+
+    if (this.isSupabaseConfigured()) {
+      const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+      await Promise.all([
+        this.supabaseInsert('app_events', {
+          event_name: 'open_game_updated',
+          screen: 'createGame',
+          user_contact: (window.S && S.user && S.user.email) || '',
+          properties: updatePayload
+        }),
+        fetch(`${baseUrl}/rest/v1/open_games?id=eq.${encodeURIComponent(g.id)}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            apikey: this.cfg.supabaseKey,
+            Authorization: `Bearer ${this.cfg.supabaseKey}`,
+            Prefer: 'return=minimal'
+          },
+          body: JSON.stringify({
+            title: g.title,
+            venue_name: vName,
+            pitch_name: g.pitch,
+            match_when: g.when,
+            format: g.fmt,
+            players_needed: +g.need,
+            slots_left: +g.left,
+            price_ngn: +g.price || 0,
+            skill_level: g.level,
+            requires_approval: Boolean(g.approval)
+          })
+        }).catch(() => {})
+      ]);
     }
   },
 
@@ -216,29 +298,13 @@ const FCData = {
     }
   },
 
-  async supabasePatchGameSlots(gameId, newSlotsLeft) {
-    if (!this.isSupabaseConfigured() || !gameId) return;
-    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
-    try {
-      await fetch(`${baseUrl}/rest/v1/open_games?id=eq.${encodeURIComponent(gameId)}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          apikey: this.cfg.supabaseKey,
-          Authorization: `Bearer ${this.cfg.supabaseKey}`,
-          Prefer: 'return=minimal'
-        },
-        body: JSON.stringify({ slots_left: newSlotsLeft })
-      });
-    } catch (e) {}
-  },
-
   rowToUiGame(row) {
     let vIdx = 0;
     if (window.venues && row.venue_name) {
       const foundIdx = venues.findIndex((v) => v.name.toLowerCase() === String(row.venue_name).toLowerCase());
       if (foundIdx >= 0) vIdx = foundIdx;
     }
+    const initSlots = row.slots_left !== undefined && row.slots_left !== null ? +row.slots_left : 4;
     return {
       id: row.id || 'g_' + (row.created_at || Date.now()),
       title: row.title || 'Open Game',
@@ -248,11 +314,13 @@ const FCData = {
       when: row.match_when || 'Upcoming',
       fmt: row.format || '5-a-side',
       need: +row.players_needed || 10,
-      left: row.slots_left !== undefined && row.slots_left !== null ? +row.slots_left : 4,
+      left: initSlots,
+      initialLeft: initSlots,
       price: row.price_ngn !== undefined && row.price_ngn !== null ? +row.price_ngn : 0,
       org: row.organiser_name || 'Organiser',
       level: row.skill_level || 'All levels',
       approval: Boolean(row.requires_approval),
+      created_at: row.created_at || '',
       fromCloud: true
     };
   },
@@ -260,18 +328,61 @@ const FCData = {
   mergeLiveIntoUI() {
     if (!window.games) return;
     const cloudGames = (this.db.open_games || []).map((r) => this.rowToUiGame(r));
+
+    // Apply any game edits stored in app_events (oldest to newest)
+    const editEvents = (this.db.app_events || [])
+      .filter((ev) => ev.event_name === 'open_game_updated' && ev.properties && ev.properties.game_id)
+      .slice()
+      .reverse();
+
+    for (const ev of editEvents) {
+      const p = ev.properties;
+      const target =
+        cloudGames.find((cg) => String(cg.id) === String(p.game_id)) ||
+        games.find((g) => String(g.id) === String(p.game_id));
+      if (target) {
+        if (p.title !== undefined) target.title = p.title;
+        if (p.v !== undefined) target.v = +p.v;
+        if (p.venue_name !== undefined) target.venueName = p.venue_name;
+        if (p.pitch_name !== undefined) target.pitch = p.pitch_name;
+        if (p.match_when !== undefined) target.when = p.match_when;
+        if (p.format !== undefined) target.fmt = p.format;
+        if (p.players_needed !== undefined) target.need = +p.players_needed;
+        if (p.slots_left !== undefined) {
+          target.left = +p.slots_left;
+          target.initialLeft = +p.slots_left;
+          target.lastEditedAt = ev.created_at || '';
+        }
+        if (p.price_ngn !== undefined) target.price = +p.price_ngn;
+        if (p.skill_level !== undefined) target.level = p.skill_level;
+        if (p.requires_approval !== undefined) target.approval = Boolean(p.requires_approval);
+        if (p.notes !== undefined) target.notes = p.notes;
+      }
+    }
+
+    // Apply slot decrements from game_joins / open_game_joined events
+    const joinEvents = (this.db.app_events || []).filter(
+      (ev) => ev.event_name === 'open_game_joined' && ev.properties
+    );
+    for (const cg of cloudGames) {
+      const joinsAfterEdit = joinEvents.filter((ev) => {
+        const matchId = ev.properties.game_id && String(ev.properties.game_id) === String(cg.id);
+        const matchTitle = !ev.properties.game_id && ev.properties.game_title === cg.title;
+        if (!matchId && !matchTitle) return false;
+        if (cg.lastEditedAt && ev.created_at && ev.created_at < cg.lastEditedAt) return false;
+        return true;
+      }).length;
+      if (joinsAfterEdit > 0 && cg.initialLeft !== undefined) {
+        cg.left = Math.max(0, cg.initialLeft - joinsAfterEdit);
+      }
+    }
+
     if (cloudGames.length > 0) {
-      // Remove any existing versions of these cloud games by id or (title + when + org)
       for (let i = cloudGames.length - 1; i >= 0; i--) {
         const cg = cloudGames[i];
-        const existingIdx = games.findIndex(
-          (x) =>
-            String(x.id) === String(cg.id) ||
-            (x.title === cg.title && x.when === cg.when && x.org === cg.org)
-        );
+        const existingIdx = games.findIndex((x) => String(x.id) === String(cg.id));
         if (existingIdx >= 0) {
           games[existingIdx] = { ...games[existingIdx], ...cg };
-          // Move to front if it's the newest cloud game
           const [item] = games.splice(existingIdx, 1);
           games.unshift(item);
         } else {
@@ -307,22 +418,25 @@ const FCData = {
       Authorization: `Bearer ${this.cfg.supabaseKey}`
     };
     try {
-      const tables = ['open_games', 'users', 'bookings', 'game_joins', 'ticket_orders', 'teams', 'event_submissions'];
-      for (const t of tables) {
-        const res = await fetch(`${baseUrl}/rest/v1/${t}?select=*&order=created_at.desc&limit=50`, { headers });
-        if (res.ok) {
-          const rows = await res.json();
-          if (Array.isArray(rows)) {
-            this.db[t] = rows;
-          }
-        }
-        if (t === 'open_games') {
-          this.mergeLiveIntoUI();
-          this.refreshActiveDeepLinkGame();
-          if (typeof render === 'function') render();
-        }
-      }
+      const tables = ['open_games', 'game_joins', 'app_events', 'users', 'bookings', 'ticket_orders', 'teams', 'event_submissions'];
+      await Promise.all(
+        tables.map(async (t) => {
+          try {
+            const res = await fetch(`${baseUrl}/rest/v1/${t}?select=*&order=created_at.desc&limit=100`, {
+              headers,
+              cache: 'no-store'
+            });
+            if (res.ok) {
+              const rows = await res.json();
+              if (Array.isArray(rows)) {
+                this.db[t] = rows;
+              }
+            }
+          } catch (err) {}
+        })
+      );
       this.mergeLiveIntoUI();
+      this.refreshActiveDeepLinkGame();
       this.persistLocal();
       if (typeof render === 'function') render();
     } catch (e) {
@@ -336,13 +450,21 @@ const FCData = {
     if (topItem && topItem.s === 'game') {
       const params = new URLSearchParams(window.location.search);
       const qGame = params.get('game');
-      // If friend opened ?game=0 (or a cloud game id), ensure it points to the latest matching game
       if ((qGame === '0' || qGame === '') && !params.has('g') && games.length > 0) {
         topItem.a = games[0].id;
       } else if (qGame) {
-        const found = findGame(qGame);
-        if (found) topItem.a = found.id;
+        const exact = games.find((x) => String(x.id) === String(qGame));
+        if (exact) topItem.a = exact.id;
       }
+    }
+  },
+
+  checkDeepLinkFullAlert() {
+    if (!this.deepLinkGameId) return;
+    const g = findGame(this.deepLinkGameId);
+    this.deepLinkGameId = null;
+    if (g && +g.left <= 0 && !(window.S && S.joined && S.joined[g.id])) {
+      showFullSlotsModal(g);
     }
   },
 
@@ -356,7 +478,6 @@ const FCData = {
     for (const t of tables) {
       for (const row of this.db[t] || []) {
         const copy = { ...row };
-        delete copy.id;
         const ok = await this.supabaseInsert(t, copy);
         if (ok) count++;
       }
@@ -409,9 +530,10 @@ const FCData = {
   registerPWA() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('./sw.js')
-        .then(() => {
+        .register('./sw.js?v=5')
+        .then((reg) => {
           this.swReady = true;
+          if (reg && typeof reg.update === 'function') reg.update();
         })
         .catch(() => {});
     }
@@ -435,6 +557,7 @@ const FCData = {
             } else {
               games.unshift(decoded);
             }
+            this.deepLinkGameId = decoded.id;
             S.stack = [{ s: 'game', a: decoded.id }];
             render();
             return;
@@ -449,8 +572,9 @@ const FCData = {
         render();
       } else if (params.has('game')) {
         const rawId = params.get('game');
-        const g = findGame(rawId);
-        S.stack = [{ s: 'game', a: g ? g.id : rawId }];
+        this.deepLinkGameId = rawId;
+        // Preserve rawId so pullLiveRecords can resolve UUIDs from Supabase without falling back to dummy games[0]
+        S.stack = [{ s: 'game', a: rawId }];
         render();
       } else if (params.has('venue')) {
         const id = +params.get('venue') || 0;
@@ -462,8 +586,7 @@ const FCData = {
         render();
       } else if (params.has('team')) {
         const rawId = params.get('team');
-        const t = findTeam(rawId);
-        S.stack = [{ s: 'team', a: t ? t.id : rawId }];
+        S.stack = [{ s: 'team', a: rawId }];
         render();
       } else if (params.has('screen')) {
         const sc = params.get('screen');
@@ -483,6 +606,30 @@ const FCData = {
 };
 
 window.FCData = FCData;
+
+/* ===== Full Slots Modal Helper ===== */
+window.showFullSlotsModal = function (g) {
+  const v = (window.venues && venues[g.v]) || venues[0];
+  const vName = g.venueName || v.name;
+  showModal({
+    title: 'Game Slots Full!',
+    sub: `All ${g.need} player slots for "${g.title}" have been filled. Check out other open games available near you.`,
+    icon: 'users',
+    tone: 'warn',
+    meta: [
+      ['Game', g.title],
+      ['Status', `Full (${g.need} of ${g.need} players)`],
+      ['Venue', vName + ' · ' + g.pitch]
+    ],
+    primary: 'Check Other Open Games',
+    primaryFn: () => {
+      S.stack = [];
+      S.tab = 'explore';
+      S.sub.explore = 'Open Games';
+    },
+    secondary: 'Close'
+  });
+};
 
 /* ===== PWA Install Helper ===== */
 window.installPWA = async function () {
@@ -572,17 +719,47 @@ window.shareVia = function (channel) {
   });
 };
 
-/* ===== Join Open Game Helper ===== */
+/* ===== Join Open Game Flow (Free -> Permit Code, Paid -> Checkout -> Permit Code) ===== */
 window.joinOpenGame = function (id) {
   const g = findGame(id);
-  const v = venues[g.v] || venues[0];
+  if (!g) return;
+
+  // If already joined, take them straight to their Permit Code screen
+  if (S.joined && S.joined[g.id]) {
+    go('gamePass', g.id);
+    return;
+  }
+
+  // If slots are full, show Full Slots modal directing to other open games
+  if (+g.left <= 0) {
+    showFullSlotsModal(g);
+    return;
+  }
+
+  const isFree = !g.price || +g.price === 0;
+  if (isFree) {
+    completeGameJoin(g.id, 'Free Entry');
+  } else {
+    go('gamePay', g.id);
+  }
+};
+
+window.completeGameJoin = function (id, paymentNote) {
+  const g = findGame(id);
+  if (!g) return;
+  const v = (window.venues && venues[g.v]) || venues[0];
   const vName = g.venueName || v.name;
-  if (!S.joined[g.id] && g.left > 0) {
-    g.left = Math.max(0, g.left - 1);
-    FCData.supabasePatchGameSlots(g.id, g.left);
+
+  S.permits = S.permits || {};
+  const permitCode = S.permits[g.id] || 'FCP-' + Math.floor(100000 + Math.random() * 900000);
+  S.permits[g.id] = permitCode;
+
+  if (!S.joined[g.id] && +g.left > 0) {
+    g.left = Math.max(0, +g.left - 1);
   }
   S.joined[g.id] = true;
-  const isFree = !g.price || +g.price === 0;
+  FCData.persistLocal();
+
   FCData.record(
     'game_joins',
     {
@@ -595,28 +772,116 @@ window.joinOpenGame = function (id) {
       status: g.approval ? 'pending_approval' : 'confirmed'
     },
     'open_game_joined',
-    { game_title: g.title, venue: vName, price_ngn: +g.price || 0 }
+    {
+      game_id: String(g.id),
+      game_title: g.title,
+      venue: vName,
+      price_ngn: +g.price || 0,
+      permit_code: permitCode,
+      payment_note: paymentNote || ''
+    }
   );
-  showModal({
-    title: g.approval ? 'Join Request Sent!' : 'Spot Reserved!',
-    sub: g.approval
-      ? 'The organiser (' + g.org + ') will review your request and notify you.'
-      : 'Your player slot is confirmed for ' + g.title + '.',
-    meta: [
-      ['Game', g.title],
-      ['Venue', vName + ' · ' + g.pitch],
-      ['When', g.when],
-      ['Contribution', isFree ? 'Free' : N(g.price)]
-    ],
-    primary: 'View in My Activity',
-    primaryFn: () => {
-      S.sub.activity = 'Games Joined';
-      S.stack = [];
-      S.tab = 'activity';
-    },
-    secondary: 'Share Game',
-    secFn: () => openShare('game', g.id)
-  });
+
+  // Navigate to Permit Code Success Screen
+  const topCur = S.stack[S.stack.length - 1];
+  if (topCur && (topCur.s === 'gamePay' || topCur.s === 'processing')) {
+    S.stack.pop();
+  }
+  S.stack.push({ s: 'gamePass', a: g.id });
+  render();
+};
+
+window.payForGameSlot = function (id) {
+  const g = findGame(id);
+  if (!g) return;
+  if (+g.left <= 0 && !(S.joined && S.joined[g.id])) {
+    showFullSlotsModal(g);
+    return;
+  }
+  go('processing');
+  setTimeout(() => {
+    const cur = S.stack[S.stack.length - 1];
+    if (cur && cur.s === 'processing') {
+      completeGameJoin(g.id, 'Paid · ' + N(g.price));
+    }
+  }, 1400);
+};
+
+/* ===== Paid Game Checkout Screen (SC.gamePay) ===== */
+SC.gamePay = (id) => {
+  const g = findGame(id);
+  const v = (window.venues && venues[g.v]) || venues[0];
+  const vName = g.venueName || v.name;
+  const fee = +g.price || 2500;
+  const method = S.gpayMethod || 'card';
+  const methods = [
+    ['card', 'Debit Card / Paystack Checkout', 'Instant verification & permit code issuance'],
+    ['transfer', 'Instant Bank Transfer / USSD', 'Pay via Nigerian bank transfer or USSD code']
+  ];
+  return `${hdr('Confirm & pay slot')}
+    <div class="card">
+      <div class="row sp"><span class="tag gold">${g.fmt}</span><span class="tag ok">${g.left} slot${g.left === 1 ? '' : 's'} left</span></div>
+      <div class="b" style="font-size:18px;margin-top:8px">${g.title}</div>
+      <div class="sub small" style="margin-top:2px">${vName} · ${g.pitch}</div>
+      <div class="kv" style="margin-top:10px"><span class="muted">Date &amp; time</span><b>${g.when}</b></div>
+      <div class="kv"><span class="muted">Organiser</span><b>${g.org}</b></div>
+      <div class="kv"><span class="muted">Player</span><b>${S.user.name}</b></div>
+      <div class="kv"><span class="muted">Slot fee per player</span><b>${N(fee)}</b></div>
+    </div>
+    <h2 class="sec">Select payment method</h2>
+    <div class="list">
+      ${methods
+        .map(
+          (m) => `<div class="opt ${method === m[0] ? 'on' : ''}" onclick="S.gpayMethod='${m[0]}';render()">
+            <div class="radio"></div>
+            <div class="grow"><b>${m[1]}</b><div class="sub small">${m[2]}</div></div>
+          </div>`
+        )
+        .join('')}
+    </div>
+    <div class="note" style="margin-top:14px">Your unique player permit code will be generated immediately after payment verification.</div>
+    <div style="margin-top:20px">
+      <button class="btn" onclick="payForGameSlot('${g.id}')">Pay ${N(fee)} &amp; Get Permit Code</button>
+    </div>`;
+};
+
+/* ===== Game Join Success & Permit Code Screen (SC.gamePass) ===== */
+SC.gamePass = (id) => {
+  const g = findGame(id);
+  const v = (window.venues && venues[g.v]) || venues[0];
+  const vName = g.venueName || v.name;
+  const isFree = !g.price || +g.price === 0;
+  S.permits = S.permits || {};
+  if (!S.permits[g.id]) {
+    S.permits[g.id] = 'FCP-' + Math.floor(100000 + Math.random() * 900000);
+  }
+  const code = S.permits[g.id];
+  return `
+    <div style="text-align:center;padding-top:18px">
+      <div class="modal-ico" style="margin:0 auto 14px">${ic('check')}</div>
+      <h1>${g.approval ? 'Join Request & Permit Ready' : 'You’re In! Spot Confirmed'}</h1>
+      <p class="sub" style="margin:6px 0 18px">Present this permit code to the game organiser (${g.org}) when you arrive at the pitch.</p>
+    </div>
+    <div class="card" style="text-align:center;border:2px dashed var(--brand);background:var(--surface)">
+      <span class="tag gold">PLAYER ENTRY PERMIT</span>
+      <div style="font-size:28px;font-weight:800;letter-spacing:2px;margin:10px 0 4px;color:var(--brand)">${code}</div>
+      <div class="small muted">Verified Player Pass · ${S.user.name}</div>
+      <div style="margin:14px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)">
+        <svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg>
+      </div>
+      <button class="btn sm ghost" style="margin:0 auto" onclick="navigator.clipboard&&navigator.clipboard.writeText('${code}');toast('Permit code ${code} copied!')">Copy Permit Code</button>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <div class="kv"><span class="muted">Game</span><b>${g.title}</b></div>
+      <div class="kv"><span class="muted">Venue &amp; Pitch</span><b>${vName} · ${g.pitch}</b></div>
+      <div class="kv"><span class="muted">Date &amp; Time</span><b>${g.when}</b></div>
+      <div class="kv"><span class="muted">Format</span><b>${g.fmt}</b></div>
+      <div class="kv"><span class="muted">Entry Status</span><span class="tag ok">${isFree ? 'Free · Confirmed' : 'Paid · ' + N(g.price)}</span></div>
+    </div>
+    <div class="col" style="margin-top:18px">
+      <button class="btn" onclick="openShare('game','${g.id}')">${ic('share')}Invite &amp; Share Game</button>
+      <button class="btn ghost" onclick="S.sub.activity='Games Joined';S.stack=[];S.tab='activity';render()">View in My Activity</button>
+    </div>`;
 };
 
 /* ===== Owner Data & Cloud Setup Screen (SC.admin) ===== */

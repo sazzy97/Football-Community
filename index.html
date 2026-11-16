@@ -785,15 +785,45 @@ SC.game=id=>{const g=games[id],v=venues[g.v],j=S.joined[id];return `${hdr('Open 
  <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div>
  <div style="margin-top:18px"><button class="btn" onclick="S.joined[${id}]=true;toast('${g.approval?'Request sent to organiser':'You joined this game'}');render()">${j?(g.approval?'Request pending':'Joined · view in My Activity'):(g.approval?'Request to join':'Join · '+N(g.price))}</button></div>`};
 
+const makeUUID=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16)});
+const startCreateGame=()=>{
+ S.editingGameId=null;
+ S.form={gtitle:'Friday Floodlit 5s',gv:0,gpitch:venues[0].pitches[0].n,gdate:'Fri 13 Nov',gtime:'19:00–20:00',gneed:10,gleft:3,gfree:false,gprice:2500,gfmt:'5-a-side',glevel:'All levels',gnotes:''};
+ go('createGame');
+};
+const openEditGame=id=>{
+ const g=findGame(id);
+ if(!g)return;
+ S.editingGameId=g.id;
+ const wParts=(g.when||'Fri 13 Nov · 19:00–20:00').split('·');
+ const isFree=!g.price||+g.price===0;
+ S.form={
+   gtitle:g.title,
+   gv:g.v||0,
+   gpitch:g.pitch||(venues[g.v||0]||venues[0]).pitches[0].n,
+   gdate:(wParts[0]||'Fri 13 Nov').trim(),
+   gtime:(wParts[1]||'19:00–20:00').trim(),
+   gneed:+g.need||10,
+   gleft:+g.left!==undefined?+g.left:3,
+   gfree:isFree,
+   gprice:isFree?0:(+g.price||2500),
+   gfmt:g.fmt||'5-a-side',
+   glevel:g.level||'All levels',
+   gnotes:g.notes||''
+ };
+ S.p=S.p||{};S.p.appr=!!g.approval;
+ go('createGame');
+};
 SC.createGame=()=>{
- const f=S.form;if(!f.gtitle)f.gtitle='Friday Floodlit 5s';if(f.gv===undefined)f.gv=0;
+ const f=S.form,isEdit=!!S.editingGameId;
+ if(!f.gtitle)f.gtitle='Friday Floodlit 5s';if(f.gv===undefined)f.gv=0;
  const vObj=venues[f.gv||0]||venues[0];
  if(!f.gpitch)f.gpitch=vObj.pitches[0].n;
- if(!f.gdate)f.gdate='Fri 13 Nov';if(!f.gtime)f.gtime='19:00–20:00';if(!f.gneed)f.gneed=10;if(!f.gleft)f.gleft=3;
+ if(!f.gdate)f.gdate='Fri 13 Nov';if(!f.gtime)f.gtime='19:00–20:00';if(!f.gneed)f.gneed=10;if(f.gleft===undefined)f.gleft=3;
  if(f.gfree===undefined)f.gfree=false;
  if(f.gprice===undefined)f.gprice=2500;
  if(!f.gfmt)f.gfmt='5-a-side';if(!f.glevel)f.glevel='All levels';
- return `${hdr('Create open game')}
+ return `${hdr(isEdit?'Edit open game':'Create open game')}
  <div class="field">Game title<input value="${f.gtitle}" oninput="S.form.gtitle=this.value" placeholder="e.g. Thursday Night 5s"></div>
  <div class="field">Venue or existing booking<select onchange="S.form.gv=+this.value;S.form.gpitch=(venues[+this.value]||venues[0]).pitches[0].n;render()">${venues.map((v,i)=>`<option value="${i}" ${f.gv===i?'selected':''}>${v.name} (${v.area})</option>`).join('')}<option value="0">My booking · ${S.b.ref||'FCP-482913'}</option></select></div>
  <div class="field">Pitch<select onchange="S.form.gpitch=this.value.split(' · ')[0];S.form.gfmt=this.value.split(' · ')[1]||S.form.gfmt;render()">${vObj.pitches.map(p=>`<option value="${p.n} · ${p.f}" ${f.gpitch===p.n?'selected':''}>${p.n} · ${p.f}</option>`).join('')}</select></div>
@@ -806,7 +836,7 @@ SC.createGame=()=>{
    <div class="field grow">Available slots<input type="number" value="${f.gleft}" oninput="S.form.gleft=+this.value"></div>
  </div>
  <div class="row">
-   <div class="field grow">Game entry<select onchange="S.form.gfree=(this.value==='free');render()"><option value="paid" ${!f.gfree?'selected':''}>Paid</option><option value="free" ${f.gfree?'selected':''}>Free</option></select></div>
+   <div class="field grow">Game entry<select onchange="S.form.gfree=(this.value==='free');if(!S.form.gfree&&!S.form.gprice)S.form.gprice=2500;render()"><option value="paid" ${!f.gfree?'selected':''}>Paid</option><option value="free" ${f.gfree?'selected':''}>Free</option></select></div>
    <div class="field grow">Football format<select onchange="S.form.gfmt=this.value"><option ${f.gfmt==='5-a-side'?'selected':''}>5-a-side</option><option ${f.gfmt==='7-a-side'?'selected':''}>7-a-side</option><option ${f.gfmt==='9-a-side'?'selected':''}>9-a-side</option><option ${f.gfmt==='11-a-side'?'selected':''}>11-a-side</option></select></div>
  </div>
  ${f.gfree?'':`<div class="field">Price per player (₦)<input type="number" value="${f.gprice}" oninput="S.form.gprice=+this.value" placeholder="e.g. 2500"></div>`}
@@ -814,20 +844,48 @@ SC.createGame=()=>{
  <div class="field">Additional instructions<input value="${f.gnotes||''}" oninput="S.form.gnotes=this.value" placeholder="Bring bibs, white and dark shirts…"></div>
  <div class="opt" style="margin-bottom:10px" onclick="flipTog('appr',false,event)"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(false,'appr')}</div>
  <div class="opt" onclick="flipTog('pub',true,event)"><div class="grow"><b>Public game</b><div class="sub">Visible in Open Games discovery</div></div>${tog(true,'pub')}</div>
- <div style="margin-top:20px"><button class="btn" onclick="publishGame()">Publish game</button></div>`};
+ <div style="margin-top:20px"><button class="btn" onclick="publishGame()">${isEdit?'Save changes':'Publish game'}</button></div>`};
 function publishGame(){
- const f=S.form,gid='g_'+Date.now();
+ const f=S.form,isEdit=!!S.editingGameId;
  const vIdx=f.gv||0,vObj=venues[vIdx]||venues[0];
  const pitchName=f.gpitch||vObj.pitches[0].n;
  const priceVal=f.gfree?0:(f.gprice!==undefined?+f.gprice:2500);
- const g={id:gid,title:f.gtitle||'Friday Floodlit 5s',v:vIdx,venueName:vObj.name,pitch:pitchName,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:+f.gneed||10,left:+f.gleft||3,price:priceVal,org:S.user.name||'Tunde A.',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr)};
+ const needVal=+f.gneed||10;
+ const leftVal=f.gleft!==undefined?Math.max(0,+f.gleft):3;
+ if(isEdit){
+   const g=findGame(S.editingGameId);
+   if(g){
+     g.title=f.gtitle||g.title;
+     g.v=vIdx;
+     g.venueName=vObj.name;
+     g.pitch=pitchName;
+     g.when=(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00');
+     g.fmt=f.gfmt||'5-a-side';
+     g.need=needVal;
+     g.left=leftVal;
+     g.price=priceVal;
+     g.level=f.glevel||'All levels';
+     g.approval=!!(S.p&&S.p.appr);
+     g.notes=f.gnotes||'';
+     if(window.FCData){
+       FCData.updateOpenGame(g);
+     }
+     S.editingGameId=null;
+     S.stack=[{s:'game',a:g.id}];
+     const pLabel=g.price===0?'Free':N(g.price)+'/player';
+     showModal({title:'Game Changes Saved!',sub:'Your updated game details are now live across all devices and shared links.',meta:[['Game',g.title],['Venue',vObj.name+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+pLabel+')']],primary:'Share Updated Game',primaryFn:()=>openShare('game',g.id),secondary:'View Game'});
+     return;
+   }
+ }
+ const gid=makeUUID();
+ const g={id:gid,title:f.gtitle||'Friday Floodlit 5s',v:vIdx,venueName:vObj.name,pitch:pitchName,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:needVal,left:leftVal,price:priceVal,org:S.user.name||'Tunde Adeyemi',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr),notes:f.gnotes||'',isMine:true};
  games.unshift(g);
  if(window.FCData){
-   FCData.record('open_games',{title:g.title,organiser_name:S.user.name,organiser_contact:S.user.email,venue_name:vObj.name,pitch_name:g.pitch,match_when:g.when,format:g.fmt,players_needed:+g.need,slots_left:+g.left,price_ngn:+g.price,skill_level:g.level,requires_approval:g.approval},'open_game_created',{title:g.title,venue:vObj.name,format:g.fmt,price_ngn:g.price},g);
+   FCData.record('open_games',{id:gid,title:g.title,organiser_name:S.user.name,organiser_contact:S.user.email,venue_name:vObj.name,pitch_name:g.pitch,match_when:g.when,format:g.fmt,players_needed:+g.need,slots_left:+g.left,price_ngn:+g.price,skill_level:g.level,requires_approval:g.approval},'open_game_created',{game_id:gid,title:g.title,venue:vObj.name,format:g.fmt,price_ngn:g.price},g);
  }
- S.stack=[];S.tab='explore';S.sub.explore='Open Games';
+ S.stack=[{s:'game',a:g.id}];
  const pLabel=g.price===0?'Free':N(g.price)+'/player';
- showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery for players to join.',meta:[['Game',g.title],['Venue',vObj.name+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+pLabel+')']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',g.id),secondary:'View Open Games'});
+ showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery across web and mobile.',meta:[['Game',g.title],['Venue',vObj.name+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+pLabel+')']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',g.id),secondary:'Edit Game',secFn:()=>openEditGame(g.id)});
 }
 
 SC.event=id=>{const e=events[id];return `${hdr('Event',`<div class="row" style="gap:8px"><button class="round" onclick="S.saved[${id}]=!S.saved[${id}];render()" style="color:${S.saved[id]?'#D94343':'inherit'}">${ic('heart')}</button><button class="round" onclick="openShare('event',${id})">${ic('share')}</button></div>`)}
@@ -913,8 +971,15 @@ SC.activity=()=>{const k=S.sub.activity;let body='';
  const bk=(n,s,c,pay)=>`<div class="card"><div class="row sp"><b>${n}</b><span class="tag ${c}">${s}</span></div><div class="sub" style="margin:4px 0">Wed 11 Nov · 18:00 · Pitch A</div><div class="row sp small"><span class="muted">Ref FCP-482913</span><span>${pay}</span></div></div>`;
  if(k==='Bookings')body=`<div class="list">${bk('Lekki Goal Arena','Confirmed','ok','Paid in full')}${bk('Yaba Turf Club','Awaiting payment','warn','Pay before 5:00 PM')}${bk('Ikeja Sports Ground','Pending approval','warn','Deposit paid · balance ₦21,000')}</div>
   <h2 class="sec">Past</h2><div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Cancelled','bad','Refund pending')}</div>`;
- if(k==='Games Joined')body=`<div class="list">${gameCard(games[1])}</div>`;
- if(k==='Games Created')body=`<div class="list">${gameCard(games[0])}<div class="card"><div class="b">Join requests (1)</div><div class="row sp" style="margin-top:8px"><span class="small">Emeka O. wants to join</span><div class="row"><button class="btn sm ghost" onclick="toast('Declined')">Decline</button><button class="btn sm" onclick="showModal({title:'Player Approved!',sub:'Emeka O. has been added to Thursday Night 5s and notified.',meta:[['Player','Emeka Obi'],['Game','Thursday Night 5s']],primary:'Done'})">Approve</button></div></div></div></div>`;
+ if(k==='Games Joined'){
+   const joinedList=games.filter(g=>S.joined&&S.joined[g.id]);
+   const showList=joinedList.length?joinedList:[games[1]||games[0]];
+   body=`<div class="list">${showList.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm" onclick="go('gamePass','${g.id}')">View Permit Code</button><button class="btn sm ghost" onclick="openShare('game','${g.id}')">Share</button></div></div>`).join('')}</div>`;
+ }
+ if(k==='Games Created'){
+   const myGames=games.slice(0,3);
+   body=`<div class="list">${myGames.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button><button class="btn sm" onclick="openShare('game','${g.id}')">Invite &amp; Share</button></div></div>`).join('')}<div class="card"><div class="b">Join requests (1)</div><div class="row sp" style="margin-top:8px"><span class="small">Emeka O. wants to join</span><div class="row"><button class="btn sm ghost" onclick="toast('Declined')">Decline</button><button class="btn sm" onclick="showModal({title:'Player Approved!',sub:'Emeka O. has been added to '+games[0].title+' and notified.',meta:[['Player','Emeka Obi'],['Game',games[0].title]],primary:'Done'})">Approve</button></div></div></div></div>`;
+ }
  if(k==='Events')body=`<div class="list">${eventCard(events[0])}</div>`;
  if(k==='Tickets')body=`<div class="card" style="text-align:center"><div class="b">Lagos Grassroots Cup — Final</div><div class="sub">2 × General entry</div><div style="margin:14px auto;width:130px;height:130px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:90px;height:90px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><span class="tag ok">Valid · show at entry</span></div>`;
  if(k==='History')body=`<div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Completed','','Paid in full')}</div>`;
@@ -1072,7 +1137,7 @@ SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style
 <div class="search full" onclick="tab('explore')" style="margin:20px 0 0">${ic('search')}<span>Search pitches, games or events</span></div>
 <h2 class="sec">Recommended for you <a onclick="jump('venues')">See all ${ic('chev')}</a></h2>
 <div class="deck" onclick="go('venue',0)"><div ${pic('venue1',200)}><span class="pill-w">2.1 km</span><div class="dk"><div><div class="dkt">Lekki Goal Arena</div><div class="dks">${ic('pin')} Lekki Phase 1 · ${ic('star')} 4.7</div></div><div class="dkp">${N(25000)}<small>/hr</small></div></div></div></div>
-<div class="qrow"><button class="qa" onclick="jump('venues')"><i>${ic('pin')}</i>Book Pitch</button><button class="qa" onclick="go('createGame')"><i>${ic('plus')}</i>Create Game</button><button class="qa" onclick="jump('events')"><i>${ic('trophy')}</i>Events</button><button class="qa" onclick="S.sub.community='Teams';tab('community')"><i>${ic('users')}</i>Teams</button></div>
+<div class="qrow"><button class="qa" onclick="jump('venues')"><i>${ic('pin')}</i>Book Pitch</button><button class="qa" onclick="startCreateGame()"><i>${ic('plus')}</i>Create Game</button><button class="qa" onclick="jump('events')"><i>${ic('trophy')}</i>Events</button><button class="qa" onclick="S.sub.community='Teams';tab('community')"><i>${ic('users')}</i>Teams</button></div>
 <h2 class="sec">Open games near you <a onclick="jump('games')">See all ${ic('chev')}</a></h2><div class="hscroll">${games.map(g=>`<div style="width:276px">${gameCard(g)}</div>`).join('')}</div>
 <h2 class="sec">Nearby pitches <a onclick="jump('venues')">See all ${ic('chev')}</a></h2><div class="list">${venues.map(v=>`<div class="card vrow" onclick="go('venue',${v.id})"><div class="img has th" style="background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${v.name}</div><div class="sub small">${ic('pin')} ${v.area} · ${v.km} km</div><div class="row" style="gap:8px;margin-top:8px"><span class="tag ${v.id==1?'warn':'ok'}">${slotsLeft[v.id]}</span><span class="rate small">${ic('star')}${v.rating}</span></div></div>${ic('chev')}</div>`).join('')}</div>
 <h2 class="sec">Upcoming football events <a onclick="jump('events')">See all ${ic('chev')}</a></h2><div class="hscroll">${events.slice(0,3).map(e=>`<div style="width:284px">${eventCard(e)}</div>`).join('')}</div>
@@ -1080,14 +1145,22 @@ SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style
 <h2 class="sec">Teams <a onclick="S.sub.community='Teams';tab('community')">See all ${ic('chev')}</a></h2><div class="hscroll">${teams.map(teamMini).join('')}</div>
 <h2 class="sec">Recent community activity <a onclick="tab('community')">See all ${ic('chev')}</a></h2><div class="card small">Lekki Lions created a new game · <span class="muted">12 min ago</span></div>`;
 
-SC.game=id=>{const g=findGame(id),v=venues[g.v]||venues[0],vName=g.venueName||v.name,j=S.joined[g.id],filled=Math.max(g.need-g.left,1),isFree=!g.price||+g.price===0,pLabel=isFree?'Free':N(g.price);return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="back()">${ic('back')}</button><button class="round ov r" onclick="openShare('game','${g.id}')">${ic('share')}</button></div>
-<div class="sheetcard"><div class="row sp"><h1 style="font-size:22px">${g.title}</h1><span class="tag gold">${g.fmt}</span></div><div class="row" style="margin:8px 0 14px"><span class="tag">${g.level}</span><span class="tag ${g.left<=2?'warn':'ok'}">${g.left} slots left</span></div>
-<div class="card row"><div class="av">${ini(g.org||'Org')}</div><div class="grow"><div class="small muted">Hosted by</div><div class="b">${g.org}</div></div><button class="btn sm ghost" onclick="go('player')">View Profile</button></div>
+SC.game=id=>{
+ const exact=games.find(x=>String(x.id)===String(id))||games[+id];
+ if(!exact&&window.FCData&&FCData.loading){
+   return `<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Loading match details</h1><p class="sub" style="margin-top:6px">Fetching real-time game data…</p></div>`;
+ }
+ const g=findGame(id),v=venues[g.v]||venues[0],vName=g.venueName||v.name,j=S.joined[g.id],isFull=+g.left<=0,filled=Math.max(g.need-g.left,isFull?g.need:1),isFree=!g.price||+g.price===0,pLabel=isFree?'Free':N(g.price);
+ const btnText=j?'Joined · View Permit Code':isFull?'Slot Full · Check Other Games':(g.approval?'Request to join · '+pLabel:'Join Game · '+pLabel);
+ return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="if(S.stack.length>1){back()}else{S.stack=[];S.tab='home';render()}">${ic('back')}</button><button class="round ov r" onclick="openShare('game','${g.id}')">${ic('share')}</button></div>
+<div class="sheetcard"><div class="row sp"><h1 style="font-size:22px">${g.title}</h1><span class="tag gold">${g.fmt}</span></div><div class="row" style="margin:8px 0 14px"><span class="tag">${g.level}</span><span class="tag ${isFull?'bad':g.left<=2?'warn':'ok'}">${isFull?'0 slots left · Full':g.left+' slot'+(g.left===1?'':'s')+' left'}</span></div>
+<div class="card row"><div class="av">${ini(g.org||'Org')}</div><div class="grow"><div class="small muted">Hosted by</div><div class="b">${g.org}</div></div><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button></div>
 <div class="tiles"><div class="tile">${ic('clock')}<small>Date &amp; time</small><b>${g.when}</b></div><div class="tile">${ic('users')}<small>Players</small><b>${filled} of ${g.need} joined</b></div><div class="tile">${ic('ball')}<small>Format</small><b>${g.fmt}</b></div><div class="tile">${ic('card')}<small>Price per player</small><b>${pLabel}</b></div></div>
 <div class="card vrow" style="margin-top:12px" onclick="go('venue',${g.v||0})">${ic('pin')}<div class="grow"><div class="b">${vName}</div><div class="sub small">${g.pitch} · ${v.area}</div></div>${ic('chev')}</div>
-<div class="card" style="margin-top:12px"><div class="row sp"><b>Players</b>${faces(Math.min(filled,5),Math.max(filled-5,0))}</div><div class="bar" style="margin:10px 0 6px"><i style="width:${Math.min(100,filled/g.need*100)}%"></i></div><div class="small muted">${g.approval?'Organiser approval required to join':'Join directly'} · ${g.left} slots left</div></div>
+<div class="card" style="margin-top:12px"><div class="row sp"><b>Players</b>${faces(Math.min(filled,5),Math.max(filled-5,0))}</div><div class="bar" style="margin:10px 0 6px"><i style="width:${Math.min(100,filled/g.need*100)}%"></i></div><div class="small muted">${g.approval?'Organiser approval required to join':'Join directly'} · ${isFull?'All slots filled':g.left+' slots left'}</div></div>
+${g.notes?`<div class="card" style="margin-top:12px"><div class="small muted">Organiser instructions</div><div class="b small" style="margin-top:4px">${g.notes}</div></div>`:''}
 <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div></div>
-<div class="stick"><button class="btn big" onclick="joinOpenGame('${g.id}')"><span>${j?(g.approval?'Request pending':'Joined · View Activity'):(g.approval?'Request to join':'Join Game · '+pLabel)}</span><i class="arrow">${ic('chev')}</i></button></div>`};
+<div class="stick"><button class="btn big" onclick="joinOpenGame('${g.id}')"><span>${btnText}</span><i class="arrow">${ic('chev')}</i></button></div>`};
 
 SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];render()">Skip</button><h1>Find Football<br><em>Matches Near You</em></h1><p>Discover nearby games, check available slots, and join matches instantly.</p>
 <div class="float card"><div class="row"><div class="img has th" style="background-image:url(img/venue1.jpg)"></div><div><span class="tag gold">5-a-side</span><div class="b" style="margin-top:3px">Evening Kickoff</div><div class="sub small">Lekki Goal Arena · Today, 7:00 PM</div></div></div><div class="row sp" style="margin-top:10px">${faces(3,5)}<span class="small muted">8 players joined</span><span class="price">${N(2500)}</span></div></div>
@@ -1120,6 +1193,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js"></script>
+<script src="fc-data.js?v=5"></script>
 </body>
 </html>
