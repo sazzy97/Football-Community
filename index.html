@@ -3,7 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Football Community — Mobile Prototype</title>
+<title>Football Community Lagos</title>
+<meta name="description" content="Find places to play, people to play with, and matches to watch across Lagos.">
+<meta name="theme-color" content="#123D2B">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="FootballNG">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
 <style>
 /* ===== Design tokens (light / dark) ===== */
 /* ===== Design system tokens (provided) ===== */
@@ -425,6 +434,15 @@ h2.sec{margin:28px 0 14px}
 .time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0 16px}
 .time-pill{padding:11px 6px;border-radius:12px;background:var(--bg);border:1px solid var(--line);font-size:13px;font-weight:700;text-align:center;cursor:pointer}
 .time-pill.on{background:var(--brand);color:var(--brand-ink);border-color:var(--brand)}
+/* PWA & Owner Data Hub */
+.pwa-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:linear-gradient(135deg,#1A5A41,#123D2B);color:#fff;padding:12px 14px;border-radius:18px;margin:14px 0 4px;box-shadow:var(--sh-1)}
+.pwa-bar .btn.sm{background:var(--color-accent);color:var(--color-primary);padding:8px 14px;font-size:12px;flex:none}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.stat-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 8px;text-align:center;box-shadow:var(--sh-1)}
+.stat-box b{display:block;font-size:20px;font-weight:800;color:var(--brand)}
+[data-theme=dark] .stat-box b{color:var(--color-accent)}
+.stat-box small{font-size:11px;color:var(--muted);font-weight:600}
+.code-box{background:#0E1712;color:#D5E8DC;padding:12px;border-radius:14px;font-family:monospace;font-size:11px;line-height:1.45;overflow-x:auto;max-height:190px;border:1px solid #26382E;white-space:pre}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -432,12 +450,15 @@ h2.sec{margin:28px 0 14px}
 
 <div class="panel">
   <h2>Football Community</h2>
-  <p>Consumer mobile app prototype (placeholder name, PRD §23). All data is sample data.</p>
+  <p>Consumer mobile app (PWA + Supabase + PostHog ready).</p>
   <div class="seg" id="themeSeg">
     <button data-t="light" class="on">Light</button><button data-t="dark">Dark</button>
   </div>
-  <p style="margin:0 0 6px"><b>Jump to journey</b> (PRD §8)</p>
-  <a onclick="S.onb=1;jump('onb')">Onboarding — Interactive (§11.1)</a><a onclick="openShare('game',0)">Share screen (Games, Venues, Events)</a>
+  <p style="margin:0 0 6px"><b>Owner &amp; PWA Controls</b></p>
+  <a onclick="go('admin')" style="background:var(--surface2);padding:7px 10px;border-radius:10px;margin-bottom:6px">📊 Owner Data &amp; Cloud Setup</a>
+  <a onclick="installPWA()">📲 Install App (PWA Home Screen)</a>
+  <p style="margin:10px 0 6px"><b>Jump to journey</b> (PRD §8)</p>
+  <a onclick="S.onb=0;jump('onb')">Onboarding — Interactive (§11.1)</a><a onclick="openShare('game',0)">Share screen (Games, Venues, Events)</a>
   <a onclick="jump('venues')">A · Discover &amp; book a pitch</a>
   <a onclick="jump('createGame')">B · Create an open game</a>
   <a onclick="jump('games')">C · Join an open game</a>
@@ -543,14 +564,15 @@ const toast=m=>{S.toast=m;render();setTimeout(()=>{S.toast=null;render()},1800)}
 const showModal=(cfg)=>{S.modal=cfg;render()};
 const closeModal=(fn)=>{S.modal=null;if(fn)fn();render()};
 const openShare=(type,id)=>{
-  let item={type,id,title:'Football Community',sub:'Lagos, Nigeria',tag:'Football',url:'footballcommunity.ng',img:'game1'};
-  if(type==='venue'){const v=venues[id||0];item={type:'Venue',id:v.id,title:v.name,sub:v.area+' · From '+N(v.from)+'/hr',tag:v.fmts.join(' · '),url:'footballcommunity.ng/v/'+v.name.toLowerCase().replace(/\s+/g,'-'),img:v.im}}
-  else if(type==='game'){const g=games[id||0],v=venues[g.v];item={type:'Open Game',id:g.id,title:g.title,sub:v.name+' · '+g.when,tag:g.fmt+' · '+N(g.price)+'/player',url:'footballcommunity.ng/g/'+g.title.toLowerCase().replace(/\s+/g,'-'),img:'game1'}}
-  else if(type==='event'){const e=events[id||0];item={type:'Event',id:e.id,title:e.title,sub:e.venue+' · '+e.when,tag:e.cat+' · '+e.fee,url:'footballcommunity.ng/e/'+e.title.toLowerCase().replace(/[^a-z0-9]+/g,'-'),img:e.im}}
-  else if(type==='comp'){const c=comps[id||0];item={type:'Competition',id:c.id,title:c.name,sub:c.type+' · '+c.season,tag:c.teams+' teams',url:'footballcommunity.ng/c/'+c.name.toLowerCase().replace(/\s+/g,'-'),img:'event1'}}
-  else if(type==='team'){const t=teams[id||0];item={type:'Team',id:t.id,title:t.name,sub:t.loc+' · '+t.fmt,tag:t.m+' members',url:'footballcommunity.ng/t/'+t.name.toLowerCase().replace(/\s+/g,'-'),img:'event2'}}
-  else if(type==='match'){item={type:'Live Match',id:0,title:'Lekki Lions 1 : 1 Yaba Rovers',sub:'Lagos Grassroots Cup · Lagos Arena',tag:'LIVE · 54\'',url:'footballcommunity.ng/m/ll-vs-yr',img:'event1'}}
-  else if(type==='ticket'){const e=events[0];item={type:'Ticket',id:0,title:e.title,sub:e.venue+' · '+e.when,tag:'General Entry',url:'footballcommunity.ng/tix/FCP-TIX',img:e.im}}
+  const base='sazzy97.github.io/Football-Community/';
+  let item={type,id,title:'Football Community',sub:'Lagos, Nigeria',tag:'Football',url:base,img:'game1'};
+  if(type==='venue'){const v=venues[id||0];item={type:'Venue',id:v.id,title:v.name,sub:v.area+' · From '+N(v.from)+'/hr',tag:v.fmts.join(' · '),url:base+'?venue='+(id||0),img:v.im}}
+  else if(type==='game'){const g=games[id||0],v=venues[g.v];item={type:'Open Game',id:g.id,title:g.title,sub:v.name+' · '+g.when,tag:g.fmt+' · '+N(g.price)+'/player',url:base+'?game='+(id||0),img:'game1'}}
+  else if(type==='event'){const e=events[id||0];item={type:'Event',id:e.id,title:e.title,sub:e.venue+' · '+e.when,tag:e.cat+' · '+e.fee,url:base+'?event='+(id||0),img:e.im}}
+  else if(type==='comp'){const c=comps[id||0];item={type:'Competition',id:c.id,title:c.name,sub:c.type+' · '+c.season,tag:c.teams+' teams',url:base+'?tab=explore&sub=Competitions',img:'event1'}}
+  else if(type==='team'){const t=teams[id||0];item={type:'Team',id:t.id,title:t.name,sub:t.loc+' · '+t.fmt,tag:t.m+' members',url:base+'?team='+(id||0),img:'event2'}}
+  else if(type==='match'){item={type:'Live Match',id:0,title:'Lekki Lions 1 : 1 Yaba Rovers',sub:'Lagos Grassroots Cup · Lagos Arena',tag:'LIVE · 54\'',url:base+'?screen=match',img:'event1'}}
+  else if(type==='ticket'){const e=events[0];item={type:'Ticket',id:0,title:e.title,sub:e.venue+' · '+e.when,tag:'General Entry',url:base+'?event=0',img:e.im}}
   S.shareItem=item;
   go('share');
 };
@@ -654,9 +676,20 @@ SC.onb=()=>{
   <div class="row" style="margin-bottom:20px">${[0,1,2].map(i=>`<div class="bar grow" style="cursor:pointer" onclick="S.onb=${i};render()"><i style="width:${i<=S.onb?100:0}%"></i></div>`).join('')}</div>
   <h1>${st[0]}</h1><p class="sub" style="margin:6px 0 20px">${st[1]}</p>${st[2]}
   <div style="margin-top:26px">
-    <button class="btn" onclick="if(S.onb<2){S.onb++;render()}else{S.onb=0;S.stack=[];S.tab='home';showModal({title:'Welcome to Football Community!',sub:'Your profile and football preferences have been saved.',meta:[['Player',S.user.name||'Tunde Adeyemi'],['Location',S.user.loc],['Formats',Object.keys(S.user.fmts).filter(k=>S.user.fmts[k]).join(', ')],['Position',Object.keys(S.user.pos).filter(k=>S.user.pos[k]).join(', ')]],primary:'Start Exploring'})}">${S.onb<2?'Continue':'Finish Setup'}</button>
+    <button class="btn" onclick="if(S.onb<2){S.onb++;render()}else{finishOnb()}">${S.onb<2?'Continue':'Finish Setup'}</button>
     <div style="text-align:center;margin-top:16px"><button class="small b" style="color:var(--brand);text-decoration:underline" onclick="wlSignin()">I already have an account</button></div>
   </div></div>`};
+function finishOnb(){
+  const fmts=Object.keys(S.user.fmts).filter(k=>S.user.fmts[k]);
+  const pos=Object.keys(S.user.pos).filter(k=>S.user.pos[k]);
+  const avs=Object.keys(S.user.avail).filter(k=>S.user.avail[k]);
+  if(window.FCData){
+    FCData.identifyUser();
+    FCData.record('users',{full_name:S.user.name||'Tunde Adeyemi',email_or_phone:S.user.email||'tunde@example.com',location_cluster:S.user.loc,formats:fmts,positions:pos,experience:S.user.exp,availability:avs},'onboarding_completed',{location:S.user.loc,formats:fmts.join(','),positions:pos.join(',')});
+  }
+  S.onb=0;S.stack=[];S.tab='home';
+  showModal({title:'Welcome to Football Community!',sub:'Your profile and football preferences have been saved.',meta:[['Player',S.user.name||'Tunde Adeyemi'],['Location',S.user.loc],['Formats',fmts.join(', ')],['Position',pos.join(', ')]],primary:'Start Exploring'});
+}
 
 SC.home=()=>`<div class="row sp"><div class="row"><div class="av">TA</div><div><div class="sub">Hi, welcome back</div><div class="b">${ic('pin')} Lekki, Lagos</div></div></div><button class="round" onclick="go('notifs')">${ic('bell')}</button></div>
  <div class="search" style="margin:16px 0" onclick="tab('explore')">${ic('search')}<span>Search pitches, games, events</span></div>
@@ -762,8 +795,11 @@ function publishGame(){
  const f=S.form,newId=games.length;
  const g={id:newId,title:f.gtitle||'Friday Floodlit 5s',v:f.gv||0,pitch:venues[f.gv||0].pitches[0].n,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:f.gneed||10,left:f.gleft||3,price:f.gprice||2500,org:S.user.name.split(' ')[0]+' '+(S.user.name.split(' ')[1]||'A.')[0]+'.',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr)};
  games.unshift(g);
+ if(window.FCData){
+   FCData.record('open_games',{title:g.title,organiser_name:S.user.name,organiser_contact:S.user.email,venue_name:venues[g.v].name,pitch_name:g.pitch,match_when:g.when,format:g.fmt,players_needed:+g.need,slots_left:+g.left,price_ngn:+g.price,skill_level:g.level,requires_approval:g.approval},'open_game_created',{title:g.title,venue:venues[g.v].name,format:g.fmt,price_ngn:g.price});
+ }
  S.stack=[];S.tab='explore';S.sub.explore='Open Games';
- showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery for players to join.',meta:[['Game',g.title],['Venue',venues[g.v].name+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+N(g.price)+'/player)']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',newId),secondary:'View Open Games'});
+ showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery for players to join.',meta:[['Game',g.title],['Venue',venues[g.v].name+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+N(g.price)+'/player)']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',0),secondary:'View Open Games'});
 }
 
 SC.event=id=>{const e=events[id];return `${hdr('Event',`<div class="row" style="gap:8px"><button class="round" onclick="S.saved[${id}]=!S.saved[${id}];render()" style="color:${S.saved[id]?'#D94343':'inherit'}">${ic('heart')}</button><button class="round" onclick="openShare('event',${id})">${ic('share')}</button></div>`)}
@@ -779,7 +815,15 @@ SC.ticket=id=>{const e=events[id||0],q=S.tixQty||2,unit=1500,subTot=q*unit,fee=q
  return `${hdr('Tickets')}<div class="card"><div class="b">${e.title}</div><div class="sub">${e.venue} · ${e.when}</div>
  <div class="kv" style="margin-top:8px"><div><b>General entry</b><div class="small muted">${N(unit)} each</div></div><div class="row"><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.max(1,(S.tixQty||2)-1);render()">−</button><b>${q}</b><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.min(10,(S.tixQty||2)+1);render()">+</button></div></div>
  <div class="kv"><span class="muted">Tickets (${q} × ${N(unit)})</span><b>${N(subTot)}</b></div><div class="kv"><span class="muted">Service fee (shown before checkout)</span><b>${N(fee)}</b></div><div class="kv"><b>Total</b><b>${N(tot)}</b></div></div>
- <div style="margin-top:18px"><button class="btn" onclick="S.sub.activity='Tickets';S.stack=[];S.tab='activity';showModal({title:'Tickets Issued!',sub:'Your entry QR pass is ready in My Activity → Tickets.',meta:[['Event','${e.title}'],['Quantity',q+' × General entry'],['Total Paid','${N(tot)}'],['Ticket Ref','TIX-'+Math.floor(100000+Math.random()*899999)]],primary:'View My Ticket',secondary:'Share Event',secFn:()=>openShare('event',${id||0})})">Pay ${N(tot)}</button></div>`};
+ <div style="margin-top:18px"><button class="btn" onclick="buyTicket(${id||0},${q},${tot})">Pay ${N(tot)}</button></div>`};
+function buyTicket(id,q,tot){
+ const e=events[id||0],tref='TIX-'+Math.floor(100000+Math.random()*899999);
+ if(window.FCData){
+   FCData.record('ticket_orders',{ticket_ref:tref,event_title:e.title,venue_name:e.venue,buyer_name:S.user.name,buyer_contact:S.user.email,quantity:q,total_ngn:tot},'ticket_purchased',{event_title:e.title,quantity:q,total_ngn:tot});
+ }
+ S.sub.activity='Tickets';S.stack=[];S.tab='activity';
+ showModal({title:'Tickets Issued!',sub:'Your entry QR pass is ready in My Activity → Tickets.',meta:[['Event',e.title],['Quantity',q+' × General entry'],['Total Paid',N(tot)],['Ticket Ref',tref]],primary:'View My Ticket',secondary:'Share Event',secFn:()=>openShare('event',id||0)});
+}
 
 SC.comp=id=>{const c=comps[id],k=S.sub.compTab;const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
  Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
@@ -826,6 +870,9 @@ function createNewTeam(){
  const f=S.form,newId=teams.length;
  const t={id:newId,name:f.tname||'Victoria Island FC',loc:f.tloc||'Lekki',fmt:f.tfmt||'7-a-side',m:1,role:'Owner'};
  teams.unshift(t);
+ if(window.FCData){
+   FCData.record('teams',{team_name:t.name,location:t.loc,format:t.fmt,owner_name:S.user.name,owner_contact:S.user.email},'team_created',{team_name:t.name,location:t.loc,format:t.fmt});
+ }
  S.stack=[{s:'team',a:0}];
  showModal({title:'Team Created!',sub:'You are now the Owner & Captain of '+t.name+'. Invite players to build your squad.',meta:[['Team',t.name],['Location',t.loc],['Format',t.fmt],['Your Role','Owner & Captain']],primary:'Invite Players',primaryFn:()=>openShare('team',0),secondary:'View Team Profile'});
 }
@@ -848,8 +895,9 @@ SC.activity=()=>{const k=S.sub.activity;let body='';
 
 SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px;cursor:pointer" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
  return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">${ini(S.user.name||'Tunde Adeyemi')}</div><h1>${S.user.name||'Tunde Adeyemi'}</h1><div class="sub">${S.user.loc} · Player · Captain · Spectator</div></div>
+ <div class="pwa-bar"><div><div class="b" style="font-size:14px">Install Football Community</div><div style="font-size:11px;opacity:.85">Add to your phone home screen for 1-tap access</div></div><button class="btn sm" onclick="installPWA()">Install App</button></div>
  <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;go('onb')")}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
- <h2 class="sec">Settings</h2><div class="list">${it('cog','Football preferences',"S.onb=2;go('onb')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout','Sign out',"confirmSignOut()")}</div>
+ <h2 class="sec">Settings &amp; Owner Hub</h2><div class="list">${it('list','Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')")}${it('cog','Football preferences',"S.onb=2;go('onb')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout','Sign out',"confirmSignOut()")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
 SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others can view your football profile',true],['Discoverable by players','Appear in player discovery',true],['Show public activity','Games and teams on your profile',false]].map((r,i)=>`<div class="opt" onclick="flipTog('pv${i}',${r[2]},event)"><div class="grow"><b>${r[0]}</b><div class="sub">${r[1]}</div></div>${tog(r[2],'pv'+i)}</div>`).join('')}</div><div class="note" style="margin-top:12px">Sensitive personal information is not shown publicly by default. You can also block or report users.</div>`;
@@ -857,11 +905,28 @@ SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others 
 SC.notifs=()=>`${hdr('Notifications')}<div class="list">${[['Booking confirmed','Lekki Goal Arena · Wed 18:00','ok'],['Payment confirmed',N(25000)+' received','ok'],['Booking reminder','Tomorrow 18:00 at Lekki Goal Arena',''],['Join approved','You are in Thursday Night 5s','ok'],['Team invitation','Mainland FC invited you',''],['Fixture update','Lagos Grassroots Cup: kickoff moved to 15:00','warn'],['Match result','Mainland FC 3 – 0 Ikeja Stars','']].map(n=>`<div class="card row"><span class="tag ${n[2]}">${ic('bell')}</span><div class="grow"><b>${n[0]}</b><div class="small muted">${n[1]}</div></div></div>`).join('')}</div>
  <h2 class="sec">Preferences</h2><div class="opt" onclick="flipTog('n1',true,event)"><div class="grow"><b>Booking and payment alerts</b></div>${tog(true,'n1')}</div><div class="opt" style="margin-top:8px" onclick="flipTog('n2',true,event)"><div class="grow"><b>Event and competition updates</b></div>${tog(true,'n2')}</div><div class="opt" style="margin-top:8px" onclick="flipTog('n3',true,event)"><div class="grow"><b>Team and open-game invitations</b></div>${tog(true,'n3')}</div>`;
 
-SC.submitEvent=()=>{const f=S.form;if(!f.edate)f.edate='Sat 28 Nov';if(!f.etime)f.etime='15:00–17:00';return `${hdr('Suggest an event')}<div class="note" style="margin-bottom:12px">Community submissions are reviewed before they appear as confirmed events.</div><div class="field">Event name<input placeholder="e.g. Surulere Community Cup"></div><div class="field">Category<select><option>Local tournament</option><option>Grassroots competition</option><option>Friendly match</option><option>Charity match</option><option>Football trial</option></select></div><div class="field">Venue or location<input placeholder="e.g. Surulere Playground"></div><div class="row"><div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('edate','${f.edate}')"><span>${f.edate}</span>${ic('cal')}</button></div><div class="field grow">Time<button type="button" class="picker-field" onclick="openTimePicker('etime','${f.etime}')"><span>${f.etime}</span>${ic('clock')}</button></div></div><button class="btn" onclick="back();showModal({title:'Event Submitted for Review!',sub:'Per platform trust rules (PRD §6.2.6), community-submitted events are reviewed by moderators before appearing as confirmed events.',meta:[['Status','Pending moderation'],['Date',S.form.edate||'Sat 28 Nov'],['Trust Label','Community-submitted']],primary:'Got It'})">Submit for review</button>`};
+SC.submitEvent=()=>{const f=S.form;if(!f.edate)f.edate='Sat 28 Nov';if(!f.etime)f.etime='15:00–17:00';if(!f.ecat)f.ecat='Local tournament';return `${hdr('Suggest an event')}<div class="note" style="margin-bottom:12px">Community submissions are reviewed before they appear as confirmed events.</div><div class="field">Event name<input value="${f.ename||''}" oninput="S.form.ename=this.value" placeholder="e.g. Surulere Community Cup"></div><div class="field">Category<select onchange="S.form.ecat=this.value"><option>Local tournament</option><option>Grassroots competition</option><option>Friendly match</option><option>Charity match</option><option>Football trial</option></select></div><div class="field">Venue or location<input value="${f.evenue||''}" oninput="S.form.evenue=this.value" placeholder="e.g. Surulere Playground"></div><div class="row"><div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('edate','${f.edate}')"><span>${f.edate}</span>${ic('cal')}</button></div><div class="field grow">Time<button type="button" class="picker-field" onclick="openTimePicker('etime','${f.etime}')"><span>${f.etime}</span>${ic('clock')}</button></div></div><button class="btn" onclick="submitNewEvent()">Submit for review</button>`};
+function submitNewEvent(){
+  const f=S.form;
+  const ename=f.ename||'Surulere Community Cup',ecat=f.ecat||'Local tournament',evenue=f.evenue||'Surulere Playground',edate=f.edate||'Sat 28 Nov',etime=f.etime||'15:00–17:00';
+  if(window.FCData){
+    FCData.record('event_submissions',{event_name:ename,category:ecat,venue:evenue,event_date:edate,event_time:etime,submitted_by:S.user.name,status:'pending_review'},'event_submitted',{event_name:ename,category:ecat,venue:evenue});
+  }
+  back();
+  showModal({title:'Event Submitted for Review!',sub:'Per platform trust rules (PRD §6.2.6), community-submitted events are reviewed by moderators before appearing as confirmed events.',meta:[['Event',ename],['Status','Pending moderation'],['Date',edate+' · '+etime],['Trust Label','Community-submitted']],primary:'Got It'});
+}
 
-function payNow(){S.b.ref='FCP-'+Math.floor(100000+Math.random()*899999);
-  if(S.b.pay==='other'){go('confirm');showModal({title:'Booking Request Sent!',sub:'Your slot request has been sent to the venue. It remains pending until verified.',meta:[['Reference',S.b.ref],['Venue',venues[S.b.v].name],['Pitch',venues[S.b.v].pitches[S.b.p].n],['Time',S.b.t]],primary:'View Booking Details'});return}
-  go('processing');setTimeout(()=>{const c=S.stack[S.stack.length-1];if(c&&c.s==='processing'){const failed=S.fail;S.stack.pop();S.stack.push({s:failed?'failed':'confirm'});S.fail=false;if(!failed){const v=venues[S.b.v],p=v.pitches[S.b.p];showModal({title:'Booking Confirmed!',sub:'Payment verified by our server. Your pitch is reserved.',meta:[['Booking Ref',S.b.ref],['Venue',v.name],['Pitch',p.n+' · '+p.f],['Time',S.b.t],['Status',S.b.pay==='deposit'?'Deposit Paid':'Paid in Full']],primary:'Done',secondary:'Share Booking',secFn:()=>openShare('venue',S.b.v)})}else{render()}}},1700)}
+function payNow(){
+  S.b.ref='FCP-'+Math.floor(100000+Math.random()*899999);
+  const v=venues[S.b.v],p=v.pitches[S.b.p],bdate='Wed '+(11+S.b.d-2)+' Nov';
+  const amt=S.b.pay==='full'?p.p:S.b.pay==='deposit'?Math.round(p.p*0.3):0;
+  if(S.b.pay==='other'){
+    if(window.FCData)FCData.record('bookings',{booking_ref:S.b.ref,user_name:S.user.name,user_contact:S.user.email,venue_name:v.name,pitch_name:p.n,format:p.f,booking_date:bdate,booking_time:S.b.t,amount_ngn:amt,payment_option:'other',status:'pending_approval'},'pitch_booked',{venue:v.name,pitch:p.n,payment_option:'other',amount_ngn:amt});
+    go('confirm');showModal({title:'Booking Request Sent!',sub:'Your slot request has been sent to the venue. It remains pending until verified.',meta:[['Reference',S.b.ref],['Venue',v.name],['Pitch',p.n],['Time',S.b.t]],primary:'View Booking Details'});return;
+  }
+  go('processing');setTimeout(()=>{const c=S.stack[S.stack.length-1];if(c&&c.s==='processing'){const failed=S.fail;S.stack.pop();S.stack.push({s:failed?'failed':'confirm'});S.fail=false;if(!failed){
+    if(window.FCData)FCData.record('bookings',{booking_ref:S.b.ref,user_name:S.user.name,user_contact:S.user.email,venue_name:v.name,pitch_name:p.n,format:p.f,booking_date:bdate,booking_time:S.b.t,amount_ngn:amt,payment_option:S.b.pay,status:'confirmed'},'pitch_booked',{venue:v.name,pitch:p.n,payment_option:S.b.pay,amount_ngn:amt});
+    showModal({title:'Booking Confirmed!',sub:'Payment verified by our server. Your pitch is reserved.',meta:[['Booking Ref',S.b.ref],['Venue',v.name],['Pitch',p.n+' · '+p.f],['Time',S.b.t],['Status',S.b.pay==='deposit'?'Deposit Paid':'Paid in Full']],primary:'Done',secondary:'Share Booking',secFn:()=>openShare('venue',S.b.v)})}else{render()}}},1700)}
 SC.processing=()=>`<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Verifying payment</h1><p class="sub" style="margin-top:6px">Please keep the app open. We confirm with our server before marking your booking paid.</p></div>`;
 SC.failed=()=>`<div style="text-align:center;padding-top:60px"><div class="av lg" style="margin:0 auto 16px;background:var(--bad);color:#fff;font-size:34px">!</div><h1>Payment failed</h1><p class="sub" style="margin:6px 0 20px">You have not been charged. Your slot is still held while the timer runs.</p></div>
  <div class="card"><div class="kv"><span class="muted">Payment status</span><span class="tag bad">Failed</span></div><div class="kv"><span class="muted">Slot hold</span><b id="hold">${Math.floor(S.hold/60)}:${String(S.hold%60).padStart(2,'0')}</b></div></div>
@@ -870,7 +935,7 @@ SC.expired=()=>`<div style="text-align:center;padding-top:80px"><div class="av l
 SC.welcome=()=>`<div class="welcome"><span class="tag" style="background:var(--color-accent);color:var(--color-primary);align-self:flex-start">Lagos, Nigeria</span><h1>The home of football communities</h1><p style="opacity:.85;margin-bottom:22px">Find places to play, people to play with, and matches to watch.</p><button class="btn" style="background:var(--color-accent);color:var(--color-primary)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Get started</button><button class="btn ghost" style="margin-top:10px" onclick="S.stack=[];render()">I already have an account</button></div>`;
 
 SC.share=()=>{
-  const it=S.shareItem||{type:'Open Game',id:0,title:'Thursday Night 5s',sub:'Lekki Goal Arena · Thu 12 Nov · 20:00',tag:'5-a-side · ₦2,500/player',url:'footballcommunity.ng/g/thursday-night-5s',img:'game1'};
+  const it=S.shareItem||{type:'Open Game',id:0,title:'Thursday Night 5s',sub:'Lekki Goal Arena · Thu 12 Nov · 20:00',tag:'5-a-side · ₦2,500/player',url:'sazzy97.github.io/Football-Community/?game=0',img:'game1'};
   const chans=[
     ['WhatsApp','#25D366','WA'],
     ['Copy Link','#123D2B','🔗'],
@@ -894,11 +959,11 @@ SC.share=()=>{
   </div>
   <div class="share-link-box">
     <code>https://${it.url}</code>
-    <button class="btn sm" onclick="showModal({title:'Link Copied!',sub:'The share link is on your clipboard and ready to paste anywhere.',meta:[['Item','${it.title}'],['Link','https://${it.url}']],primary:'Done'})">Copy</button>
+    <button class="btn sm" onclick="shareVia('Copy Link')">Copy</button>
   </div>
   <h2 class="sec" style="margin-top:6px">Share to</h2>
   <div class="share-grid">
-    ${chans.map(c=>`<button class="share-chan" onclick="showModal({title:'Shared via ${c[0]}!',sub:'Your ${it.type.toLowerCase()} card and link have been prepared for ${c[0]}.',meta:[['Shared','${it.title}'],['Channel','${c[0]}'],['Link','https://${it.url}']],primary:'Done'})"><i style="background:${c[1]}">${c[2]}</i><span>${c[0]}</span></button>`).join('')}
+    ${chans.map(c=>`<button class="share-chan" onclick="shareVia('${c[0]}')"><i style="background:${c[1]}">${c[2]}</i><span>${c[0]}</span></button>`).join('')}
   </div>
   <h2 class="sec">Invite players on Football Community</h2>
   <div class="list">
@@ -958,7 +1023,7 @@ function render(){
     $('phone').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" onclick="closeModal()"><div class="modal-card" onclick="event.stopPropagation()"><div class="modal-ico ${m.tone||''}">${ic(m.icon||'check')}</div><h2>${m.title}</h2><div class="sub">${m.sub||''}</div>${metaHtml}<div class="modal-actions"><button class="btn ${m.danger?'danger':''}" onclick="closeModal(S.modal&&S.modal.primaryFn)">${m.primary||'Done'}</button>${m.secondary?`<button class="btn ghost" onclick="const fn=S.modal&&S.modal.secFn;closeModal(fn)">${m.secondary}</button>`:''}</div></div></div>`);
   }
   const key=S.tab+'|'+S.stack.length+(cur?cur.s+cur.a:'');
-  if(key!==S.last){sc.classList.remove('anim');void sc.offsetWidth;sc.classList.add('anim');S.last=key;sc.scrollTop=0}else{sc.scrollTop=top0}
+  if(key!==S.last){sc.classList.remove('anim');void sc.offsetWidth;sc.classList.add('anim');S.last=key;sc.scrollTop=0;if(window.FCData)FCData.captureAnalytics('$pageview',{screen:cur?cur.s:S.tab})}else{sc.scrollTop=top0}
 }
 function setTheme(t){S.theme=t;document.body.dataset.theme=t;document.documentElement.dataset.theme=t;
   document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));render()}
@@ -994,7 +1059,7 @@ SC.game=id=>{const g=games[id||0],v=venues[g.v],j=S.joined[id||0],filled=g.need-
 <div class="card vrow" style="margin-top:12px" onclick="go('venue',${g.v})">${ic('pin')}<div class="grow"><div class="b">${v.name}</div><div class="sub small">${g.pitch} · ${v.area}</div></div>${ic('chev')}</div>
 <div class="card" style="margin-top:12px"><div class="row sp"><b>Players</b>${faces(5,Math.max(filled-5,0))}</div><div class="bar" style="margin:10px 0 6px"><i style="width:${filled/g.need*100}%"></i></div><div class="small muted">${g.approval?'Organiser approval required to join':'Join directly'} · ${g.left} slots left</div></div>
 <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div></div>
-<div class="stick"><button class="btn big" onclick="S.joined[${id||0}]=true;showModal({title:g.approval?'Join Request Sent!':'Spot Reserved!',sub:g.approval?'The organiser ('+g.org+') will review your request and notify you.':'Your player slot is confirmed for '+g.title+'.',meta:[['Game',g.title],['Venue',v.name+' · '+g.pitch],['When',g.when],['Contribution',N(g.price)]],primary:'View in My Activity',primaryFn:()=>{S.sub.activity='Games Joined';S.stack=[];S.tab='activity'},secondary:'Share Game',secFn:()=>openShare('game',${id||0})})"><span>${j?(g.approval?'Request pending':'Joined · View Activity'):(g.approval?'Request to join':'Join Game · '+N(g.price))}</span><i class="arrow">${ic('chev')}</i></button></div>`};
+<div class="stick"><button class="btn big" onclick="joinOpenGame(${id||0})"><span>${j?(g.approval?'Request pending':'Joined · View Activity'):(g.approval?'Request to join':'Join Game · '+N(g.price))}</span><i class="arrow">${ic('chev')}</i></button></div>`};
 
 SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];render()">Skip</button><h1>Find Football<br><em>Matches Near You</em></h1><p>Discover nearby games, check available slots, and join matches instantly.</p>
 <div class="float card"><div class="row"><div class="img has th" style="background-image:url(img/venue1.jpg)"></div><div><span class="tag gold">5-a-side</span><div class="b" style="margin-top:3px">Evening Kickoff</div><div class="sub small">Lekki Goal Arena · Today, 7:00 PM</div></div></div><div class="row sp" style="margin-top:10px">${faces(3,5)}<span class="small muted">8 players joined</span><span class="price">${N(2500)}</span></div></div>
@@ -1021,11 +1086,12 @@ SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.ws=
  <div class="field">Email or phone<input value="${S.user.email}" oninput="S.user.email=this.value" placeholder="you@example.com"></div>
  <div class="field">Password<div class="pw-wrap"><input type="${S.showPw?'text':'password'}" value="${S.user.pass||'Football2026!'}" oninput="S.user.pass=this.value" placeholder="Enter your password"><button type="button" class="pw-eye" onclick="S.showPw=!S.showPw;render()" aria-label="Show password">${ic(S.showPw?'eyeOff':'eye')}</button></div></div>
  <div class="row sp" style="margin:-4px 0 24px"><span class="small muted">Forgot your password?</span><button class="small b" style="color:var(--brand)" onclick="showModal({title:'Reset link sent',sub:'We sent password reset instructions to '+S.user.email+'.',primary:'Done'})">Reset it</button></div>
- <button class="btn" onclick="S.stack=[];S.tab='home';toast('Signed in as '+S.user.email);render()">Sign in</button>
+ <button class="btn" onclick="if(window.FCData){FCData.identifyUser();FCData.record('app_events',{},'user_signed_in',{email:S.user.email})};S.stack=[];S.tab='home';toast('Signed in as '+S.user.email);render()">Sign in</button>
  <p class="small muted" style="text-align:center;margin-top:20px">New here? <button class="b" style="color:var(--brand)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Create an account</button></p></div>`;
 const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign in again to book pitches, join games and see your activity.',icon:'logout',tone:'warn',danger:true,primary:'Yes, sign out',secondary:'Cancel',primaryFn:()=>{S.stack=[{s:'signin'}];S.tab='home'}});
 setTheme('light');
 render();
 </script>
+<script src="fc-data.js"></script>
 </body>
 </html>

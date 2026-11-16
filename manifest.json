@@ -1,0 +1,49 @@
+{
+  "name": "Football Community Lagos",
+  "short_name": "FootballNG",
+  "description": "Find places to play, people to play with, and matches to watch across Lagos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F4F4",
+  "theme_color": "#123D2B",
+  "categories": ["sports", "social", "lifestyle"],
+  "icons": [
+    {
+      "src": "img/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "img/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Book a Pitch",
+      "short_name": "Book Pitch",
+      "description": "Discover and book verified football pitches in Lagos",
+      "url": "./index.html?tab=explore&sub=Pitches",
+      "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Join Open Game",
+      "short_name": "Open Games",
+      "description": "Find open 5-a-side and 7-a-side games needing players",
+      "url": "./index.html?tab=explore&sub=Open%20Games",
+      "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Create Game",
+      "short_name": "Create Game",
+      "description": "Organise a match and invite players",
+      "url": "./index.html?screen=createGame",
+      "icons": [{ "src": "img/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
