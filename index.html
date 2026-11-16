@@ -859,7 +859,7 @@ SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];r
 
 /* ===== Round 6: welcome slides, sign in, sign out ===== */
 const SBW=`<div class="wl-sb"><span>9:41</span><span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 6a15 15 0 0 1 20 0M6 10.5a9 9 0 0 1 12 0M10 15a3 3 0 0 1 4 0"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg></span></div>`;
-const WS=[{tag:'LIVE PITCH RADAR',h1:'Find Football',h2:'Matches Near You',p:'Discover nearby games to watch at your leisure time.',img:'welcome-bg',card:{img:'event1',tag:'11-A-SIDE',title:'KiDave Media Cup',l1:'Oki pry school · Today, 4:00 PM<br>Sat, Nov 15 · 4:00 PM',l2:'',right:'● Free'}},
+const WS=[{tag:'LIVE PITCH RADAR',h1:'Find Football',h2:'Matches Near You',p:'Discover nearby games to watch at your leisure time.',img:'game1',card:{img:'event1',tag:'11-A-SIDE',title:'KiDave Media Cup',l1:'Oki pry school · Today, 4:00 PM<br>Sat, Nov 15 · 4:00 PM',l2:'',right:'● Free'}},
  {tag:'PLAY · BOOK A PITCH',h1:'Book Pitches',h2:'Anytime, Anywhere',p:'See live availability, pick your slot and pay in full or by deposit in a few taps.',img:'venue1',card:{img:'venue2',tag:'5-A-SIDE',title:'Lekki Goal Arena',l1:'Lekki Phase 1 · 2.1 km away',l2:'From ₦25,000 / hour',right:'4 slots free'}},
  {tag:'CONNECT · OPEN GAMES',h1:'Join Games,',h2:'Build Your Squad',p:'No full team needed. Join open games, create your own and meet players near you.',img:'game1',card:{img:'game1',tag:'5-A-SIDE',title:'Thursday Night 5s',l1:'Lekki Goal Arena · Thu, 8:00 PM',l2:'2 slots left · ₦2,500 / player',right:'₦2,500'}}];
 const wlNext=()=>{if(S.ws<2){S.ws++;render()}else{S.onb=0;S.stack=[{s:'onb'}];render()}};
@@ -872,9 +872,7 @@ const wlCoded=(d,extra)=>{const c=d.card;
  <div class="wl-dots">${[0,1,2].map(k=>`<i class="${k===S.ws?'on':''}" onclick="S.ws=${k};render()"></i>`).join('')}</div>
  <button class="wl-go" onclick="wlNext()" aria-label="${S.ws===2?'Create account':'Next slide'}">${ic('chev')}</button>
  <button class="wl-link" onclick="wlSignin()">I already have an account</button></div>`};
-SC.welcome=()=>{
- if(S.ws===0)return `<div class="wl img1 only-desk"><button class="hz" style="left:77%;top:6.8%;width:21%;height:5%" onclick="wlSkip()" aria-label="Skip"></button><button class="hz" style="left:77%;top:82.5%;width:19%;height:9%;border-radius:50%" onclick="wlNext()" aria-label="Next slide"></button><button class="hz" style="left:24%;top:92%;width:52%;height:5%" onclick="wlSignin()" aria-label="I already have an account"></button><button class="hz" style="left:2%;top:86%;width:28%;height:5%" onclick="S.ws=1;render()" aria-label="Slide dots"></button></div>`+wlCoded(WS[0],'only-mob');
- return wlCoded(WS[S.ws])};
+SC.welcome=()=>wlCoded(WS[S.ws]);
 SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.ws=0;S.stack=[{s:'welcome'}];render()" aria-label="Back">${ic('back')}</button>
  <h1 style="margin-top:24px;font-size:30px">Welcome back</h1><p class="sub" style="margin:8px 0 26px">Sign in to book pitches, join open games and follow your teams.</p>
  <div class="field">Email or phone<input value="${S.user.email}" oninput="S.user.email=this.value" placeholder="you@example.com"></div>
