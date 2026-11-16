@@ -3,11 +3,18 @@
    ========================================================================== */
 
 const DEFAULT_FC_CONFIG = {
-  supabaseUrl: '',
-  supabaseKey: '',
-  posthogKey: '',
+  supabaseUrl: 'https://lqkeaotyyfmajabcqhgq.supabase.co',
+  supabaseKey: 'sb_publishable_RP1haqnhloKRaq6slQZlLA_XtaEcxx2',
+  posthogKey: 'phc_qQH6x8kwgSqAvmzPeozxmS66s8mwCUJ55Q7f4sWp8G6f',
   posthogHost: 'https://us.i.posthog.com'
 };
+
+function normalizeSupabaseUrl(url) {
+  if (!url) return '';
+  const m = url.match(/supabase\.com\/dashboard\/project\/([a-z0-9]+)/i);
+  if (m) return `https://${m[1]}.supabase.co`;
+  return url.replace(/\/+$/, '');
+}
 
 const FCData = {
   cfg: { ...DEFAULT_FC_CONFIG },
@@ -28,7 +35,16 @@ const FCData = {
   init() {
     try {
       const savedCfg = localStorage.getItem('fc_cloud_config');
-      if (savedCfg) this.cfg = { ...DEFAULT_FC_CONFIG, ...JSON.parse(savedCfg) };
+      if (savedCfg) {
+        const parsed = JSON.parse(savedCfg);
+        this.cfg = {
+          supabaseUrl: normalizeSupabaseUrl(parsed.supabaseUrl || DEFAULT_FC_CONFIG.supabaseUrl),
+          supabaseKey: parsed.supabaseKey || DEFAULT_FC_CONFIG.supabaseKey,
+          posthogKey: parsed.posthogKey || DEFAULT_FC_CONFIG.posthogKey,
+          posthogHost: parsed.posthogHost || DEFAULT_FC_CONFIG.posthogHost
+        };
+      }
+      this.cfg.supabaseUrl = normalizeSupabaseUrl(this.cfg.supabaseUrl);
       const savedDb = localStorage.getItem('fc_local_db');
       if (savedDb) this.db = { ...this.db, ...JSON.parse(savedDb) };
     } catch (e) {
@@ -55,6 +71,7 @@ const FCData = {
 
   saveConfig(newCfg) {
     this.cfg = { ...this.cfg, ...newCfg };
+    this.cfg.supabaseUrl = normalizeSupabaseUrl(this.cfg.supabaseUrl);
     try {
       localStorage.setItem('fc_cloud_config', JSON.stringify(this.cfg));
     } catch (e) {}
