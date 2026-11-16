@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Football Community — Mobile Prototype</title>
 <style>
 /* ===== Design tokens (light / dark) ===== */
@@ -318,6 +318,63 @@ h2.sec{margin:28px 0 14px}
 .opt{cursor:pointer;user-select:none}
 .chip{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:6px}
 .chip .chk{width:14px;height:14px;border-radius:50%;display:inline-grid;place-items:center;background:rgba(255,255,255,.22)}
+
+/* ===================== Round 6: welcome slides, home row, nav, mobile ===================== */
+.top h1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.locl{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--sec);margin-top:3px}
+.locl .ico{width:13px;height:13px}
+.locl .ico:first-child{color:var(--ok)}
+.qrow{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:6px 0 4px}
+.qa{display:flex;flex-direction:column;align-items:center;gap:10px;font-size:12px;font-weight:700;color:var(--text)}
+.qa i{width:100%;max-width:72px;aspect-ratio:1;border-radius:22px;background:var(--surface);box-shadow:var(--sh-1);display:grid;place-items:center;color:var(--brand);font-style:normal;border:1px solid rgba(23,33,27,.05)}
+.qa i .ico{width:26px;height:26px}
+[data-theme=dark] .qa i{border-color:rgba(255,255,255,.06)}
+.qa:active i{transform:scale(.94)}
+/* nav: every icon always visible */
+.nav{gap:2px;padding:0 6px}
+.nav button{flex:1 1 0;min-width:0;justify-content:center;padding:13px 0}
+.nav button.on{flex:2.3 1 0;padding:13px 8px}
+.nav button.on span{font-size:12px;white-space:nowrap}
+@media(max-width:400px){.nav button.on span{font-size:11px}.nav button.on{padding:13px 4px;flex:2.4 1 0}}
+/* modal tones */
+.modal-ico.warn{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad);box-shadow:0 0 0 8px color-mix(in srgb,var(--bad) 8%,transparent)}
+.btn.danger{background:var(--bad);color:#fff;box-shadow:0 8px 20px rgba(217,67,67,.25)}
+.btn.danger:hover{background:#c13636;color:#fff}
+/* welcome slides */
+.wl{position:absolute;inset:0;z-index:5;color:#fff;overflow:hidden;background-size:cover;background-position:center;background-repeat:no-repeat}
+.wl.img1{background-image:url(img/welcome1.jpg);background-size:100% 100%}
+.wl .hz{position:absolute;background:transparent;border-radius:999px}
+.wl-sb{position:absolute;top:14px;left:28px;right:28px;display:flex;justify-content:space-between;font-size:14px;font-weight:600;z-index:2}
+.wl-skip{position:absolute;top:66px;right:22px;padding:9px 16px;border-radius:999px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);font-size:12px;font-weight:700;letter-spacing:.06em;color:#fff}
+.wl-copy{position:absolute;top:128px;left:24px;right:24px}
+.wl-tag{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;background:rgba(184,243,74,.12);border:1px solid rgba(184,243,74,.4);color:#B8F34A;font-size:11px;font-weight:700;letter-spacing:.04em}
+.wl-tag i{width:7px;height:7px;border-radius:50%;background:#B8F34A}
+.wl-copy h1{font-size:34px;line-height:1.08;margin:18px 0 12px;color:#fff}
+.wl-copy h1 em{font-style:normal;color:#B8F34A}
+.wl-copy p{font-size:14px;line-height:1.55;color:rgba(255,255,255,.82);max-width:300px}
+.wl-card{position:absolute;left:20px;right:20px;bottom:198px;display:flex;gap:14px;align-items:center;padding:16px;border-radius:24px;background:rgba(18,28,22,.78);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(16px)}
+.wl-card .th{width:58px;height:58px;border-radius:14px}
+.wl-card .t{font-size:16px;font-weight:800;margin:6px 0 4px}
+.wl-card .s{font-size:12px;color:rgba(255,255,255,.74);line-height:1.5}
+.wl-card .tg{display:inline-block;padding:4px 9px;border-radius:8px;background:rgba(184,243,74,.14);border:1px solid rgba(184,243,74,.3);color:#B8F34A;font-size:10px;font-weight:800;letter-spacing:.04em}
+.wl-card .fr{position:absolute;top:14px;right:16px;font-size:12px;font-weight:700;color:#4CD08A}
+.wl-dots{position:absolute;left:24px;bottom:96px;display:flex;gap:7px}
+.wl-dots i{width:9px;height:9px;border-radius:99px;background:rgba(255,255,255,.4);cursor:pointer}
+.wl-dots i.on{width:34px;background:#B8F34A}
+.wl-go{position:absolute;right:22px;bottom:70px;width:64px;height:64px;border-radius:50%;background:#B8F34A;color:#123D2B;display:grid;place-items:center;box-shadow:0 10px 28px rgba(184,243,74,.3)}
+.wl-go .ico{width:26px;height:26px;stroke-width:2.4}
+.wl-link{position:absolute;left:0;right:0;bottom:32px;text-align:center;color:rgba(255,255,255,.88);font-size:13px;font-weight:600;text-decoration:underline}
+/* real phones: full-screen app, no frame */
+@media(max-width:520px){
+ body{display:block;padding:0;background:var(--bg)}
+ .panel{display:none}
+ .phone{width:100vw;height:100vh;height:100dvh;border:0;border-radius:0;box-shadow:none}
+ .notch,.status,.wl-sb{display:none}
+ .screen{padding-top:calc(20px + env(safe-area-inset-top))}
+ .nav{bottom:calc(14px + env(safe-area-inset-bottom))}
+ .wl-skip{top:calc(20px + env(safe-area-inset-top))}
+ .wl-copy{top:calc(84px + env(safe-area-inset-top))}
+}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -336,7 +393,7 @@ h2.sec{margin:28px 0 14px}
   <a onclick="jump('games')">C · Join an open game</a>
   <a onclick="jump('events')">D · Discover a football event</a>
   <a onclick="jump('createTeam')">E · Create a team</a>
-  <a onclick="jump('notifs')">Notifications (§6.3.7)</a><a onclick="S.fail=true;toast('Next payment will fail')">Simulate a failed payment</a><a onclick="S.stack=[{s:'welcome'}];render()">Welcome screen</a>
+  <a onclick="jump('notifs')">Notifications (§6.3.7)</a><a onclick="S.fail=true;toast('Next payment will fail')">Simulate a failed payment</a><a onclick="S.ws=0;S.stack=[{s:'welcome'}];render()">Welcome slides</a><a onclick="S.stack=[{s:'signin'}];render()">Sign in screen</a>
   <p class="small" style="margin-top:14px">Nothing here adds requirements beyond the PRD. Items marked P1 are designed in per PRD §10 note.</p>
 </div>
 
@@ -408,7 +465,7 @@ const players=[{n:'Emeka Obi',pos:'Midfielder',fmt:'5-a-side',area:'Lekki',av:'W
 
 /* ===== state & routing ===== */
 const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},onb:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:2,user:{name:'Tunde Adeyemi',email:'tunde@example.com',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:2,user:{name:'Tunde Adeyemi',email:'tunde@example.com',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 const $=id=>document.getElementById(id);
 const go=(s,a)=>{S.stack.push({s,a});render()};
 const back=()=>{S.stack.pop();render()};
@@ -605,8 +662,8 @@ SC.ticket=id=>{const e=events[id||0],q=S.tixQty||2,unit=1500,subTot=q*unit,fee=q
 SC.comp=id=>{const c=comps[id],k=S.sub.compTab;const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
  Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
  Teams:`<div class="list">${teams.map(teamCard).join('')}</div>`,Updates:`<div class="card small">Fixtures published for the next round. <span class="muted">· 2 days ago</span></div>`}[k];
- return `${hdr('Competition',`<div class="row" style="gap:8px"><button class="btn sm ${S.followed['c'+id]?'ghost':''}" onclick="S.followed['c${id}']=!S.followed['c${id}'];render()">${S.followed['c'+id]?'Following':'Follow'}</button><button class="round" onclick="openShare('comp',${id})">${ic('share')}</button></div>`)}
- <div class="hero"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div><div style="font-size:19px;font-weight:800">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div></div>
+ return `${hdr('Competition',`<button class="round" onclick="openShare('comp',${id})">${ic('share')}</button>`)}
+ <div class="hero"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div><div style="font-size:19px;font-weight:800">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div><button class="btn gold sm" style="margin-top:14px" onclick="S.followed['c${id}']=!S.followed['c${id}'];render()">${S.followed['c'+id]?'Following ✓':'Follow competition'}</button></div>
  ${tabsUI('compTab',['Fixtures','Results','Standings','Teams','Updates'])}${body}`};
 
 SC.match=()=>`${hdr('Match centre',`<button class="round" onclick="openShare('match',0)">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><span class="tag live">LIVE · 54'</span><div class="sub" style="margin:8px 0">Lagos Grassroots Cup · Lagos Arena</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Lekki Lions',44)}</div><b>Lekki Lions</b></div><span class="score">1 : 1</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest('Yaba Rovers',44)}</div><b>Yaba Rovers</b></div></div></div>
@@ -658,7 +715,7 @@ SC.activity=()=>{const k=S.sub.activity;let body='';
 SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px;cursor:pointer" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
  return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">${ini(S.user.name||'Tunde Adeyemi')}</div><h1>${S.user.name||'Tunde Adeyemi'}</h1><div class="sub">${S.user.loc} · Player · Captain · Spectator</div></div>
  <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;go('onb')")}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
- <h2 class="sec">Settings</h2><div class="list">${it('cog','Football preferences',"S.onb=2;go('onb')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout','Sign out',"S.stack=[{s:'welcome'}];render()")}</div>
+ <h2 class="sec">Settings</h2><div class="list">${it('cog','Football preferences',"S.onb=2;go('onb')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout','Sign out',"confirmSignOut()")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
 SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others can view your football profile',true],['Discoverable by players','Appear in player discovery',true],['Show public activity','Games and teams on your profile',false]].map((r,i)=>`<div class="opt"><div class="grow"><b>${r[0]}</b><div class="sub">${r[1]}</div></div>${tog(r[2],'pv'+i)}</div>`).join('')}</div><div class="note" style="margin-top:12px">Sensitive personal information is not shown publicly by default. You can also block or report users.</div>`;
@@ -734,7 +791,7 @@ function render(){
   if(S.modal){
     const m=S.modal;
     const metaHtml=m.meta&&m.meta.length?`<div class="modal-meta">${m.meta.map(r=>`<div class="kv"><span class="muted">${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>`:'';
-    $('phone').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" onclick="closeModal()"><div class="modal-card" onclick="event.stopPropagation()"><div class="modal-ico">${ic('check')}</div><h2>${m.title}</h2><div class="sub">${m.sub||''}</div>${metaHtml}<div class="modal-actions"><button class="btn" onclick="closeModal(S.modal&&S.modal.primaryFn)">${m.primary||'Done'}</button>${m.secondary?`<button class="btn ghost" onclick="const fn=S.modal&&S.modal.secFn;closeModal(fn)">${m.secondary}</button>`:''}</div></div></div>`);
+    $('phone').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" onclick="closeModal()"><div class="modal-card" onclick="event.stopPropagation()"><div class="modal-ico ${m.tone||''}">${ic(m.icon||'check')}</div><h2>${m.title}</h2><div class="sub">${m.sub||''}</div>${metaHtml}<div class="modal-actions"><button class="btn ${m.danger?'danger':''}" onclick="closeModal(S.modal&&S.modal.primaryFn)">${m.primary||'Done'}</button>${m.secondary?`<button class="btn ghost" onclick="const fn=S.modal&&S.modal.secFn;closeModal(fn)">${m.secondary}</button>`:''}</div></div></div>`);
   }
   const key=S.tab+'|'+S.stack.length+(cur?cur.s+cur.a:'');
   if(key!==S.last){sc.classList.remove('anim');void sc.offsetWidth;sc.classList.add('anim');S.last=key;sc.scrollTop=0}else{sc.scrollTop=top0}
@@ -754,11 +811,11 @@ gameCard=g=>`<div class="card gcard" onclick="go('game',${g.id})"><div ${pic('ga
 eventCard=e=>`<div class="card vcard" onclick="go('event',${e.id})"><div ${pic(e.im,120)}><span class="pill-w l">${e.cat}</span><button class="pill-w sv" onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'#D94343':'#17211B'}">${ic('heart')}</button></div><div class="vbody"><div class="b t1">${e.title}</div><div class="sub">${e.venue}</div><div class="sub">${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="price">${e.fee}</span></div></div></div>`;
 matchRow=f=>`<div class="card mrow" onclick="go('match',0)"><div class="row sp small muted"><span>${f.t}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div><div class="mrow-main"><div class="side">${crest(f.h,40)}<b>${f.h}</b></div><div class="mid">${f.sc?`<span class="scorepill">${f.sc}</span>`:`<span class="timepill">${f.t.split('·').pop().trim()}</span>`}</div><div class="side">${crest(f.a,40)}<b>${f.a}</b></div></div><div class="small muted" style="text-align:center">${f.v}</div></div>`;
 
-SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Tunde Adeyemi')}</div><div><div class="sub small">Good evening 👋</div><div class="b" style="font-size:16px">${S.user.name||'Tunde Adeyemi'}</div></div></div><div class="row"><button class="loc" onclick="S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos</button><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div></div>
+SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Tunde Adeyemi')}</div><div><div class="b" style="font-size:17px">${S.user.name||'Tunde Adeyemi'}</div><button class="locl" onclick="event.stopPropagation();S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos${ic('chev')}</button></div></div><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div>
 <div class="search full" onclick="tab('explore')" style="margin:20px 0 0">${ic('search')}<span>Search pitches, games or events</span></div>
 <h2 class="sec">Recommended for you <a onclick="jump('venues')">See all ${ic('chev')}</a></h2>
 <div class="deck" onclick="go('venue',0)"><div ${pic('venue1',200)}><span class="pill-w">2.1 km</span><div class="dk"><div><div class="dkt">Lekki Goal Arena</div><div class="dks">${ic('pin')} Lekki Phase 1 · ${ic('star')} 4.7</div></div><div class="dkp">${N(25000)}<small>/hr</small></div></div></div></div>
-<div class="qgrid"><button class="pbtn solid" onclick="jump('venues')">${ic('cal')}Book Pitch</button><button class="pbtn" onclick="go('createGame')">${ic('plus')}Create Game</button><button class="pbtn" onclick="jump('events')">${ic('trophy')}Events</button><button class="pbtn" onclick="S.sub.community='Teams';tab('community')">${ic('users')}Teams</button></div>
+<div class="qrow"><button class="qa" onclick="jump('venues')"><i>${ic('pin')}</i>Book Pitch</button><button class="qa" onclick="go('createGame')"><i>${ic('plus')}</i>Create Game</button><button class="qa" onclick="jump('events')"><i>${ic('trophy')}</i>Events</button><button class="qa" onclick="S.sub.community='Teams';tab('community')"><i>${ic('users')}</i>Teams</button></div>
 <h2 class="sec">Open games near you <a onclick="jump('games')">See all ${ic('chev')}</a></h2><div class="hscroll">${games.map(g=>`<div style="width:276px">${gameCard(g)}</div>`).join('')}</div>
 <h2 class="sec">Nearby pitches <a onclick="jump('venues')">See all ${ic('chev')}</a></h2><div class="list">${venues.map(v=>`<div class="card vrow" onclick="go('venue',${v.id})"><div class="img has th" style="background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${v.name}</div><div class="sub small">${ic('pin')} ${v.area} · ${v.km} km</div><div class="row" style="gap:8px;margin-top:8px"><span class="tag ${v.id==1?'warn':'ok'}">${slotsLeft[v.id]}</span><span class="rate small">${ic('star')}${v.rating}</span></div></div>${ic('chev')}</div>`).join('')}</div>
 <h2 class="sec">Upcoming football events <a onclick="jump('events')">See all ${ic('chev')}</a></h2><div class="hscroll">${events.slice(0,3).map(e=>`<div style="width:284px">${eventCard(e)}</div>`).join('')}</div>
@@ -778,6 +835,32 @@ SC.game=id=>{const g=games[id||0],v=venues[g.v],j=S.joined[id||0],filled=g.need-
 SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];render()">Skip</button><h1>Find Football<br><em>Matches Near You</em></h1><p>Discover nearby games, check available slots, and join matches instantly.</p>
 <div class="float card"><div class="row"><div class="img has th" style="background-image:url(img/venue1.jpg)"></div><div><span class="tag gold">5-a-side</span><div class="b" style="margin-top:3px">Evening Kickoff</div><div class="sub small">Lekki Goal Arena · Today, 7:00 PM</div></div></div><div class="row sp" style="margin-top:10px">${faces(3,5)}<span class="small muted">8 players joined</span><span class="price">${N(2500)}</span></div></div>
 <div class="wbottom"><span class="dots"><i class="on"></i><i></i><i></i></span><button class="go" onclick="S.onb=0;S.stack=[{s:'onb'}];render()" aria-label="Get started">${ic('chev')}</button></div><button class="alink" onclick="S.stack=[];render()">I already have an account</button></div>`;
+
+/* ===== Round 6: welcome slides, sign in, sign out ===== */
+const SBW=`<div class="wl-sb"><span>9:41</span><span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 6a15 15 0 0 1 20 0M6 10.5a9 9 0 0 1 12 0M10 15a3 3 0 0 1 4 0"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg></span></div>`;
+const WS=[null,
+ {tag:'PLAY · BOOK A PITCH',h1:'Book Pitches',h2:'Anytime, Anywhere',p:'See live availability, pick your slot and pay in full or by deposit in a few taps.',img:'venue1',card:{img:'venue2',tag:'5-A-SIDE',title:'Lekki Goal Arena',l1:'Lekki Phase 1 · 2.1 km away',l2:'From ₦25,000 / hour',right:'4 slots free'}},
+ {tag:'CONNECT · OPEN GAMES',h1:'Join Games,',h2:'Build Your Squad',p:'No full team needed. Join open games, create your own and meet players near you.',img:'game1',card:{img:'game1',tag:'5-A-SIDE',title:'Thursday Night 5s',l1:'Lekki Goal Arena · Thu, 8:00 PM',l2:'2 slots left · ₦2,500 / player',right:'₦2,500'}}];
+const wlNext=()=>{if(S.ws<2){S.ws++;render()}else{S.onb=0;S.stack=[{s:'onb'}];render()}};
+const wlSkip=()=>{S.onb=0;S.stack=[{s:'onb'}];render()};
+const wlSignin=()=>{S.stack=[{s:'signin'}];render()};
+SC.welcome=()=>{
+ if(S.ws===0)return `<div class="wl img1"><button class="hz" style="left:77%;top:6.8%;width:21%;height:5%" onclick="wlSkip()" aria-label="Skip"></button><button class="hz" style="left:77%;top:82.5%;width:19%;height:9%;border-radius:50%" onclick="wlNext()" aria-label="Next slide"></button><button class="hz" style="left:24%;top:92%;width:52%;height:5%" onclick="wlSignin()" aria-label="I already have an account"></button><button class="hz" style="left:2%;top:86%;width:28%;height:5%" onclick="S.ws=1;render()" aria-label="Slide dots"></button></div>`;
+ const d=WS[S.ws],c=d.card;
+ return `<div class="wl" style="background-image:linear-gradient(180deg,rgba(6,16,11,.72) 0%,rgba(6,16,11,.12) 38%,rgba(6,16,11,.9) 100%),url(img/${d.img}.jpg)">${SBW}<button class="wl-skip" onclick="wlSkip()">SKIP</button>
+ <div class="wl-copy"><span class="wl-tag"><i></i>${d.tag}</span><h1>${d.h1}<br><em>${d.h2}</em></h1><p>${d.p}</p></div>
+ <div class="wl-card"><div class="img has th" style="background-image:url(img/${c.img}.jpg)"></div><div><span class="tg">${c.tag}</span><div class="t">${c.title}</div><div class="s">${c.l1}<br>${c.l2}</div></div><span class="fr">${c.right}</span></div>
+ <div class="wl-dots">${[0,1,2].map(k=>`<i class="${k===S.ws?'on':''}" onclick="S.ws=${k};render()"></i>`).join('')}</div>
+ <button class="wl-go" onclick="wlNext()" aria-label="${S.ws===2?'Create account':'Next slide'}">${ic('chev')}</button>
+ <button class="wl-link" onclick="wlSignin()">I already have an account</button></div>`};
+SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.ws=0;S.stack=[{s:'welcome'}];render()" aria-label="Back">${ic('back')}</button>
+ <h1 style="margin-top:24px;font-size:30px">Welcome back</h1><p class="sub" style="margin:8px 0 26px">Sign in to book pitches, join open games and follow your teams.</p>
+ <div class="field">Email or phone<input value="${S.user.email}" oninput="S.user.email=this.value" placeholder="you@example.com"></div>
+ <div class="field">Password<input type="password" placeholder="Enter your password"></div>
+ <div class="row sp" style="margin:-4px 0 24px"><span class="small muted">Forgot your password?</span><button class="small b" style="color:var(--brand)" onclick="showModal({title:'Reset link sent',sub:'We sent password reset instructions to '+S.user.email+'.',primary:'Done'})">Reset it</button></div>
+ <button class="btn" onclick="S.stack=[];S.tab='home';toast('Signed in as '+S.user.email);render()">Sign in</button>
+ <p class="small muted" style="text-align:center;margin-top:20px">New here? <button class="b" style="color:var(--brand)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Create an account</button></p></div>`;
+const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign in again to book pitches, join games and see your activity.',icon:'logout',tone:'warn',danger:true,primary:'Yes, sign out',secondary:'Cancel',primaryFn:()=>{S.stack=[{s:'signin'}];S.tab='home'}});
 if(matchMedia('(prefers-color-scheme: dark)').matches)setTheme('dark');
 render();
 </script>
