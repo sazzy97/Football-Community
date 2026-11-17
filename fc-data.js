@@ -37,6 +37,8 @@ const FCData = {
   init() {
     S.permits = S.permits || {};
     S.myGames = S.myGames || {};
+    S.myFixtures = S.myFixtures || {};
+    S.myEvents = S.myEvents || {};
     S.attending = S.attending || {};
     S.tickets = S.tickets || {};
     S.gpayMethod = S.gpayMethod || 'card';
@@ -47,6 +49,10 @@ const FCData = {
       if (savedJoined) S.joined = { ...S.joined, ...JSON.parse(savedJoined) };
       const savedMyGames = localStorage.getItem('fc_my_games');
       if (savedMyGames) S.myGames = { ...S.myGames, ...JSON.parse(savedMyGames) };
+      const savedMyFix = localStorage.getItem('fc_my_fixtures');
+      if (savedMyFix) S.myFixtures = { ...S.myFixtures, ...JSON.parse(savedMyFix) };
+      const savedMyEv = localStorage.getItem('fc_my_events');
+      if (savedMyEv) S.myEvents = { ...S.myEvents, ...JSON.parse(savedMyEv) };
       const savedAttending = localStorage.getItem('fc_attending');
       if (savedAttending) S.attending = { ...S.attending, ...JSON.parse(savedAttending) };
       const savedTickets = localStorage.getItem('fc_tickets');
@@ -62,6 +68,7 @@ const FCData = {
         };
       }
       this.cfg.supabaseUrl = normalizeSupabaseUrl(this.cfg.supabaseUrl);
+      this.restoreAuthSession();
       const savedDb = localStorage.getItem('fc_local_db');
       if (savedDb) {
         this.db = { ...this.db, ...JSON.parse(savedDb) };
@@ -96,6 +103,393 @@ const FCData = {
     this.registerPWA();
   },
 
+  /* ===== Real User Accounts (Supabase Auth) ===== */
+  getAuthSession() {
+    try {
+      const raw = localStorage.getItem('fc_auth_session');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  },
+
+  applyAuthSession(sessionObj, isBootRestore = false) {
+    if (!sessionObj || !sessionObj.user) return;
+    try {
+      const toStore = {
+        access_token: sessionObj.access_token || '',
+        refresh_token: sessionObj.refresh_token || '',
+        expires_at: sessionObj.expires_at || Math.floor(Date.now() / 1000) + 3500,
+        user: sessionObj.user
+      };
+      localStorage.setItem('fc_auth_session', JSON.stringify(toStore));
+    } catch (e) {}
+
+    const u = sessionObj.user;
+    const meta = u.user_metadata || {};
+    S.authUser = { id: u.id, email: u.email, user_metadata: meta };
+    S.user.email = u.email || S.user.email;
+    if (meta.full_name) S.user.name = meta.full_name;
+    else if (!S.user.name && u.email) S.user.name = u.email.split('@')[0];
+    if (meta.location_cluster) S.user.loc = meta.location_cluster;
+    if (Array.isArray(meta.formats) && meta.formats.length) {
+      S.user.fmts = {};
+      meta.formats.forEach((f) => (S.user.fmts[f] = true));
+    }
+    if (Array.isArray(meta.positions) && meta.positions.length) {
+      S.user.pos = {};
+      meta.positions.forEach((p) => (S.user.pos[p] = true));
+    }
+    if (meta.experience) S.user.exp = meta.experience;
+    if (Array.isArray(meta.availability) && meta.availability.length) {
+      S.user.avail = {};
+      meta.availability.forEach((a) => (S.user.avail[a] = true));
+    }
+    S.user.pass = '';
+
+    // Returning signed-in users go straight to Home if no deep link
+    if (isBootRestore && S.stack.length === 1 && S.stack[0].s === 'welcome' && !window.location.search) {
+      S.stack = [];
+      S.tab = 'home';
+    }
+    this.identifyUser();
+  },
+
+  restoreAuthSession() {
+    const sess = this.getAuthSession();
+    if (!sess || !sess.user) return;
+    this.applyAuthSession(sess, true);
+    if (!this.isSupabaseConfigured() || !sess.access_token) return;
+    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (sess.refresh_token && sess.expires_at && sess.expires_at - nowSec < 300) {
+      fetch(`${baseUrl}/auth/v1/token?grant_type=refresh_token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: this.cfg.supabaseKey },
+        body: JSON.stringify({ refresh_token: sess.refresh_token })
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data && data.access_token && data.user) {
+            this.applyAuthSession(data, false);
+            if (typeof render === 'function') render();
+          }
+        })
+        .catch(() => {});
+    } else {
+      fetch(`${baseUrl}/auth/v1/user`, {
+        headers: { apikey: this.cfg.supabaseKey, Authorization: `Bearer ${sess.access_token}` }
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((u) => {
+          if (u && u.id) {
+            this.applyAuthSession({ ...sess, user: u }, false);
+            if (typeof render === 'function') render();
+          }
+        })
+        .catch(() => {});
+    }
+  },
+
+  async authSignUp(email, password, profileMeta = {}) {
+    if (!this.isSupabaseConfigured()) return { ok: false, error: 'Cloud database not configured.' };
+    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+    try {
+      const res = await fetch(`${baseUrl}/auth/v1/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: this.cfg.supabaseKey },
+        body: JSON.stringify({ email, password, data: profileMeta })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return { ok: false, error: data.msg || data.error_description || data.message || 'Could not create account.' };
+      }
+      // Record profile into public.users for Owner Data Hub
+      this.record(
+        'users',
+        {
+          full_name: profileMeta.full_name || email.split('@')[0],
+          email_or_phone: email,
+          location_cluster: profileMeta.location_cluster || S.user.loc,
+          formats: profileMeta.formats || [],
+          positions: profileMeta.positions || [],
+          experience: profileMeta.experience || S.user.exp,
+          availability: profileMeta.availability || []
+        },
+        'user_signed_up',
+        { email, location: profileMeta.location_cluster || '' }
+      );
+      if (data.access_token && data.user) {
+        this.resetLocalUserMaps();
+        this.applyAuthSession(data, false);
+        await this.pullLiveRecords();
+        return { ok: true, needsEmailConfirm: false };
+      }
+      if (data.id || (data.user && data.user.id)) {
+        return { ok: true, needsEmailConfirm: true };
+      }
+      return { ok: false, error: 'Unexpected signup response. Please try signing in.' };
+    } catch (e) {
+      return { ok: false, error: 'Network error while creating account. Please try again.' };
+    }
+  },
+
+  async authSignIn(email, password) {
+    if (!this.isSupabaseConfigured()) return { ok: false, error: 'Cloud database not configured.' };
+    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+    try {
+      const res = await fetch(`${baseUrl}/auth/v1/token?grant_type=password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: this.cfg.supabaseKey },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.access_token || !data.user) {
+        let msg = data.error_description || data.msg || data.message || 'Invalid email or password.';
+        if (msg.toLowerCase().includes('email not confirmed')) {
+          msg = 'Please confirm your email first — check your inbox for the verification link from Supabase.';
+        }
+        return { ok: false, error: msg };
+      }
+      this.resetLocalUserMaps();
+      this.applyAuthSession(data, false);
+      this.captureAnalytics('user_signed_in', { email: data.user.email });
+      await this.pullLiveRecords();
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: 'Network error while signing in. Please try again.' };
+    }
+  },
+
+  async authUpdateProfile(profileMeta = {}) {
+    const sess = this.getAuthSession();
+    if (!this.isSupabaseConfigured() || !sess || !sess.access_token) return { ok: false };
+    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+    try {
+      const res = await fetch(`${baseUrl}/auth/v1/user`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          apikey: this.cfg.supabaseKey,
+          Authorization: `Bearer ${sess.access_token}`
+        },
+        body: JSON.stringify({ data: profileMeta })
+      });
+      const u = await res.json().catch(() => null);
+      if (res.ok && u && u.id) {
+        this.applyAuthSession({ ...sess, user: u }, false);
+        return { ok: true };
+      }
+      return { ok: false };
+    } catch (e) {
+      return { ok: false };
+    }
+  },
+
+  async authResetPassword(email) {
+    if (!this.isSupabaseConfigured()) return { ok: false, error: 'Cloud not configured.' };
+    const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+    try {
+      const res = await fetch(`${baseUrl}/auth/v1/recover`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: this.cfg.supabaseKey },
+        body: JSON.stringify({ email, redirect_to: window.location.origin + window.location.pathname })
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        return { ok: false, error: d.msg || d.error_description || 'Could not send reset email.' };
+      }
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, error: 'Network error sending reset link.' };
+    }
+  },
+
+  resetLocalUserMaps() {
+    S.joined = {};
+    S.permits = {};
+    S.myGames = {};
+    S.myFixtures = {};
+    S.myEvents = {};
+    S.attending = {};
+    S.tickets = {};
+    if (window.games) games.forEach((g) => (g.isMine = false));
+    if (window.fixtures) fixtures.forEach((f) => (f.isMine = false));
+    if (window.events) events.forEach((e) => (e.isMine = false));
+    ['fc_joined', 'fc_permits', 'fc_my_games', 'fc_my_fixtures', 'fc_my_events', 'fc_attending', 'fc_tickets'].forEach((k) => {
+      try {
+        localStorage.removeItem(k);
+      } catch (e) {}
+    });
+  },
+
+  authSignOut() {
+    const sess = this.getAuthSession();
+    if (this.isSupabaseConfigured() && sess && sess.access_token) {
+      const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
+      fetch(`${baseUrl}/auth/v1/logout`, {
+        method: 'POST',
+        headers: { apikey: this.cfg.supabaseKey, Authorization: `Bearer ${sess.access_token}` }
+      }).catch(() => {});
+    }
+    try {
+      localStorage.removeItem('fc_auth_session');
+    } catch (e) {}
+    S.authUser = null;
+    S.authErr = null;
+    S.user.name = '';
+    S.user.email = '';
+    S.user.pass = '';
+    this.resetLocalUserMaps();
+    S.stack = [{ s: 'signin' }];
+    S.tab = 'home';
+    toast('Signed out successfully');
+    if (typeof render === 'function') render();
+  },
+
+  /* ===== Real Fixture & Event Cloud Publishing ===== */
+  async publishFixture(item) {
+    const payload = {
+      fixture_id: String(item.id),
+      h: item.h,
+      a: item.a,
+      t: item.t,
+      s: item.s,
+      sc: item.sc || '',
+      v: item.v,
+      comp: item.comp || 'Lagos Grassroots Cup',
+      fee: item.fee || 'Free',
+      price: +item.price || 0,
+      org: item.org || S.user.name,
+      creator_id: item.creator_id || '',
+      creator_email: item.creator_email || '',
+      timeline: item.timeline || []
+    };
+    await this.record(
+      'event_submissions',
+      {
+        event_name: `${item.h} vs ${item.a}`,
+        category: item.comp || 'Match Fixture',
+        venue: item.v,
+        event_date: item.t,
+        event_time: item.fee || 'Free',
+        submitted_by: item.org || S.user.name,
+        status: 'published_fixture'
+      },
+      'fixture_published',
+      payload
+    );
+  },
+
+  async updateFixture(item) {
+    const payload = {
+      fixture_id: String(item.id),
+      h: item.h,
+      a: item.a,
+      t: item.t,
+      s: item.s,
+      sc: item.sc || '',
+      v: item.v,
+      comp: item.comp || 'Lagos Grassroots Cup',
+      fee: item.fee || 'Free',
+      price: +item.price || 0,
+      org: item.org || S.user.name,
+      creator_id: item.creator_id || '',
+      creator_email: item.creator_email || '',
+      timeline: item.timeline || []
+    };
+    const ts = new Date().toISOString();
+    this.db.app_events.unshift({
+      event_name: 'fixture_updated',
+      screen: 'match',
+      user_contact: (window.S && ((S.authUser && S.authUser.email) || S.user.email)) || '',
+      properties: payload,
+      created_at: ts
+    });
+    this.persistLocal();
+    this.captureAnalytics('fixture_updated', payload);
+    if (this.isSupabaseConfigured()) {
+      await this.supabaseInsert('app_events', {
+        event_name: 'fixture_updated',
+        screen: 'match',
+        user_contact: (window.S && ((S.authUser && S.authUser.email) || S.user.email)) || '',
+        properties: payload
+      });
+    }
+  },
+
+  async publishEvent(item) {
+    const payload = {
+      event_id: String(item.id),
+      im: item.im || 'event1',
+      title: item.title,
+      cat: item.cat || 'Grassroots',
+      trust: item.trust || 'Organiser-published',
+      venue: item.venue,
+      when: item.when,
+      fee: item.fee || 'Free',
+      status: item.status || 'Upcoming',
+      org: item.org || S.user.name,
+      tix: Boolean(item.tix),
+      left: +item.left || 0,
+      about: item.about || '',
+      creator_id: item.creator_id || '',
+      creator_email: item.creator_email || ''
+    };
+    await this.record(
+      'event_submissions',
+      {
+        event_name: item.title,
+        category: item.cat || 'Grassroots',
+        venue: item.venue,
+        event_date: item.when,
+        event_time: item.fee || 'Free',
+        submitted_by: item.org || S.user.name,
+        status: 'published_event'
+      },
+      'event_published',
+      payload
+    );
+  },
+
+  async updateEvent(item) {
+    const payload = {
+      event_id: String(item.id),
+      im: item.im || 'event1',
+      title: item.title,
+      cat: item.cat || 'Grassroots',
+      trust: item.trust || 'Organiser-published',
+      venue: item.venue,
+      when: item.when,
+      fee: item.fee || 'Free',
+      status: item.status || 'Upcoming',
+      org: item.org || S.user.name,
+      tix: Boolean(item.tix),
+      left: +item.left || 0,
+      about: item.about || '',
+      creator_id: item.creator_id || '',
+      creator_email: item.creator_email || ''
+    };
+    const ts = new Date().toISOString();
+    this.db.app_events.unshift({
+      event_name: 'event_updated',
+      screen: 'createEvent',
+      user_contact: (window.S && ((S.authUser && S.authUser.email) || S.user.email)) || '',
+      properties: payload,
+      created_at: ts
+    });
+    this.persistLocal();
+    this.captureAnalytics('event_updated', payload);
+    if (this.isSupabaseConfigured()) {
+      await this.supabaseInsert('app_events', {
+        event_name: 'event_updated',
+        screen: 'createEvent',
+        user_contact: (window.S && ((S.authUser && S.authUser.email) || S.user.email)) || '',
+        properties: payload
+      });
+    }
+  },
+
   isSupabaseConfigured() {
     return Boolean(this.cfg.supabaseUrl && this.cfg.supabaseKey);
   },
@@ -120,6 +514,8 @@ const FCData = {
       if (window.S && S.permits) localStorage.setItem('fc_permits', JSON.stringify(S.permits));
       if (window.S && S.joined) localStorage.setItem('fc_joined', JSON.stringify(S.joined));
       if (window.S && S.myGames) localStorage.setItem('fc_my_games', JSON.stringify(S.myGames));
+      if (window.S && S.myFixtures) localStorage.setItem('fc_my_fixtures', JSON.stringify(S.myFixtures));
+      if (window.S && S.myEvents) localStorage.setItem('fc_my_events', JSON.stringify(S.myEvents));
       if (window.S && S.attending) localStorage.setItem('fc_attending', JSON.stringify(S.attending));
       if (window.S && S.tickets) localStorage.setItem('fc_tickets', JSON.stringify(S.tickets));
     } catch (e) {}
@@ -330,6 +726,7 @@ const FCData = {
       initialLeft: initSlots,
       price: row.price_ngn !== undefined && row.price_ngn !== null ? +row.price_ngn : 0,
       org: row.organiser_name || 'Organiser',
+      creator_email: (row.organiser_contact || '').toLowerCase(),
       level: row.skill_level || 'All levels',
       approval: Boolean(row.requires_approval),
       created_at: row.created_at || '',
@@ -339,10 +736,23 @@ const FCData = {
 
   mergeLiveIntoUI() {
     if (!window.games) return;
+    const allEvs = this.db.app_events || [];
+    const authEmail = window.S && S.authUser && S.authUser.email ? S.authUser.email.toLowerCase() : '';
+    const authId = window.S && S.authUser && S.authUser.id ? String(S.authUser.id) : '';
     const cloudGames = (this.db.open_games || []).map((r) => this.rowToUiGame(r));
 
+    // Enrich cloudGames with creator_id from open_game_created events
+    const createGameEvs = allEvs.filter((ev) => ev.event_name === 'open_game_created' && ev.properties && ev.properties.game_id);
+    for (const cg of cloudGames) {
+      const cEv = createGameEvs.find((ev) => String(ev.properties.game_id) === String(cg.id));
+      if (cEv && cEv.properties) {
+        if (cEv.properties.creator_id) cg.creator_id = cEv.properties.creator_id;
+        if (cEv.properties.creator_email && !cg.creator_email) cg.creator_email = String(cEv.properties.creator_email).toLowerCase();
+      }
+    }
+
     // Apply any game edits stored in app_events (oldest to newest)
-    const editEvents = (this.db.app_events || [])
+    const editEvents = allEvs
       .filter((ev) => ev.event_name === 'open_game_updated' && ev.properties && ev.properties.game_id)
       .slice()
       .reverse();
@@ -373,9 +783,7 @@ const FCData = {
     }
 
     // Apply slot decrements from game_joins / open_game_joined events
-    const joinEvents = (this.db.app_events || []).filter(
-      (ev) => ev.event_name === 'open_game_joined' && ev.properties
-    );
+    const joinEvents = allEvs.filter((ev) => ev.event_name === 'open_game_joined' && ev.properties);
     for (const cg of cloudGames) {
       const joinsAfterEdit = joinEvents.filter((ev) => {
         const matchId = ev.properties.game_id && String(ev.properties.game_id) === String(cg.id);
@@ -393,14 +801,219 @@ const FCData = {
       for (let i = cloudGames.length - 1; i >= 0; i--) {
         const cg = cloudGames[i];
         const existingIdx = games.findIndex((x) => String(x.id) === String(cg.id));
+        const matchesAuth = Boolean(
+          (authId && cg.creator_id && String(cg.creator_id) === authId) ||
+            (authEmail && cg.creator_email && cg.creator_email.toLowerCase() === authEmail)
+        );
+        if (matchesAuth && window.S) {
+          S.myGames = S.myGames || {};
+          S.myGames[cg.id] = true;
+        }
         if (existingIdx >= 0) {
-          const wasMine = Boolean(games[existingIdx].isMine || (window.S && S.myGames && S.myGames[cg.id]));
+          const wasMine = authEmail
+            ? matchesAuth
+            : Boolean(games[existingIdx].isMine || (window.S && S.myGames && S.myGames[cg.id]));
           games[existingIdx] = { ...games[existingIdx], ...cg, isMine: wasMine };
           const [item] = games.splice(existingIdx, 1);
           games.unshift(item);
         } else {
-          cg.isMine = Boolean(window.S && S.myGames && S.myGames[cg.id]);
+          cg.isMine = authEmail ? matchesAuth : Boolean(window.S && S.myGames && S.myGames[cg.id]);
           games.unshift(cg);
+        }
+      }
+    }
+
+    // Reconstruct & merge real cloud Fixtures (published + live updates)
+    if (window.fixtures) {
+      const pubFixEvs = allEvs
+        .filter((ev) => ev.event_name === 'fixture_published' && ev.properties && ev.properties.fixture_id)
+        .slice()
+        .reverse();
+      const cloudFixMap = {};
+      for (const ev of pubFixEvs) {
+        const p = ev.properties;
+        cloudFixMap[String(p.fixture_id)] = {
+          id: String(p.fixture_id),
+          h: p.h || 'Home FC',
+          a: p.a || 'Away FC',
+          t: p.t || 'Upcoming',
+          s: p.s || 'Upcoming',
+          sc: p.sc || '',
+          v: p.v || 'Lagos Pitch',
+          comp: p.comp || 'Lagos Grassroots Cup',
+          fee: p.fee || 'Free',
+          price: +p.price || 0,
+          org: p.org || 'Organiser',
+          creator_id: p.creator_id || '',
+          creator_email: (p.creator_email || ev.user_contact || '').toLowerCase(),
+          timeline: Array.isArray(p.timeline) ? p.timeline : [],
+          going: 1,
+          attended: 0,
+          tixSold: 0,
+          fromCloud: true
+        };
+      }
+      const updFixEvs = allEvs
+        .filter((ev) => ev.event_name === 'fixture_updated' && ev.properties && ev.properties.fixture_id)
+        .slice()
+        .reverse();
+      for (const ev of updFixEvs) {
+        const p = ev.properties;
+        const target = cloudFixMap[String(p.fixture_id)] || fixtures.find((f) => String(f.id) === String(p.fixture_id));
+        if (target) {
+          if (p.h !== undefined) target.h = p.h;
+          if (p.a !== undefined) target.a = p.a;
+          if (p.t !== undefined) target.t = p.t;
+          if (p.s !== undefined) target.s = p.s;
+          if (p.sc !== undefined) target.sc = p.sc;
+          if (p.v !== undefined) target.v = p.v;
+          if (p.comp !== undefined) target.comp = p.comp;
+          if (p.fee !== undefined) target.fee = p.fee;
+          if (p.price !== undefined) target.price = +p.price;
+          if (Array.isArray(p.timeline)) target.timeline = p.timeline;
+        }
+      }
+      const cloudFixtures = Object.values(cloudFixMap);
+      for (const cf of cloudFixtures) {
+        const matchesAuth = Boolean(
+          (authId && cf.creator_id && String(cf.creator_id) === authId) ||
+            (authEmail && cf.creator_email && cf.creator_email.toLowerCase() === authEmail)
+        );
+        if (matchesAuth && window.S) {
+          S.myFixtures = S.myFixtures || {};
+          S.myFixtures[cf.id] = true;
+        }
+        const idx = fixtures.findIndex((x) => String(x.id) === String(cf.id));
+        if (idx >= 0) {
+          fixtures[idx] = { ...fixtures[idx], ...cf, isMine: authEmail ? matchesAuth : Boolean(fixtures[idx].isMine || (S.myFixtures && S.myFixtures[cf.id])) };
+        } else {
+          cf.isMine = authEmail ? matchesAuth : Boolean(S.myFixtures && S.myFixtures[cf.id]);
+          fixtures.unshift(cf);
+        }
+      }
+    }
+
+    // Reconstruct & merge real cloud Events (published + updates)
+    if (window.events) {
+      const pubEvEvs = allEvs
+        .filter((ev) => ev.event_name === 'event_published' && ev.properties && ev.properties.event_id)
+        .slice()
+        .reverse();
+      const cloudEvMap = {};
+      for (const ev of pubEvEvs) {
+        const p = ev.properties;
+        cloudEvMap[String(p.event_id)] = {
+          id: String(p.event_id),
+          im: p.im || 'event1',
+          title: p.title || 'Football Event',
+          cat: p.cat || 'Grassroots',
+          trust: p.trust || 'Organiser-published',
+          venue: p.venue || 'Lagos Field',
+          when: p.when || 'Upcoming',
+          fee: p.fee || 'Free',
+          status: p.status || 'Upcoming',
+          org: p.org || 'Organiser',
+          tix: Boolean(p.tix),
+          left: +p.left || 0,
+          comp: -1,
+          b: '',
+          about: p.about || '',
+          creator_id: p.creator_id || '',
+          creator_email: (p.creator_email || ev.user_contact || '').toLowerCase(),
+          going: 1,
+          attended: 0,
+          tixSold: 0,
+          fromCloud: true
+        };
+      }
+      const updEvEvs = allEvs
+        .filter((ev) => ev.event_name === 'event_updated' && ev.properties && ev.properties.event_id)
+        .slice()
+        .reverse();
+      for (const ev of updEvEvs) {
+        const p = ev.properties;
+        const target = cloudEvMap[String(p.event_id)] || events.find((e) => String(e.id) === String(p.event_id));
+        if (target) {
+          if (p.title !== undefined) target.title = p.title;
+          if (p.cat !== undefined) target.cat = p.cat;
+          if (p.venue !== undefined) target.venue = p.venue;
+          if (p.when !== undefined) target.when = p.when;
+          if (p.fee !== undefined) target.fee = p.fee;
+          if (p.tix !== undefined) target.tix = Boolean(p.tix);
+          if (p.left !== undefined) target.left = +p.left;
+          if (p.about !== undefined) target.about = p.about;
+        }
+      }
+      const cloudEvents = Object.values(cloudEvMap);
+      for (const ce of cloudEvents) {
+        const matchesAuth = Boolean(
+          (authId && ce.creator_id && String(ce.creator_id) === authId) ||
+            (authEmail && ce.creator_email && ce.creator_email.toLowerCase() === authEmail)
+        );
+        if (matchesAuth && window.S) {
+          S.myEvents = S.myEvents || {};
+          S.myEvents[ce.id] = true;
+        }
+        const idx = events.findIndex((x) => String(x.id) === String(ce.id));
+        if (idx >= 0) {
+          events[idx] = { ...events[idx], ...ce, isMine: authEmail ? matchesAuth : Boolean(events[idx].isMine || (S.myEvents && S.myEvents[ce.id])) };
+        } else {
+          ce.isMine = authEmail ? matchesAuth : Boolean(S.myEvents && S.myEvents[ce.id]);
+          events.unshift(ce);
+        }
+      }
+    }
+
+    // Hydrate signed-in user's joined games, permits, tickets, and RSVPs across devices
+    if (authEmail && window.S) {
+      S.joined = S.joined || {};
+      S.permits = S.permits || {};
+      S.tickets = S.tickets || {};
+      S.attending = S.attending || {};
+      const chronEvs = allEvs.slice().reverse();
+      for (const ev of chronEvs) {
+        const evEmail = (ev.user_contact || (ev.properties && ev.properties.spectator_contact) || '').toLowerCase();
+        if (evEmail !== authEmail || !ev.properties) continue;
+        const p = ev.properties;
+        if (ev.event_name === 'open_game_joined' && p.game_id) {
+          S.joined[p.game_id] = true;
+          if (p.permit_code) S.permits[p.game_id] = p.permit_code;
+        } else if (ev.event_name === 'ticket_purchased' && p.item_key) {
+          S.tickets[p.item_key] = {
+            key: p.item_key,
+            type: p.item_type || (String(p.item_key).startsWith('f_') ? 'fixture' : 'event'),
+            id: p.item_id || String(p.item_key).replace(/^[ef]_/, ''),
+            title: p.event_title || 'Match Ticket',
+            venue: p.venue || 'Lagos Venue',
+            when: 'Confirmed Ticket',
+            qty: +p.quantity || 1,
+            total: +p.total_ngn || 1500,
+            code: p.ticket_code || 'TIX-849201'
+          };
+        } else if (ev.event_name === 'fixture_rsvp_going' && p.item_key) {
+          if (!S.attending[p.item_key] || S.attending[p.item_key].status !== 'attended') {
+            S.attending[p.item_key] = {
+              key: p.item_key,
+              type: p.item_type || (String(p.item_key).startsWith('e_') ? 'event' : 'fixture'),
+              id: String(p.item_key).replace(/^[ef]_/, ''),
+              title: p.match_title || 'Match',
+              venue: p.venue || 'Lagos Pitch',
+              when: p.match_when || 'Upcoming',
+              status: 'going'
+            };
+          }
+        } else if (ev.event_name === 'fixture_rsvp_cancelled' && p.item_key) {
+          delete S.attending[p.item_key];
+        } else if (ev.event_name === 'fixture_attendance_verified' && p.item_key) {
+          S.attending[p.item_key] = {
+            key: p.item_key,
+            type: p.item_type || (String(p.item_key).startsWith('e_') ? 'event' : 'fixture'),
+            id: String(p.item_key).replace(/^[ef]_/, ''),
+            title: p.match_title || 'Match',
+            venue: p.venue || 'Lagos Pitch',
+            when: p.match_when || 'Matchday',
+            status: 'attended'
+          };
         }
       }
     }
@@ -551,7 +1164,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=10', { updateViaCache: 'none' })
+        .register('./sw.js?v=11', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -567,25 +1180,46 @@ const FCData = {
   handleUrlDeepLinks() {
     try {
       const params = new URLSearchParams(window.location.search);
-      // 1. Check if instant encoded game payload (?g=...) is present
+      // 1. Instant encoded payloads (?g= game, ?m= match fixture, ?e= event)
       if (params.has('g')) {
         try {
           const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('g')))));
           if (decoded && decoded.title) {
             const existingIdx = games.findIndex((x) => String(x.id) === String(decoded.id));
-            if (existingIdx >= 0) {
-              games[existingIdx] = { ...games[existingIdx], ...decoded };
-            } else {
-              games.unshift(decoded);
-            }
+            if (existingIdx >= 0) games[existingIdx] = { ...games[existingIdx], ...decoded };
+            else games.unshift(decoded);
             this.deepLinkGameId = decoded.id;
             S.stack = [{ s: 'game', a: decoded.id }];
             render();
             return;
           }
-        } catch (err) {
-          console.warn('Could not decode game param:', err);
-        }
+        } catch (err) {}
+      }
+      if (params.has('m')) {
+        try {
+          const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('m')))));
+          if (decoded && decoded.h) {
+            const existingIdx = fixtures.findIndex((x) => String(x.id) === String(decoded.id));
+            if (existingIdx >= 0) fixtures[existingIdx] = { ...fixtures[existingIdx], ...decoded };
+            else fixtures.unshift(decoded);
+            S.stack = [{ s: 'match', a: decoded.id }];
+            render();
+            return;
+          }
+        } catch (err) {}
+      }
+      if (params.has('e')) {
+        try {
+          const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('e')))));
+          if (decoded && decoded.title) {
+            const existingIdx = events.findIndex((x) => String(x.id) === String(decoded.id));
+            if (existingIdx >= 0) events[existingIdx] = { ...events[existingIdx], ...decoded };
+            else events.unshift(decoded);
+            S.stack = [{ s: 'event', a: decoded.id }];
+            render();
+            return;
+          }
+        } catch (err) {}
       }
 
       if (params.has('admin') || window.location.hash === '#admin') {
@@ -594,7 +1228,6 @@ const FCData = {
       } else if (params.has('game')) {
         const rawId = params.get('game');
         this.deepLinkGameId = rawId;
-        // Preserve rawId so pullLiveRecords can resolve UUIDs from Supabase without falling back to dummy games[0]
         S.stack = [{ s: 'game', a: rawId }];
         render();
       } else if (params.has('venue')) {
@@ -602,12 +1235,12 @@ const FCData = {
         S.stack = [{ s: 'venue', a: id }];
         render();
       } else if (params.has('event')) {
-        const id = +params.get('event') || 0;
-        S.stack = [{ s: 'event', a: id }];
+        const rawId = params.get('event');
+        S.stack = [{ s: 'event', a: rawId }];
         render();
       } else if (params.has('match')) {
-        const id = +params.get('match') || 0;
-        S.stack = [{ s: 'match', a: id }];
+        const rawId = params.get('match');
+        S.stack = [{ s: 'match', a: rawId }];
         render();
       } else if (params.has('team')) {
         const rawId = params.get('team');
@@ -927,7 +1560,8 @@ SC.admin = () => {
     const verifiedCount = (db.app_events || []).filter((e) => e.event_name === 'fixture_attendance_verified').length;
     content = `
       <div class="card">
-        <div class="row sp"><span class="muted small">Supabase Database</span><span class="tag ${sbOk ? 'ok' : 'warn'}">${sbOk ? 'Connected ✓' : 'Local Mode'}</span></div>
+        <div class="row sp"><span class="muted small">Supabase Database &amp; Auth</span><span class="tag ${sbOk ? 'ok' : 'warn'}">${sbOk ? 'Connected ✓' : 'Local Mode'}</span></div>
+        <div class="row sp" style="margin-top:8px"><span class="muted small">Signed-In Account</span><span class="tag ${window.S && S.authUser ? 'ok' : 'warn'}">${window.S && S.authUser ? S.authUser.email : 'Guest'}</span></div>
         <div class="row sp" style="margin-top:8px"><span class="muted small">PostHog Analytics &amp; Replays</span><span class="tag ${phOk ? 'ok' : 'warn'}">${phOk ? 'Active ✓' : 'Add Key'}</span></div>
         <div class="row sp" style="margin-top:8px"><span class="muted small">PWA Home Screen Support</span><span class="tag ok">Active ✓</span></div>
       </div>
@@ -954,6 +1588,7 @@ SC.admin = () => {
   } else if (k === 'Live Records') {
     const tbls = [
       ['open_games', 'Games'],
+      ['event_submissions', 'Fixtures & Events'],
       ['game_joins', 'Joins'],
       ['bookings', 'Bookings'],
       ['users', 'Users'],
