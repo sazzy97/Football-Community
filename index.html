@@ -570,7 +570,7 @@ const players=[
 
 /* ===== state & routing ===== */
 const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,user:{name:'Tunde Adeyemi',email:'tunde@example.com',pass:'Football2026!',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},myGames:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,user:{name:'Tunde Adeyemi',email:'tunde@example.com',pass:'Football2026!',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 const $=id=>document.getElementById(id);
 const go=(s,a)=>{S.stack.push({s,a});render()};
 const back=()=>{S.stack.pop();render()};
@@ -582,6 +582,10 @@ const closeModal=(fn)=>{S.modal=null;if(fn)fn();render()};
 const findGame=id=>{
   if(id===undefined||id===null)return games[0];
   return games.find(x=>String(x.id)===String(id))||games[+id]||games[0];
+};
+const isGameCreator=g=>{
+  if(!g)return false;
+  return Boolean(g.isMine||(S.myGames&&S.myGames[g.id]));
 };
 const findTeam=id=>{
   if(id===undefined||id===null)return teams[0];
@@ -655,26 +659,18 @@ const toggleWillBeThere=(type,id,ev)=>{
         ['Spectators',info.obj.going+' going'],
         ['Your Status','Going ✓']
       ],
-      primary:'Done',
-      secondary:"📍 I'm at the venue (Check In)",
-      secFn:()=>verifyPitchPresence(type,id)
+      primary:'Done'
     });
     return;
   }
   if(cur.status==='going'){
-    showModal({
-      title:"You're Going! ⚽",
-      sub:`You're registered as Going for ${info.title} at ${info.venue}. Have you arrived at the venue to watch live?`,
-      meta:[
-        ['Match',info.title],
-        ['Venue',info.venue],
-        ['Date & Time',info.when],
-        ['Your Status','Going ✓']
-      ],
-      primary:"📍 I'm at the venue (Check In)",
-      primaryFn:()=>verifyPitchPresence(type,id),
-      secondary:'Done'
-    });
+    delete S.attending[key];
+    info.obj.going=Math.max(0,(info.obj.going||1)-1);
+    if(window.FCData){
+      FCData.persistLocal();
+      FCData.record('app_events',{},'fixture_rsvp_cancelled',{item_key:key,match_title:info.title,venue:info.venue});
+    }
+    render();
     return;
   }
   if(cur.status==='attended'){
@@ -760,8 +756,8 @@ const willBeThereBtn=(type,id,fullWidth=false)=>{
     const hasTix=S.tickets[info.key];
     if(hasTix){
       return fullWidth
-        ? `<button class="btn" style="background:var(--ok);color:#fff" onclick="openTicketPass('${type}',${info.id},event)">${ic('ticket')}View Ticket Code (${hasTix.code})</button>`
-        : `<button class="will-btn verified" onclick="openTicketPass('${type}',${info.id},event)">${ic('ticket')}Ticket (${hasTix.code})</button>`;
+        ? `<button class="btn" style="background:var(--ok);color:#fff" onclick="openTicketPass('${type}',${info.id},event)">${ic('ticket')}View ticket</button>`
+        : `<button class="will-btn verified" onclick="openTicketPass('${type}',${info.id},event)">${ic('ticket')}View ticket</button>`;
     }
     return fullWidth
       ? `<button class="btn" onclick="openTicketCheckout('${type}',${info.id},event)">${ic('ticket')}Get Ticket · ${info.feeLabel}</button>`
@@ -959,14 +955,20 @@ SC.explore=()=>{const k=S.sub.explore;let body='';
  if(k==='Competitions')body=`<div class="search">${ic('search')}<input placeholder="Search competitions"></div><div class="list" style="margin-top:12px">${comps.map(c=>`<div class="card" onclick="go('comp',${c.id})"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div><div class="row sp" style="margin-top:10px"><span class="small muted">${c.teams} teams</span><button class="btn sm ${S.followed['c'+c.id]?'ghost':''}" onclick="event.stopPropagation();S.followed['c${c.id}']=!S.followed['c${c.id}'];render()">${S.followed['c'+c.id]?'Following':'Follow'}</button></div></div>`).join('')}</div>`;
  return `<h1>Explore</h1>${tabsUI('explore',['Pitches','Open Games','Matches & Events','Competitions'])}${body}`};
 
-SC.venue=id=>{const v=venues[id],k=S.sub.venue;
+SC.venue=arg=>{
+ const id=arg&&typeof arg==='object'?arg.id:(arg||0);
+ const fromGame=Boolean(arg&&typeof arg==='object'&&arg.fromGame);
+ const v=venues[id]||venues[0];
+ if(fromGame&&S.sub.venue==='Pitches')S.sub.venue='Overview';
+ const k=S.sub.venue;
  const b={Overview:`<p class="sub">Floodlit football facility with multiple pitches. Opening hours and pricing are set by the venue.</p><div class="map" style="height:120px;margin:12px 0"><span class="pin" style="top:46px;left:140px">${ic('pin')}</span></div><div class="kv"><span class="muted">Address</span><b>${v.area}, Lagos</b></div><div class="kv"><span class="muted">Opening hours</span><b>${v.hours}</b></div><div class="kv"><span class="muted">Formats</span><b>${v.fmts.join(', ')}</b></div><div class="kv"><span class="muted">Contact</span><b>Call venue</b></div><h2 class="sec">Facilities</h2><div class="row" style="flex-wrap:wrap">${v.fac.map(f=>`<span class="tag">${f}</span>`).join('')}</div><h2 class="sec">Booking policy</h2><div class="note">${v.policy}</div>`,
   Pitches:`<div class="list">${v.pitches.map(p=>`<div class="card row"><div class="img has" style="width:64px;height:64px;background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.f}</div></div><div class="b">${N(p.p)}<span class="muted small">/hr</span></div></div>`).join('')}</div>`,
   Reviews:`<div class="row"><span class="score">${v.rating}</span><div class="sub">${v.rev} reviews<br>Verified booking reviews only</div></div><div class="list" style="margin-top:12px">${['Great pitch and lighting.','Easy booking, clean changing rooms.'].map(t=>`<div class="card small"><div class="b">${ic('star')} 5.0</div>${t}</div>`).join('')}</div>`}[k];
+ const tabItems=fromGame?['Overview','Reviews']:['Overview','Pitches','Reviews'];
+ const ctaHtml=fromGame?'':`<div class="cta"><div><div class="small muted">From</div><div class="b">${N(v.from)}/hr</div></div><button class="btn sm" onclick="S.b={v:${id},p:0,d:2,t:null,pay:'full',ref:null};go('book')">Book a pitch</button></div>`;
  return `${hdr(v.name,`<button class="round" onclick="openShare('venue',${id})">${ic('share')}</button>`)}<div ${pic(v.im,170)}>${v.verified?`<span class="tag ok" style="position:absolute;top:12px;left:12px">${ic('shield')}Verified venue</span>`:''}${v.name}</div>
  <div class="row sp" style="margin-top:12px"><div class="sub">${ic('pin')} ${v.area} · ${v.km} km</div><div class="b">${ic('star')} ${v.rating} <span class="muted small">(${v.rev})</span></div></div>
- <div class="hscroll" style="margin-top:10px">${[1,2,3].map(i=>`<div class="img has" style="width:96px;height:66px;background-image:url(img/venue${i}.jpg)"></div>`).join('')}</div>${tabsUI('venue',['Overview','Pitches','Reviews'])}${b}
- <div class="cta"><div><div class="small muted">From</div><div class="b">${N(v.from)}/hr</div></div><button class="btn sm" onclick="S.b={v:${id},p:0,d:2,t:null,pay:'full',ref:null};go('book')">Book a pitch</button></div>`};
+ <div class="hscroll" style="margin-top:10px">${[1,2,3].map(i=>`<div class="img has" style="width:96px;height:66px;background-image:url(img/venue${i}.jpg)"></div>`).join('')}</div>${tabsUI('venue',tabItems)}${b}${ctaHtml}`};
 
 SC.book=()=>{const v=venues[S.b.v];const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const times=['16:00','17:00','18:00','19:00','20:00','21:00'];
  return `${hdr('Select pitch and time')}
@@ -1007,6 +1009,10 @@ const startCreateGame=()=>{
 const openEditGame=id=>{
  const g=findGame(id);
  if(!g)return;
+ if(!isGameCreator(g)){
+   toast('Only the game creator can edit this game');
+   return;
+ }
  S.editingGameId=g.id;
  const wParts=(g.when||'Fri 13 Nov · 19:00–20:00').split('·');
  const isFree=!g.price||+g.price===0;
@@ -1091,9 +1097,12 @@ function publishGame(){
    }
  }
  const gid=makeUUID();
+ S.myGames=S.myGames||{};
+ S.myGames[gid]=true;
  const g={id:gid,title:f.gtitle||'Friday Floodlit 5s',v:vIdx,venueName:vObj.name,pitch:pitchName,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:needVal,left:leftVal,price:priceVal,org:S.user.name||'Tunde Adeyemi',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr),notes:f.gnotes||'',isMine:true};
  games.unshift(g);
  if(window.FCData){
+   FCData.persistLocal();
    FCData.record('open_games',{id:gid,title:g.title,organiser_name:S.user.name,organiser_contact:S.user.email,venue_name:vObj.name,pitch_name:g.pitch,match_when:g.when,format:g.fmt,players_needed:+g.need,slots_left:+g.left,price_ngn:+g.price,skill_level:g.level,requires_approval:g.approval},'open_game_created',{game_id:gid,title:g.title,venue:vObj.name,format:g.fmt,price_ngn:g.price},g);
  }
  S.stack=[{s:'game',a:g.id}];
@@ -1288,8 +1297,10 @@ SC.activity=()=>{const k=S.sub.activity;let body='';
    body=`<div class="list">${showList.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm" onclick="go('gamePass','${g.id}')">View Permit Code</button><button class="btn sm ghost" onclick="openShare('game','${g.id}')">Share</button></div></div>`).join('')}</div>`;
  }
  if(k==='Games Created'){
-   const myGames=games.slice(0,3);
-   body=`<div class="list">${myGames.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button><button class="btn sm" onclick="openShare('game','${g.id}')">Invite &amp; Share</button></div></div>`).join('')}<div class="card"><div class="b">Join requests (1)</div><div class="row sp" style="margin-top:8px"><span class="small">Emeka O. wants to join</span><div class="row"><button class="btn sm ghost" onclick="toast('Declined')">Decline</button><button class="btn sm" onclick="showModal({title:'Player Approved!',sub:'Emeka O. has been added to '+games[0].title+' and notified.',meta:[['Player','Emeka Obi'],['Game',games[0].title]],primary:'Done'})">Approve</button></div></div></div></div>`;
+   const myGames=games.filter(g=>isGameCreator(g));
+   body=myGames.length
+     ? `<div class="list">${myGames.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button><button class="btn sm" onclick="openShare('game','${g.id}')">Invite &amp; Share</button></div></div>`).join('')}</div>`
+     : `<div class="card" style="text-align:center;padding:24px"><div class="b">No games created yet</div><div class="sub small" style="margin:6px 0 14px">Create an open game to invite players and manage your game details here.</div><button class="btn sm" style="margin:0 auto" onclick="startCreateGame()">${ic('plus')}Create Open Game</button></div>`;
  }
  if(k==='Events'){
    const attEntries=Object.values(S.attending||{});
@@ -1470,13 +1481,13 @@ SC.game=id=>{
  if(!exact&&window.FCData&&FCData.loading){
    return `<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Loading match details</h1><p class="sub" style="margin-top:6px">Fetching real-time game data…</p></div>`;
  }
- const g=findGame(id),v=venues[g.v]||venues[0],vName=g.venueName||v.name,j=S.joined[g.id],isFull=+g.left<=0,filled=Math.max(g.need-g.left,isFull?g.need:1),isFree=!g.price||+g.price===0,pLabel=isFree?'Free':N(g.price);
+ const g=findGame(id),v=venues[g.v]||venues[0],vName=g.venueName||v.name,j=S.joined[g.id],isFull=+g.left<=0,filled=Math.max(g.need-g.left,isFull?g.need:1),isFree=!g.price||+g.price===0,pLabel=isFree?'Free':N(g.price),canEdit=isGameCreator(g);
  const btnText=j?'Joined · View Permit Code':isFull?'Slot Full · Check Other Games':(g.approval?'Request to join · '+pLabel:'Join Game · '+pLabel);
  return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="if(S.stack.length>1){back()}else{S.stack=[];S.tab='home';render()}">${ic('back')}</button><button class="round ov r" onclick="openShare('game','${g.id}')">${ic('share')}</button></div>
 <div class="sheetcard"><div class="row sp"><h1 style="font-size:22px">${g.title}</h1><span class="tag gold">${g.fmt}</span></div><div class="row" style="margin:8px 0 14px"><span class="tag">${g.level}</span><span class="tag ${isFull?'bad':g.left<=2?'warn':'ok'}">${isFull?'0 slots left · Full':g.left+' slot'+(g.left===1?'':'s')+' left'}</span></div>
-<div class="card row"><div class="av">${ini(g.org||'Org')}</div><div class="grow"><div class="small muted">Hosted by</div><div class="b">${g.org}</div></div><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button></div>
+<div class="card row"><div class="av">${ini(g.org||'Org')}</div><div class="grow"><div class="small muted">Hosted by</div><div class="b">${g.org}</div></div>${canEdit?`<button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button>`:`<span class="tag">Organiser</span>`}</div>
 <div class="tiles"><div class="tile">${ic('clock')}<small>Date &amp; time</small><b>${g.when}</b></div><div class="tile">${ic('users')}<small>Players</small><b>${filled} of ${g.need} joined</b></div><div class="tile">${ic('ball')}<small>Format</small><b>${g.fmt}</b></div><div class="tile">${ic('card')}<small>Price per player</small><b>${pLabel}</b></div></div>
-<div class="card vrow" style="margin-top:12px" onclick="go('venue',${g.v||0})">${ic('pin')}<div class="grow"><div class="b">${vName}</div><div class="sub small">${g.pitch} · ${v.area}</div></div>${ic('chev')}</div>
+<div class="card vrow" style="margin-top:12px" onclick="S.sub.venue='Overview';go('venue',{id:${g.v||0},fromGame:true})">${ic('pin')}<div class="grow"><div class="b">${vName}</div><div class="sub small">${g.pitch} · ${v.area}</div></div>${ic('chev')}</div>
 <div class="card" style="margin-top:12px"><div class="row sp"><b>Players</b>${faces(Math.min(filled,5),Math.max(filled-5,0))}</div><div class="bar" style="margin:10px 0 6px"><i style="width:${Math.min(100,filled/g.need*100)}%"></i></div><div class="small muted">${g.approval?'Organiser approval required to join':'Join directly'} · ${isFull?'All slots filled':g.left+' slots left'}</div></div>
 ${g.notes?`<div class="card" style="margin-top:12px"><div class="small muted">Organiser instructions</div><div class="b small" style="margin-top:4px">${g.notes}</div></div>`:''}
 <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div></div>
@@ -1513,6 +1524,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=7"></script>
+<script src="fc-data.js?v=8"></script>
 </body>
 </html>
