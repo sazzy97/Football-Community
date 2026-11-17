@@ -779,8 +779,17 @@ const willBeThereBtn=(type,id,fullWidth=false)=>{
     ? `<button class="btn" onclick="toggleWillBeThere('${type}',${info.id},event)">🙋‍♂️ I will be there</button>`
     : `<button class="will-btn" onclick="toggleWillBeThere('${type}',${info.id},event)">🙋‍♂️ I will be there</button>`;
 };
+const getShareBase=()=>{
+  try{
+    if(location.protocol==='https:'&&!location.hostname.includes('localhost')&&location.hostname!=='127.0.0.1'){
+      const path=location.pathname.replace(/index\.html$/,'').replace(/\/?$/,'/');
+      return location.host+path;
+    }
+  }catch(e){}
+  return 'sazzy97.github.io/Football-Community/';
+};
 const openShare=(type,id)=>{
-  const base='sazzy97.github.io/Football-Community/';
+  const base=getShareBase();
   let item={type,id,title:'Football Community',sub:'Lagos, Nigeria',tag:'Football',url:base,fullUrl:base,img:'game1'};
   if(type==='venue'){const v=venues[id||0]||venues[0];item={type:'Venue',id:v.id,title:v.name,sub:v.area+' · From '+N(v.from)+'/hr',tag:v.fmts.join(' · '),url:base+'?venue='+(id||0),fullUrl:base+'?venue='+(id||0),img:v.im}}
   else if(type==='game'){
@@ -1358,7 +1367,7 @@ SC.expired=()=>`<div style="text-align:center;padding-top:80px"><div class="av l
 SC.welcome=()=>`<div class="welcome"><span class="tag" style="background:var(--color-accent);color:var(--color-primary);align-self:flex-start">Lagos, Nigeria</span><h1>The home of football communities</h1><p style="opacity:.85;margin-bottom:22px">Find places to play, people to play with, and matches to watch.</p><button class="btn" style="background:var(--color-accent);color:var(--color-primary)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Get started</button><button class="btn ghost" style="margin-top:10px" onclick="S.stack=[];render()">I already have an account</button></div>`;
 
 SC.share=()=>{
-  const it=S.shareItem||{type:'Open Game',id:0,title:'Thursday Night 5s',sub:'Lekki Goal Arena · Thu 12 Nov · 20:00',tag:'5-a-side · ₦2,500/player',url:'sazzy97.github.io/Football-Community/?game=0',img:'game1'};
+  const it=S.shareItem||{type:'Open Game',id:0,title:'Thursday Night 5s',sub:'Lekki Goal Arena · Thu 12 Nov · 20:00',tag:'5-a-side · ₦2,500/player',url:getShareBase()+'?game=0',img:'game1'};
   const chans=[
     ['WhatsApp','#25D366','WA'],
     ['Copy Link','#123D2B','🔗'],
@@ -1524,6 +1533,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=9"></script>
+<script src="fc-data.js?v=10"></script>
 </body>
 </html>

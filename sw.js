@@ -1,4 +1,4 @@
-const CACHE_NAME = 'football-community-v9';
+const CACHE_NAME = 'football-community-v10';
 const CORE_ASSETS = [
   './',
   './index.html',

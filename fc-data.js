@@ -551,7 +551,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=9', { updateViaCache: 'none' })
+        .register('./sw.js?v=10', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
