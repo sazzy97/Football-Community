@@ -580,7 +580,7 @@ const players=[
 
 /* ===== state & routing ===== */
 const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,user:{name:'Tunde Adeyemi',email:'tunde@example.com',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 const $=id=>document.getElementById(id);
 const go=(s,a)=>{S.stack.push({s,a});render()};
 const back=()=>{S.stack.pop();render()};
@@ -938,9 +938,9 @@ SC.onb=()=>{
  const st=[
   [editingProfile?'Edit your account':'Create your account',editingProfile?'Update your display name and profile details synced across your devices.':'Create a real Football Community account synced across all your devices.',
    `${S.authErr?`<div class="auth-err">${S.authErr}</div>`:''}
-    <div class="field">Full name<input value="${S.user.name||''}" oninput="S.user.name=this.value;S.authErr=null" placeholder="e.g. Tunde Adeyemi"></div>
-    <div class="field">Email address<input type="email" value="${S.user.email||''}" ${editingProfile?'disabled style="opacity:.7"':''} oninput="S.user.email=this.value;S.authErr=null" placeholder="you@example.com"></div>
-    ${editingProfile?'':`<div class="field">Password (min 6 characters)<div class="pw-wrap"><input type="${S.showPw?'text':'password'}" value="${S.user.pass||''}" oninput="S.user.pass=this.value;S.authErr=null" placeholder="Create a password"><button type="button" class="pw-eye" onclick="S.showPw=!S.showPw;render()" aria-label="Show password">${ic(S.showPw?'eyeOff':'eye')}</button></div></div>`}
+    <div class="field">Full name<input value="${S.user.name||''}" oninput="S.user.name=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter your full name" autocomplete="name"></div>
+    <div class="field">Email address<input type="email" value="${S.user.email||''}" ${editingProfile?'disabled style="opacity:.7"':''} oninput="S.user.email=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter your email address" autocomplete="email"></div>
+    ${editingProfile?'':`<div class="field"><div class="row sp"><span>Password</span><span class="small muted" style="font-weight:500">min. of 6 characters</span></div><div class="pw-wrap"><input type="${S.showPw?'text':'password'}" value="${S.user.pass||''}" oninput="S.user.pass=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter password (min. of 6 characters)" autocomplete="new-password"><button type="button" class="pw-eye" onclick="S.showPw=!S.showPw;render()" aria-label="Show password">${ic(S.showPw?'eyeOff':'eye')}</button></div></div>`}
     <div class="note">Your unified account lets you book pitches, create &amp; edit your own games or fixtures, and sync tickets across phone and laptop.</div>`],
   ['Select your location','Choose your primary playing area in Lagos. Tap any cluster below to select it.',
    `<div class="list">${locs.map(a=>{const on=S.user.loc===a;return `<div class="opt ${on?'on':''}" onclick="S.user.loc='${a}';render()"><div class="radio"></div><div class="grow"><b>${a}</b><div class="sub small">Lagos launch cluster</div></div>${on?`<span class="tag ok">${ic('check')}Selected</span>`:''}</div>`}).join('')}</div>`],
@@ -1212,7 +1212,7 @@ function publishGame(){
  S.myGames[gid]=true;
  const creatorEmail=currentUserEmail()||S.user.email||'';
  const creatorId=currentUserId();
- const g={id:gid,title:f.gtitle||'Friday Floodlit 5s',v:vIdx,venueName:vObj.name,pitch:pitchName,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:needVal,left:leftVal,price:priceVal,org:S.user.name||'Tunde Adeyemi',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr),notes:f.gnotes||'',creator_id:creatorId,creator_email:creatorEmail,isMine:true};
+ const g={id:gid,title:f.gtitle||'Friday Floodlit 5s',v:vIdx,venueName:vObj.name,pitch:pitchName,when:(f.gdate||'Fri 13 Nov')+' · '+(f.gtime||'19:00–20:00'),fmt:f.gfmt||'5-a-side',need:needVal,left:leftVal,price:priceVal,org:S.user.name||'Organiser',level:f.glevel||'All levels',approval:!!(S.p&&S.p.appr),notes:f.gnotes||'',creator_id:creatorId,creator_email:creatorEmail,isMine:true};
  games.unshift(g);
  if(window.FCData){
    FCData.persistLocal();
@@ -1493,7 +1493,7 @@ SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14
  const acctCard=signedIn
   ? `<div class="auth-banner"><div><span class="tag ok">${ic('shield')}Verified Account</span><div class="b small" style="margin-top:4px">${S.authUser.email}</div><div class="muted" style="font-size:11px">Synced across laptop &amp; mobile via Supabase Auth</div></div><button class="btn sm ghost" onclick="confirmSignOut()">Sign Out</button></div>`
   : `<div class="auth-banner"><div><span class="tag warn">Guest Mode</span><div class="b small" style="margin-top:4px">Sign in to sync your account</div><div class="muted" style="font-size:11px">Keep creator permissions &amp; tickets across devices</div></div><button class="btn sm" onclick="S.authErr=null;go('signin')">Sign In</button></div>`;
- return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">${ini(S.user.name||'Player')}</div><h1>${S.user.name||'Player'}</h1><div class="sub">${S.user.loc} · Player · Organiser · Spectator</div>${acctCard}</div>
+ return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">${ini(S.user.name||'Guest')}</div><h1>${S.user.name||'Guest'}</h1><div class="sub">${S.user.loc} · Player · Organiser · Spectator</div>${acctCard}</div>
  <div class="pwa-bar"><div><div class="b" style="font-size:14px">Install Football Community</div><div style="font-size:11px;opacity:.85">Add to your phone home screen for 1-tap access</div></div><button class="btn sm" onclick="installPWA()">Install App</button></div>
  <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;S.authErr=null;go('onb')")}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
  <h2 class="sec">Organiser tools</h2><div class="list">${it('plus','Publish a Match Fixture',"startCreateFixture()")}${it('trophy','Publish a Football Event',"startCreateEvent()")}${it('cal','Manage My Fixtures & Events',"S.sub.activity='Events';tab('activity')")}</div>
@@ -1787,7 +1787,7 @@ gameCard=g=>{const vObj=venues[g.v]||venues[0],vName=g.venueName||vObj.name,fill
 eventCard=e=>{const sid=String(e.id),gCount=e.going||28,info=getAttendItem('event',e.id);return `<div class="card vcard" onclick="go('event','${sid}')"><div ${pic(e.im||'event1',120)}><span class="pill-w l">${e.cat}</span><button class="pill-w sv" onclick="event.stopPropagation();S.saved['${sid}']=!S.saved['${sid}'];render()" style="color:${S.saved[sid]?'#D94343':'#17211B'}">${ic('heart')}</button></div><div class="vbody"><div class="b t1">${e.title}</div><div class="sub">${e.venue}</div><div class="sub">${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="price">${e.fee}</span></div><div class="will-foot"><div class="row" style="gap:6px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> ${info.isPaid?'attending':'going'}</span></div>${willBeThereBtn('event',sid)}</div></div></div>`};
 matchRow=f=>{const gCount=f.going||34,fid=String(f.id!==undefined?f.id:0),info=getAttendItem('fixture',fid);return `<div class="card mrow" onclick="go('match','${fid}')"><div class="row sp small muted"><span>${f.t}</span><div class="row" style="gap:6px"><span class="tag ${info.isPaid?'gold':'ok'}">${info.feeLabel}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div></div><div class="mrow-main"><div class="side">${crest(f.h,40)}<b>${f.h}</b></div><div class="mid">${f.sc?`<span class="scorepill">${f.sc}</span>`:`<span class="timepill">${f.t.split('·').pop().trim()}</span>`}</div><div class="side">${crest(f.a,40)}<b>${f.a}</b></div></div><div class="small muted" style="text-align:center">${ic('pin')} ${f.v}</div><div class="will-foot"><div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> ${info.isPaid?'attending':'going'}</span></div>${willBeThereBtn('fixture',fid)}</div></div>`};
 
-SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Tunde Adeyemi')}</div><div><div class="b" style="font-size:17px">${S.user.name||'Tunde Adeyemi'}</div><button class="locl" onclick="event.stopPropagation();S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos${ic('chev')}</button></div></div><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div>
+SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Guest')}</div><div><div class="b" style="font-size:17px">${S.user.name||'Guest'}</div><button class="locl" onclick="event.stopPropagation();S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos${ic('chev')}</button></div></div><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div>
 <div class="search full" onclick="tab('explore')" style="margin:20px 0 0">${ic('search')}<span>Search pitches, games or events</span></div>
 <h2 class="sec">Recommended for you <a onclick="jump('venues')">See all ${ic('chev')}</a></h2>
 <div class="deck" onclick="go('venue',0)"><div ${pic('venue1',200)}><span class="pill-w">2.1 km</span><div class="dk"><div><div class="dkt">Lekki Goal Arena</div><div class="dks">${ic('pin')} Lekki Phase 1 · ${ic('star')} 4.7</div></div><div class="dkp">${N(25000)}<small>/hr</small></div></div></div></div>
@@ -1826,7 +1826,7 @@ const SBW=`<div class="wl-sb"><span>9:41</span><span class="sbi"><svg width="18"
 const WS=[{tag:'LIVE PITCH RADAR',h1:'Find Football',h2:'Matches Near You',p:'Discover nearby games to watch at your leisure time.',img:'game1',card:{img:'event1',tag:'11-A-SIDE',title:'KiDave Media Cup',l1:'Oki pry school · Today, 4:00 PM<br>Sat, Nov 15 · 4:00 PM',l2:'',right:'● Free'}},
  {tag:'PLAY · BOOK A PITCH',h1:'Book Pitches',h2:'Anytime, Anywhere',p:'See live availability, pick your slot and pay in full or by deposit in a few taps.',img:'venue1',card:{img:'venue2',tag:'5-A-SIDE',title:'Lekki Goal Arena',l1:'Lekki Phase 1 · 2.1 km away',l2:'From ₦25,000 / hour',right:'4 slots free'}},
  {tag:'CONNECT · OPEN GAMES',h1:'Join Games,',h2:'Build Your Squad',p:'No full team needed. Join open games, create your own and meet players near you.',img:'game1',card:{img:'game1',tag:'5-A-SIDE',title:'Thursday Night 5s',l1:'Lekki Goal Arena · Thu, 8:00 PM',l2:'2 slots left · ₦2,500 / player',right:'₦2,500'}}];
-const prepFreshAuth=()=>{if(!S.authUser&&S.user.email==='tunde@example.com'){S.user.name='';S.user.email='';S.user.pass=''}S.authErr=null};
+const prepFreshAuth=()=>{S.authErr=null};
 const wlNext=()=>{if(S.ws<2){S.ws++;render()}else{prepFreshAuth();S.onb=0;S.stack=[{s:'onb'}];render()}};
 const wlSkip=()=>{prepFreshAuth();S.onb=0;S.stack=[{s:'onb'}];render()};
 const wlSignin=()=>{prepFreshAuth();S.stack=[{s:'signin'}];render()};
@@ -1841,8 +1841,8 @@ SC.welcome=()=>wlCoded(WS[S.ws]);
 SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.authErr=null;S.ws=0;S.stack=[{s:'welcome'}];render()" aria-label="Back">${ic('back')}</button>
  <h1 style="margin-top:24px;font-size:30px">Welcome back</h1><p class="sub" style="margin:8px 0 22px">Sign in with your account to sync your games, creator permissions, and tickets across devices.</p>
  ${S.authErr?`<div class="auth-err">${S.authErr}</div>`:''}
- <div class="field">Email address<input type="email" value="${S.user.email||''}" oninput="S.user.email=this.value;S.authErr=null" placeholder="you@example.com"></div>
- <div class="field">Password<div class="pw-wrap"><input type="${S.showPw?'text':'password'}" value="${S.user.pass||''}" oninput="S.user.pass=this.value;S.authErr=null" placeholder="Enter your password"><button type="button" class="pw-eye" onclick="S.showPw=!S.showPw;render()" aria-label="Show password">${ic(S.showPw?'eyeOff':'eye')}</button></div></div>
+ <div class="field">Email address<input type="email" value="${S.user.email||''}" oninput="S.user.email=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter your email address" autocomplete="email"></div>
+ <div class="field">Password<div class="pw-wrap"><input type="${S.showPw?'text':'password'}" value="${S.user.pass||''}" oninput="S.user.pass=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter your password" autocomplete="current-password"><button type="button" class="pw-eye" onclick="S.showPw=!S.showPw;render()" aria-label="Show password">${ic(S.showPw?'eyeOff':'eye')}</button></div></div>
  <div class="row sp" style="margin:-4px 0 22px"><span class="small muted">Forgot your password?</span><button class="small b" style="color:var(--brand)" onclick="submitPasswordReset()">Reset it</button></div>
  <button class="btn" ${S.authBusy?'disabled style="opacity:.6"':''} onclick="submitSignIn()">${S.authBusy?'Signing in...':'Sign in'}</button>
  <button class="btn ghost" style="margin-top:10px" onclick="S.authErr=null;S.stack=[];S.tab='home';toast('Browsing as guest');render()">Continue as guest</button>
@@ -1883,6 +1883,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=11"></script>
+<script src="fc-data.js?v=12"></script>
 </body>
 </html>
