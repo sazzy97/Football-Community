@@ -37,6 +37,7 @@ const FCData = {
   init() {
     S.permits = S.permits || {};
     S.attending = S.attending || {};
+    S.tickets = S.tickets || {};
     S.gpayMethod = S.gpayMethod || 'card';
     try {
       const savedPermits = localStorage.getItem('fc_permits');
@@ -45,6 +46,8 @@ const FCData = {
       if (savedJoined) S.joined = { ...S.joined, ...JSON.parse(savedJoined) };
       const savedAttending = localStorage.getItem('fc_attending');
       if (savedAttending) S.attending = { ...S.attending, ...JSON.parse(savedAttending) };
+      const savedTickets = localStorage.getItem('fc_tickets');
+      if (savedTickets) S.tickets = { ...S.tickets, ...JSON.parse(savedTickets) };
       const savedCfg = localStorage.getItem('fc_cloud_config');
       if (savedCfg) {
         const parsed = JSON.parse(savedCfg);
@@ -114,6 +117,7 @@ const FCData = {
       if (window.S && S.permits) localStorage.setItem('fc_permits', JSON.stringify(S.permits));
       if (window.S && S.joined) localStorage.setItem('fc_joined', JSON.stringify(S.joined));
       if (window.S && S.attending) localStorage.setItem('fc_attending', JSON.stringify(S.attending));
+      if (window.S && S.tickets) localStorage.setItem('fc_tickets', JSON.stringify(S.tickets));
     } catch (e) {}
   },
 
@@ -534,7 +538,7 @@ const FCData = {
   registerPWA() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('./sw.js?v=6')
+        .register('./sw.js?v=7')
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();

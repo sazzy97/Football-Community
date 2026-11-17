@@ -553,10 +553,10 @@ const events=[
 const comps=[{id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8},{id:1,name:'Campus 7s League',type:'University competition',season:'2026/27',teams:6}];
 const standings=[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]];
 const fixtures=[
- {id:0,h:'Mainland FC',a:'Surulere United',t:'Sat 14 Nov · 15:00',s:'Upcoming',v:'Teslim Balogun Stadium',comp:'Lagos Grassroots Cup',going:34,attended:0},
- {id:1,h:'Lekki Lions',a:'Yaba Rovers',t:'Today · 16:00',s:'Live',sc:'1 : 1',v:'Lagos Arena, Lekki',comp:'Lagos Grassroots Cup',going:58,attended:24},
- {id:2,h:'Akoka Boys FC',a:'Bariga All-Stars',t:'Sun 15 Nov · 16:30',s:'Upcoming',v:'St. Finbarr\'s Field, Akoka',comp:'Lagos Grassroots Cup',going:29,attended:0},
- {id:3,h:'Ikeja Stars',a:'Mainland FC',t:'Sat 7 Nov',s:'Completed',sc:'0 : 3',v:'Ikeja Sports Ground',comp:'Lagos Grassroots Cup',going:41,attended:32}
+ {id:0,h:'Mainland FC',a:'Surulere United',t:'Sat 14 Nov · 15:00',s:'Upcoming',v:'Teslim Balogun Stadium',comp:'Lagos Grassroots Cup',going:34,attended:0,fee:'₦1,500',price:1500},
+ {id:1,h:'Lekki Lions',a:'Yaba Rovers',t:'Today · 16:00',s:'Live',sc:'1 : 1',v:'Lagos Arena, Lekki',comp:'Lagos Grassroots Cup',going:58,attended:24,fee:'Free',price:0},
+ {id:2,h:'Akoka Boys FC',a:'Bariga All-Stars',t:'Sun 15 Nov · 16:30',s:'Upcoming',v:'St. Finbarr\'s Field, Akoka',comp:'Lagos Grassroots Cup',going:29,attended:0,fee:'Free',price:0},
+ {id:3,h:'Ikeja Stars',a:'Mainland FC',t:'Sat 7 Nov',s:'Completed',sc:'0 : 3',v:'Ikeja Sports Ground',comp:'Lagos Grassroots Cup',going:41,attended:32,fee:'Free',price:0}
 ];
 const teams=[{id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:'Captain'},{id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},{id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null}];
 const players=[
@@ -570,7 +570,7 @@ const players=[
 
 /* ===== state & routing ===== */
 const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},attending:{},onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:2,showPw:false,picker:null,user:{name:'Tunde Adeyemi',email:'tunde@example.com',pass:'Football2026!',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},saved:{},followed:{},joined:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,user:{name:'Tunde Adeyemi',email:'tunde@example.com',pass:'Football2026!',phone:'+234 803 555 0192',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 const $=id=>document.getElementById(id);
 const go=(s,a)=>{S.stack.push({s,a});render()};
 const back=()=>{S.stack.pop();render()};
@@ -591,20 +591,45 @@ const findFixture=id=>{
   if(id===undefined||id===null)return fixtures[1]||fixtures[0];
   return fixtures.find(x=>String(x.id)===String(id))||fixtures[+id]||fixtures[0];
 };
+const parseFee=feeStr=>{
+  if(!feeStr||String(feeStr).toLowerCase()==='free')return 0;
+  return parseInt(String(feeStr).replace(/[^0-9]/g,''),10)||0;
+};
 const getAttendKey=(type,id)=>(type==='event'?'e_':'f_')+id;
 const getAttendItem=(type,id)=>{
   if(type==='event'){
     const e=events[id||0]||events[0];
-    return {type:'event',id:e.id,title:e.title,venue:e.venue,when:e.when,status:e.status,obj:e};
+    const price=parseFee(e.fee);
+    return {key:'e_'+e.id,type:'event',id:e.id,title:e.title,venue:e.venue,when:e.when,status:e.status,price,feeLabel:price>0?N(price):'Free',isPaid:price>0,obj:e};
   }
   const f=findFixture(id);
-  return {type:'fixture',id:f.id,title:f.h+' vs '+f.a,venue:f.v,when:f.t,status:f.s,obj:f};
+  const price=+f.price||parseFee(f.fee);
+  return {key:'f_'+f.id,type:'fixture',id:f.id,title:f.h+' vs '+f.a,venue:f.v,when:f.t,status:f.s,price,feeLabel:price>0?N(price):'Free',isPaid:price>0,obj:f};
+};
+const openTicketCheckout=(type,id,ev)=>{
+  if(ev)ev.stopPropagation();
+  const info=getAttendItem(type,id);
+  S.tickets=S.tickets||{};
+  if(S.tickets[info.key]){
+    go('ticketPass',{type,id:info.id});
+    return;
+  }
+  S.tixQty=1;
+  go('ticket',{type,id:info.id});
+};
+const openTicketPass=(type,id,ev)=>{
+  if(ev)ev.stopPropagation();
+  go('ticketPass',{type,id});
 };
 const toggleWillBeThere=(type,id,ev)=>{
   if(ev)ev.stopPropagation();
-  S.attending=S.attending||{};
-  const key=getAttendKey(type,id);
   const info=getAttendItem(type,id);
+  if(info.isPaid){
+    openTicketCheckout(type,id);
+    return;
+  }
+  S.attending=S.attending||{};
+  const key=info.key;
   const cur=S.attending[key];
   if(!cur){
     info.obj.going=(info.obj.going||20)+1;
@@ -621,44 +646,44 @@ const toggleWillBeThere=(type,id,ev)=>{
       });
     }
     showModal({
-      title:"You'll Be There! ⚽",
-      sub:`You're on the spectator list for ${info.title}. When you're at ${info.venue} on match day, open this match in the app — we'll verify your pitch-side attendance!`,
+      title:"You're Going! ⚽",
+      sub:`You're confirmed on the spectator list for ${info.title}. When you arrive at ${info.venue} on match day, tap "I'm at the venue (Check In)" to verify your attendance!`,
       meta:[
         ['Match',info.title],
-        ['Field / Venue',info.venue],
-        ['Kickoff',info.when],
-        ['Spectators Going',info.obj.going+' fans going'],
-        ['Status','Going · Pre-match RSVP']
+        ['Venue',info.venue],
+        ['Date & Time',info.when],
+        ['Spectators',info.obj.going+' going'],
+        ['Your Status','Going ✓']
       ],
-      primary:"📍 I'm at the Pitch Now (Check In)",
-      primaryFn:()=>verifyPitchPresence(type,id),
-      secondary:'Done'
+      primary:'Done',
+      secondary:"📍 I'm at the venue (Check In)",
+      secFn:()=>verifyPitchPresence(type,id)
     });
     return;
   }
   if(cur.status==='going'){
     showModal({
-      title:'You said "I will be there"',
-      sub:`Are you at ${info.venue} right now watching ${info.title}? Tap below to verify your live pitch attendance, or update your RSVP.`,
+      title:"You're Going! ⚽",
+      sub:`You're registered as Going for ${info.title} at ${info.venue}. Have you arrived at the venue to watch live?`,
       meta:[
         ['Match',info.title],
-        ['Field / Venue',info.venue],
-        ['Your Status','Going · Awaiting Pitch Check-In']
+        ['Venue',info.venue],
+        ['Date & Time',info.when],
+        ['Your Status','Going ✓']
       ],
-      primary:"📍 I'm at the Pitch · Check In Now",
+      primary:"📍 I'm at the venue (Check In)",
       primaryFn:()=>verifyPitchPresence(type,id),
-      secondary:"Can't Make It (Cancel RSVP)",
-      secFn:()=>cancelWillBeThere(type,id)
+      secondary:'Done'
     });
     return;
   }
   if(cur.status==='attended'){
     showModal({
-      title:'Verified Pitch Spectator 🏆',
+      title:'Verified Venue Spectator 🏆',
       sub:`Your physical attendance at ${info.venue} for ${info.title} is verified and recorded.`,
       meta:[
         ['Match',info.title],
-        ['Field / Venue',info.venue],
+        ['Venue',info.venue],
         ['Checked In At',cur.attendedTime||'Matchday Live'],
         ['Verification','GPS Pitch Radar ✓']
       ],
@@ -668,25 +693,10 @@ const toggleWillBeThere=(type,id,ev)=>{
     });
   }
 };
-const cancelWillBeThere=(type,id)=>{
-  S.attending=S.attending||{};
-  const key=getAttendKey(type,id);
-  const info=getAttendItem(type,id);
-  if(S.attending[key]){
-    delete S.attending[key];
-    info.obj.going=Math.max(0,(info.obj.going||1)-1);
-    if(window.FCData){
-      FCData.persistLocal();
-      FCData.record('app_events',{},'fixture_rsvp_cancelled',{item_key:key,match_title:info.title,venue:info.venue});
-    }
-    toast('Removed from your matches list');
-    render();
-  }
-};
 const verifyPitchPresence=(type,id,silent=false)=>{
   S.attending=S.attending||{};
-  const key=getAttendKey(type,id);
   const info=getAttendItem(type,id);
+  const key=info.key;
   const finalizeCheckIn=(coordsText)=>{
     const timeStr=new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
     const wasAlreadyAttended=S.attending[key]&&S.attending[key].status==='attended';
@@ -714,18 +724,18 @@ const verifyPitchPresence=(type,id,silent=false)=>{
       }
     }
     if(silent){
-      toast('📍 Pitch Radar: Verified your attendance at '+info.venue+'!');
+      toast('📍 Verified your attendance at '+info.venue+'!');
       render();
     }else{
       showModal({
-        title:'Verified at the Pitch! 🏆',
+        title:'Checked In at Venue! 🏆',
         sub:`We confirmed your live presence at ${info.venue}. Enjoy watching ${info.title}!`,
         meta:[
           ['Match',info.title],
-          ['Local Field / Venue',info.venue],
+          ['Venue',info.venue],
           ['Check-In Time',timeStr],
           ['Verification','GPS Pitch Radar ✓'],
-          ['Status','Verified Match Spectator']
+          ['Status','Verified Spectator']
         ],
         primary:'Done',
         secondary:'Share Match',
@@ -744,21 +754,34 @@ const verifyPitchPresence=(type,id,silent=false)=>{
   }
 };
 const willBeThereBtn=(type,id,fullWidth=false)=>{
+  const info=getAttendItem(type,id);
+  if(info.isPaid){
+    S.tickets=S.tickets||{};
+    const hasTix=S.tickets[info.key];
+    if(hasTix){
+      return fullWidth
+        ? `<button class="btn" style="background:var(--ok);color:#fff" onclick="openTicketPass('${type}',${info.id},event)">${ic('ticket')}View Ticket Code (${hasTix.code})</button>`
+        : `<button class="will-btn verified" onclick="openTicketPass('${type}',${info.id},event)">${ic('ticket')}Ticket (${hasTix.code})</button>`;
+    }
+    return fullWidth
+      ? `<button class="btn" onclick="openTicketCheckout('${type}',${info.id},event)">${ic('ticket')}Get Ticket · ${info.feeLabel}</button>`
+      : `<button class="will-btn on" onclick="openTicketCheckout('${type}',${info.id},event)">${ic('ticket')}Get Ticket</button>`;
+  }
   S.attending=S.attending||{};
-  const cur=S.attending[getAttendKey(type,id)];
+  const cur=S.attending[info.key];
   if(cur&&cur.status==='attended'){
     return fullWidth
-      ? `<button class="btn" style="background:var(--ok);color:#fff" onclick="toggleWillBeThere('${type}',${id},event)">📍 Verified at Pitch ✓</button>`
-      : `<button class="will-btn verified" onclick="toggleWillBeThere('${type}',${id},event)">📍 At Pitch ✓</button>`;
+      ? `<button class="btn" style="background:var(--ok);color:#fff" onclick="toggleWillBeThere('${type}',${info.id},event)">📍 Checked In at Venue ✓</button>`
+      : `<button class="will-btn verified" onclick="toggleWillBeThere('${type}',${info.id},event)">📍 Checked In ✓</button>`;
   }
   if(cur&&cur.status==='going'){
     return fullWidth
-      ? `<button class="btn" onclick="toggleWillBeThere('${type}',${id},event)">${ic('check')}You'll Be There · Check In at Pitch</button>`
-      : `<button class="will-btn on" onclick="toggleWillBeThere('${type}',${id},event)">${ic('check')}I'll be there</button>`;
+      ? `<button class="btn" onclick="toggleWillBeThere('${type}',${info.id},event)">${ic('check')}Going</button>`
+      : `<button class="will-btn on" onclick="toggleWillBeThere('${type}',${info.id},event)">${ic('check')}Going</button>`;
   }
   return fullWidth
-    ? `<button class="btn" onclick="toggleWillBeThere('${type}',${id},event)">🙋‍♂️ I will be there</button>`
-    : `<button class="will-btn" onclick="toggleWillBeThere('${type}',${id},event)">🙋‍♂️ I will be there</button>`;
+    ? `<button class="btn" onclick="toggleWillBeThere('${type}',${info.id},event)">🙋‍♂️ I will be there</button>`
+    : `<button class="will-btn" onclick="toggleWillBeThere('${type}',${info.id},event)">🙋‍♂️ I will be there</button>`;
 };
 const openShare=(type,id)=>{
   const base='sazzy97.github.io/Football-Community/';
@@ -1079,37 +1102,111 @@ function publishGame(){
 }
 
 SC.event=id=>{
- const e=events[id||0]||events[0],gCount=e.going||30,cur=(S.attending&&S.attending[getAttendKey('event',e.id)])||null;
+ const e=events[id||0]||events[0],info=getAttendItem('event',e.id),gCount=e.going||30,cur=(S.attending&&S.attending[info.key])||null;
+ const hasTix=S.tickets&&S.tickets[info.key];
  return `${hdr('Event',`<div class="row" style="gap:8px"><button class="round" onclick="S.saved[${id}]=!S.saved[${id}];render()" style="color:${S.saved[id]?'#D94343':'inherit'}">${ic('heart')}</button><button class="round" onclick="openShare('event',${id})">${ic('share')}</button></div>`)}
  <div ${pic(e.im,160)}>${e.cat}</div><div class="row" style="margin:12px 0 6px;flex-wrap:wrap">${trust(e.trust)}<span class="tag">${e.status}</span></div>
  <h1>${e.title}</h1>${e.trust==='Community-submitted'?`<div class="note" style="margin-top:10px">Community-submitted. Not an officially verified event.</div>`:''}
  <div class="pitch-box">
    <div class="row sp">
-     <div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<div><div class="b small">${gCount} fans said "I will be there"</div><div class="muted" style="font-size:11px">${e.attended?e.attended+' verified at pitch · ':''}Tap below if you plan to watch live</div></div></div>
-     ${cur?`<span class="tag ${cur.status==='attended'?'ok':'gold'}">${cur.status==='attended'?'Verified ✓':'Going ✓'}</span>`:''}
+     <div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<div><div class="b small">${info.isPaid?gCount+' spectators attending':gCount+' fans going'}</div><div class="muted" style="font-size:11px">${info.isPaid?'Paid entry · Get your match ticket & permit code':(e.attended?e.attended+' verified at venue · ':'Free entry · Tap below if you will be there')}</div></div></div>
+     ${info.isPaid?`<span class="tag ${hasTix?'ok':'gold'}">${hasTix?'Ticket Issued ✓':e.fee}</span>`:(cur?`<span class="tag ${cur.status==='attended'?'ok':'gold'}">${cur.status==='attended'?'Checked In ✓':'Going ✓'}</span>`:`<span class="tag ok">Free</span>`)}
    </div>
    <div style="margin-top:12px">${willBeThereBtn('event',e.id,true)}</div>
-   ${cur&&cur.status==='going'?`<div class="row" style="margin-top:8px"><button class="btn sm gold grow" onclick="verifyPitchPresence('event',${e.id})">📍 I'm at ${e.venue.split(',')[0]} (Check In)</button><button class="btn sm ghost" onclick="cancelWillBeThere('event',${e.id})">Cancel</button></div>`:''}
+   ${!info.isPaid&&cur&&cur.status==='going'?`<div style="margin-top:8px"><button class="btn gold" style="width:100%" onclick="verifyPitchPresence('event',${e.id})">📍 I'm at the venue (Check In)</button></div>`:''}
  </div>
- <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Date and time</span><b>${e.when}</b></div><div class="kv"><span class="muted">Venue</span><b>${e.venue}</b></div><div class="kv"><span class="muted">Organiser</span><b style="text-align:right;max-width:190px">${e.org}</b></div><div class="kv"><span class="muted">Entry</span><b>${e.fee}</b></div>${e.tix?`<div class="kv"><span class="muted">Tickets available</span><b>${e.left}</b></div>`:''}</div>
+ <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Date and time</span><b>${e.when}</b></div><div class="kv"><span class="muted">Venue</span><b>${e.venue}</b></div><div class="kv"><span class="muted">Organiser</span><b style="text-align:right;max-width:190px">${e.org}</b></div><div class="kv"><span class="muted">Entry</span><b>${e.fee}</b></div>${info.isPaid?`<div class="kv"><span class="muted">Tickets available</span><b>${e.left||120}</b></div>`:''}</div>
  <h2 class="sec">About</h2><p class="sub">Description, entry requirements and contact information appear here as provided by the organiser.</p>
  ${e.comp>=0?`<h2 class="sec">Competition</h2><div class="card row" onclick="go('comp',${e.comp})"><div class="grow b">${comps[e.comp].name}</div>${ic('chev')}</div>`:''}
  <div class="map" style="height:110px;margin-top:14px"><span class="pin" style="top:40px;left:150px">${ic('pin')}</span></div>
- <div class="row" style="margin-top:16px">${willBeThereBtn('event',e.id,true)}${e.tix?`<button class="btn ghost" onclick="go('ticket',${id})">Get tickets</button>`:`<button class="btn ghost" onclick="openShare('event',${id})">Share event</button>`}</div>`};
+ <div class="row" style="margin-top:16px">${willBeThereBtn('event',e.id,true)}<button class="btn ghost" onclick="openShare('event',${id})">Share event</button></div>`};
 
-SC.ticket=id=>{const e=events[id||0],q=S.tixQty||2,unit=1500,subTot=q*unit,fee=q*75,tot=subTot+fee;
- return `${hdr('Tickets')}<div class="card"><div class="b">${e.title}</div><div class="sub">${e.venue} · ${e.when}</div>
- <div class="kv" style="margin-top:8px"><div><b>General entry</b><div class="small muted">${N(unit)} each</div></div><div class="row"><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.max(1,(S.tixQty||2)-1);render()">−</button><b>${q}</b><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.min(10,(S.tixQty||2)+1);render()">+</button></div></div>
- <div class="kv"><span class="muted">Tickets (${q} × ${N(unit)})</span><b>${N(subTot)}</b></div><div class="kv"><span class="muted">Service fee (shown before checkout)</span><b>${N(fee)}</b></div><div class="kv"><b>Total</b><b>${N(tot)}</b></div></div>
- <div style="margin-top:18px"><button class="btn" onclick="buyTicket(${id||0},${q},${tot})">Pay ${N(tot)}</button></div>`};
-function buyTicket(id,q,tot){
- const e=events[id||0],tref='TIX-'+Math.floor(100000+Math.random()*899999);
- if(window.FCData){
-   FCData.record('ticket_orders',{ticket_ref:tref,event_title:e.title,venue_name:e.venue,buyer_name:S.user.name,buyer_contact:S.user.email,quantity:q,total_ngn:tot},'ticket_purchased',{event_title:e.title,quantity:q,total_ngn:tot});
- }
- S.sub.activity='Tickets';S.stack=[];S.tab='activity';
- showModal({title:'Tickets Issued!',sub:'Your entry QR pass is ready in My Activity → Tickets.',meta:[['Event',e.title],['Quantity',q+' × General entry'],['Total Paid',N(tot)],['Ticket Ref',tref]],primary:'View My Ticket',secondary:'Share Event',secFn:()=>openShare('event',id||0)});
+SC.ticket=arg=>{
+ const tType=arg&&typeof arg==='object'?arg.type:'event';
+ const tId=arg&&typeof arg==='object'?arg.id:(arg||0);
+ const info=getAttendItem(tType,tId);
+ const q=S.tixQty||1,unit=info.price||1500,subTot=q*unit,fee=q*75,tot=subTot+fee;
+ const method=S.tixPayMethod||'card';
+ const methods=[
+  ['card','Debit Card / Paystack Checkout','Instant verification & ticket code issuance'],
+  ['transfer','Instant Bank Transfer / USSD','Pay via Nigerian bank transfer or USSD code']
+ ];
+ return `${hdr('Confirm & buy ticket')}
+ <div class="card">
+   <div class="row sp"><span class="tag gold">${tType==='fixture'?'Match Ticket':'Event Ticket'}</span><span class="tag ok">Available</span></div>
+   <div class="b" style="font-size:18px;margin-top:8px">${info.title}</div>
+   <div class="sub small" style="margin-top:2px">${info.venue} · ${info.when}</div>
+   <div class="kv" style="margin-top:10px"><div><b>General entry</b><div class="small muted">${N(unit)} per ticket</div></div><div class="row"><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.max(1,(S.tixQty||1)-1);render()">−</button><b>${q}</b><button class="round" style="width:34px;height:34px" onclick="S.tixQty=Math.min(10,(S.tixQty||1)+1);render()">+</button></div></div>
+   <div class="kv"><span class="muted">Tickets (${q} × ${N(unit)})</span><b>${N(subTot)}</b></div>
+   <div class="kv"><span class="muted">Service fee</span><b>${N(fee)}</b></div>
+   <div class="kv"><b>Total</b><b>${N(tot)}</b></div>
+ </div>
+ <h2 class="sec">Select payment method</h2>
+ <div class="list">
+   ${methods.map(m=>`<div class="opt ${method===m[0]?'on':''}" onclick="S.tixPayMethod='${m[0]}';render()"><div class="radio"></div><div class="grow"><b>${m[1]}</b><div class="sub small">${m[2]}</div></div></div>`).join('')}
+ </div>
+ <div class="note" style="margin-top:14px">Your unique ticket entry code &amp; QR pass will be issued immediately after payment verification.</div>
+ <div style="margin-top:18px"><button class="btn" onclick="buyTicket('${tType}',${info.id},${q},${tot})">Pay ${N(tot)} &amp; Get Ticket Code</button></div>`};
+
+function buyTicket(tType,id,q,tot){
+ const info=getAttendItem(tType,id);
+ go('processing');
+ setTimeout(()=>{
+  const cur=S.stack[S.stack.length-1];
+  if(!cur||cur.s!=='processing')return;
+  S.tickets=S.tickets||{};
+  const tref=S.tickets[info.key]&&S.tickets[info.key].code?S.tickets[info.key].code:'TIX-'+Math.floor(100000+Math.random()*900000);
+  S.tickets[info.key]={
+   key:info.key,type:tType,id:info.id,title:info.title,venue:info.venue,when:info.when,
+   qty:q,total:tot,code:tref,method:S.tixPayMethod||'card',purchasedAt:new Date().toISOString()
+  };
+  info.obj.going=(info.obj.going||30)+q;
+  if(window.FCData){
+   FCData.persistLocal();
+   FCData.record('ticket_orders',{ticket_ref:tref,event_title:info.title,venue_name:info.venue,buyer_name:S.user.name,buyer_contact:S.user.email,quantity:q,total_ngn:tot},'ticket_purchased',{item_key:info.key,event_title:info.title,venue:info.venue,quantity:q,total_ngn:tot,ticket_code:tref});
+  }
+  S.stack.pop();
+  const top2=S.stack[S.stack.length-1];
+  if(top2&&top2.s==='ticket')S.stack.pop();
+  S.stack.push({s:'ticketPass',a:{type:tType,id:info.id}});
+  render();
+ },1300);
 }
+
+SC.ticketPass=arg=>{
+ const tType=arg&&typeof arg==='object'?arg.type:'event';
+ const tId=arg&&typeof arg==='object'?arg.id:(arg||0);
+ const info=getAttendItem(tType,tId);
+ S.tickets=S.tickets||{};
+ const tix=S.tickets[info.key]||{code:'TIX-'+Math.floor(100000+Math.random()*900000),qty:1,total:info.price||1500};
+ S.tickets[info.key]={...tix,key:info.key,type:tType,id:info.id,title:info.title,venue:info.venue,when:info.when};
+ return `
+  <div style="text-align:center;padding-top:18px">
+    <div class="modal-ico" style="margin:0 auto 14px">${ic('check')}</div>
+    <h1>Ticket Confirmed!</h1>
+    <p class="sub" style="margin:6px 0 18px">Present this ticket entry code at ${info.venue} on match day.</p>
+  </div>
+  <div class="card" style="text-align:center;border:2px dashed var(--brand);background:var(--surface)">
+    <span class="tag gold">OFFICIAL TICKET ENTRY CODE</span>
+    <div style="font-size:28px;font-weight:800;letter-spacing:2px;margin:10px 0 4px;color:var(--brand)">${tix.code}</div>
+    <div class="small muted">${tix.qty||1} × General Entry · ${S.user.name}</div>
+    <div style="margin:14px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)">
+      <svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg>
+    </div>
+    <button class="btn sm ghost" style="margin:0 auto" onclick="navigator.clipboard&&navigator.clipboard.writeText('${tix.code}');toast('Ticket code ${tix.code} copied!')">Copy Ticket Code</button>
+  </div>
+  <div class="card" style="margin-top:14px">
+    <div class="kv"><span class="muted">Match / Event</span><b>${info.title}</b></div>
+    <div class="kv"><span class="muted">Venue</span><b>${info.venue}</b></div>
+    <div class="kv"><span class="muted">Date &amp; Time</span><b>${info.when}</b></div>
+    <div class="kv"><span class="muted">Quantity</span><b>${tix.qty||1} ticket${(tix.qty||1)>1?'s':''}</b></div>
+    <div class="kv"><span class="muted">Payment Status</span><span class="tag ok">Paid · ${N(tix.total||info.price||1500)}</span></div>
+  </div>
+  <div class="col" style="margin-top:18px">
+    <button class="btn" onclick="openShare('${tType==='event'?'event':'match'}',${info.id})">${ic('share')}Share Match</button>
+    <button class="btn ghost" onclick="S.sub.activity='Tickets';S.stack=[];S.tab='activity';render()">View in My Activity → Tickets</button>
+  </div>`;
+};
 
 SC.comp=id=>{const c=comps[id],k=S.sub.compTab;const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
  Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
@@ -1119,7 +1216,8 @@ SC.comp=id=>{const c=comps[id],k=S.sub.compTab;const body={Fixtures:`<div class=
  ${tabsUI('compTab',['Fixtures','Results','Standings','Teams','Updates'])}${body}`};
 
 SC.match=id=>{
- const f=findFixture(id),k=S.sub.matchTab||'Timeline',gCount=f.going||34,cur=(S.attending&&S.attending[getAttendKey('fixture',f.id)])||null;
+ const f=findFixture(id),info=getAttendItem('fixture',f.id),k=S.sub.matchTab||'Timeline',gCount=f.going||34,cur=(S.attending&&S.attending[info.key])||null;
+ const hasTix=S.tickets&&S.tickets[info.key];
  const isLive=f.s==='Live',isDone=f.s==='Completed';
  const mbody={
   Timeline:isLive||isDone
@@ -1127,20 +1225,20 @@ SC.match=id=>{
     : `<div class="card" style="text-align:center;padding:22px"><div class="b">Kickoff: ${f.t}</div><div class="sub small" style="margin-top:4px">Match timeline &amp; live updates will appear here once the referee blows for kickoff at ${f.v}.</div></div>`,
   Lineups:`<div class="card"><div class="b" style="margin-bottom:8px">${f.h} (Starting XI)</div>${['Ayo Bello (GK)','Chidi Okonkwo','Tunde Adeyemi (C)','Emeka Obi','Sadiq Musa','Kunle Afolabi','Babatunde I.'].map((p,i)=>`<div class="kv"><span>#${i+1} ${p}</span><span class="muted small">Starter</span></div>`).join('')}</div><div class="card" style="margin-top:12px"><div class="b" style="margin-bottom:8px">${f.a} (Starting XI)</div>${['Deji O. (GK)','Femi K. (C)','Tobi A.','Segun M.','Kelechi N.','Dapo S.','Yemi B.'].map((p,i)=>`<div class="kv"><span>#${i+1} ${p}</span><span class="muted small">Starter</span></div>`).join('')}</div>`,
   Stats:`<div class="card">${[['Goals',f.sc?f.sc.split(':')[0].trim():'0',f.sc?f.sc.split(':')[1].trim():'0'],['Shots on target',isLive||isDone?'5':'0',isLive||isDone?'4':'0'],['Corners',isLive||isDone?'3':'0',isLive||isDone?'2':'0'],['Fouls',isLive||isDone?'4':'0',isLive||isDone?'6':'0']].map(r=>`<div class="kv"><b>${r[1]}</b><span class="muted">${r[0]}</span><b>${r[2]}</b></div>`).join('')}</div>`,
-  Info:`<div class="card"><div class="kv"><span class="muted">Competition</span><b>${f.comp||'Lagos Grassroots Cup'}</b></div><div class="kv"><span class="muted">Field / Venue</span><b>${f.v}</b></div><div class="kv"><span class="muted">Kickoff</span><b>${f.t}</b></div><div class="kv"><span class="muted">Status</span><span class="tag ${isLive?'live':''}">${isLive?'Live · Second Half':f.s}</span></div><div class="kv"><span class="muted">Fans Going</span><b>${gCount} spectators</b></div></div>`
+  Info:`<div class="card"><div class="kv"><span class="muted">Competition</span><b>${f.comp||'Lagos Grassroots Cup'}</b></div><div class="kv"><span class="muted">Field / Venue</span><b>${f.v}</b></div><div class="kv"><span class="muted">Kickoff</span><b>${f.t}</b></div><div class="kv"><span class="muted">Entry</span><b>${info.feeLabel}</b></div><div class="kv"><span class="muted">Status</span><span class="tag ${isLive?'live':''}">${isLive?'Live · Second Half':f.s}</span></div><div class="kv"><span class="muted">Spectators</span><b>${gCount} going</b></div></div>`
  }[k];
  return `${hdr('Match details',`<button class="round" onclick="openShare('match',${f.id})">${ic('share')}</button>`)}\
  <div class="hero" style="text-align:center"><span class="tag ${isLive?'live':'gold'}">${isLive?"LIVE · 54'":f.s+' · '+f.t}</span><div class="sub" style="margin:8px 0">${f.comp||'Lagos Grassroots Cup'} · ${f.v}</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest(f.h,44)}</div><b>${f.h}</b></div><span class="score">${f.sc||'VS'}</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest(f.a,44)}</div><b>${f.a}</b></div></div></div>
  <div class="pitch-box">
    <div class="row sp">
-     <div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<div><div class="b small">${gCount} fans said "I will be there"</div><div class="muted" style="font-size:11px">${f.attended?f.attended+' verified at field · ':''}Watching at ${f.v}?</div></div></div>
-     ${cur?`<span class="tag ${cur.status==='attended'?'ok':'gold'}">${cur.status==='attended'?'At Pitch ✓':'Going ✓'}</span>`:''}
+     <div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<div><div class="b small">${info.isPaid?gCount+' spectators attending':gCount+' fans going'}</div><div class="muted" style="font-size:11px">${info.isPaid?'Paid match · Get your ticket & entry code':(f.attended?f.attended+' verified at venue · ':'Free match · Watching at '+f.v+'?')}</div></div></div>
+     ${info.isPaid?`<span class="tag ${hasTix?'ok':'gold'}">${hasTix?'Ticket Issued ✓':info.feeLabel}</span>`:(cur?`<span class="tag ${cur.status==='attended'?'ok':'gold'}">${cur.status==='attended'?'Checked In ✓':'Going ✓'}</span>`:`<span class="tag ok">Free</span>`)}
    </div>
    <div style="margin-top:12px">${willBeThereBtn('fixture',f.id,true)}</div>
-   ${cur&&cur.status==='going'?`<div class="row" style="margin-top:8px"><button class="btn sm gold grow" onclick="verifyPitchPresence('fixture',${f.id})">📍 I'm at ${f.v.split(',')[0]} (Check In)</button><button class="btn sm ghost" onclick="cancelWillBeThere('fixture',${f.id})">Cancel</button></div>`:''}
+   ${!info.isPaid&&cur&&cur.status==='going'?`<div style="margin-top:8px"><button class="btn gold" style="width:100%" onclick="verifyPitchPresence('fixture',${f.id})">📍 I'm at the venue (Check In)</button></div>`:''}
  </div>
  ${tabsUI('matchTab',['Timeline','Lineups','Stats','Info'])}${mbody}
- <div class="note" style="margin-top:12px">Open this match when you arrive at ${f.v} — our Pitch Radar verifies spectator attendance automatically.</div>`};
+ <div class="note" style="margin-top:12px">${info.isPaid?'Present your digital ticket code at '+f.v+' for matchday entry.':'Open this match when you arrive at '+f.v+' to verify your spectator attendance.'}</div>`};
 
 SC.community=()=>{const k=S.sub.community;let body='';
  if(k==='Activity')body=`<div class="list">${['Lekki Lions created a new game','Emeka joined Thursday Night 5s','Lagos Grassroots Cup published fixtures','Mainland FC completed a match','Eagle Academy published a new event','Surulere Social has an upcoming match'].map(t=>`<div class="card row"><div class="av sm">${ic('ball')}</div><div class="grow small"><b>${t}</b><div class="muted">Just now</div></div></div>`).join('')}</div>`;
@@ -1195,10 +1293,14 @@ SC.activity=()=>{const k=S.sub.activity;let body='';
  }
  if(k==='Events'){
    const attEntries=Object.values(S.attending||{});
-   const attCards=attEntries.length?attEntries.map(a=>`<div class="card"><div class="row sp"><b>${a.title}</b><span class="tag ${a.status==='attended'?'ok':'gold'}">${a.status==='attended'?'Verified at Pitch ✓':'Going · I will be there'}</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${a.venue} · ${a.when}</div><div class="row" style="margin-top:10px">${a.status==='going'?`<button class="btn sm" onclick="verifyPitchPresence('${a.type}',${a.id})">📍 I'm at Pitch (Check In)</button>`:`<button class="btn sm ghost" onclick="go('${a.type==='event'?'event':'match'}',${a.id})">View Match</button>`}<button class="btn sm ghost" onclick="openShare('${a.type==='event'?'event':'match'}',${a.id})">Share</button></div></div>`).join(''):'';
-   body=`${attCards?`<h2 class="sec" style="margin-top:6px">Matches you're watching (${attEntries.length})</h2><div class="list">${attCards}</div><h2 class="sec">Discover more</h2>`:''}<div class="list">${matchRow(fixtures[0])}${eventCard(events[0])}</div>`;
+   const attCards=attEntries.length?attEntries.map(a=>`<div class="card"><div class="row sp"><b>${a.title}</b><span class="tag ${a.status==='attended'?'ok':'gold'}">${a.status==='attended'?'Checked In ✓':'Going'}</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${a.venue} · ${a.when}</div>${a.status==='going'?`<div style="margin-top:10px"><button class="btn sm gold" style="width:100%" onclick="verifyPitchPresence('${a.type}',${a.id})">📍 I'm at the venue (Check In)</button></div>`:`<div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="go('${a.type==='event'?'event':'match'}',${a.id})">View Match</button><button class="btn sm ghost" onclick="openShare('${a.type==='event'?'event':'match'}',${a.id})">Share</button></div>`}</div>`).join(''):'';
+   body=`${attCards?`<h2 class="sec" style="margin-top:6px">Matches you're watching (${attEntries.length})</h2><div class="list">${attCards}</div><h2 class="sec">Discover more</h2>`:''}<div class="list">${matchRow(fixtures[1])}${eventCard(events[1])}</div>`;
  }
- if(k==='Tickets')body=`<div class="card" style="text-align:center"><div class="b">Lagos Grassroots Cup — Final</div><div class="sub">2 × General entry</div><div style="margin:14px auto;width:130px;height:130px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:90px;height:90px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><span class="tag ok">Valid · show at entry</span></div>`;
+ if(k==='Tickets'){
+   const tixList=Object.values(S.tickets||{});
+   const showTix=tixList.length?tixList:[{key:'e_0',type:'event',id:0,title:'Lagos Grassroots Cup — Final',venue:'Teslim Balogun Stadium',when:'Sat 14 Nov · 15:00',qty:2,total:3150,code:'TIX-849201'}];
+   body=`<div class="list">${showTix.map(t=>`<div class="card" style="text-align:center"><span class="tag gold">TICKET ENTRY CODE</span><div style="font-size:22px;font-weight:800;letter-spacing:1.5px;margin:8px 0 2px;color:var(--brand)">${t.code}</div><div class="b">${t.title}</div><div class="sub small">${t.venue} · ${t.when}</div><div class="sub small" style="margin-top:2px">${t.qty||1} × General Entry · Paid ${N(t.total||1500)}</div><div style="margin:12px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm" onclick="openTicketPass('${t.type||'event'}',${t.id||0},event)">View Full Ticket</button><button class="btn sm ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${t.code}');toast('Ticket code ${t.code} copied!')">Copy Code</button></div></div>`).join('')}</div>`;
+ }
  if(k==='History')body=`<div class="list">${bk('Lekki Goal Arena','Completed','','Paid in full')}${bk('Yaba Turf Club','Completed','','Paid in full')}</div>`;
  if(k==='Payments')body=`<div class="list">${[['Lekki Goal Arena',N(25000),'Successful','ok'],['Yaba Turf Club',N(5400),'Pending','warn'],['Yaba Turf Club',N(18000),'Refunded','']].map(p=>`<div class="card row sp"><div><b>${p[0]}</b><div class="small muted">Ref TX-${Math.floor(Math.random()*90000+10000)}</div></div><div style="text-align:right"><b>${p[1]}</b><div><span class="tag ${p[3]}">${p[2]}</span></div></div></div>`).join('')}</div>`;
  return `<h1>My Activity</h1>${tabsUI('activity',['Bookings','Games Joined','Games Created','Events','Tickets','History','Payments'])}${body}`};
@@ -1348,7 +1450,7 @@ const slotsLeft={0:'4 slots free',1:'2 slots free',2:'6 slots free'};
 venueCard=v=>`<div class="card vcard" onclick="go('venue',${v.id})"><div ${pic(v.im,128)}><span class="pill-w">${v.km} km</span>${v.verified?`<span class="tag vtag">${ic('shield')}Verified</span>`:''}</div><div class="vbody"><div class="row sp"><div class="b t1">${v.name}</div><div class="rate">${ic('star')}${v.rating}</div></div><div class="sub">${v.area} · ${v.fmts.join(' · ')}</div><div class="row sp" style="margin-top:8px"><span class="tag ${v.id==1?'warn':'ok'}">${slotsLeft[v.id]}</span><span class="price">${N(v.from)}<small>/hr</small></span></div></div></div>`;
 gameCard=g=>{const vObj=venues[g.v]||venues[0],vName=g.venueName||vObj.name,filled=Math.max(g.need-g.left,1),isFree=!g.price||+g.price===0;return `<div class="card gcard" onclick="go('game','${g.id}')"><div ${pic('game1',110)}><span class="pill-w l">${g.fmt}</span><span class="pill-w">${g.left} left</span></div><div class="vbody"><div class="b t1">${g.title}</div><div class="sub">${vName} · ${g.pitch}</div><div class="sub">${g.when}</div><div class="bar" style="margin:10px 0 8px"><i style="width:${Math.min(100,filled/g.need*100)}%"></i></div><div class="row sp">${faces(Math.min(filled,3),Math.max(filled-3,0))}${isFree?`<span class="price" style="color:var(--ok)">Free</span>`:`<span class="price">${N(g.price)}<small>/player</small></span>`}</div></div></div>`};
 eventCard=e=>{const gCount=e.going||28;return `<div class="card vcard" onclick="go('event',${e.id})"><div ${pic(e.im,120)}><span class="pill-w l">${e.cat}</span><button class="pill-w sv" onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'#D94343':'#17211B'}">${ic('heart')}</button></div><div class="vbody"><div class="b t1">${e.title}</div><div class="sub">${e.venue}</div><div class="sub">${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="price">${e.fee}</span></div><div class="will-foot"><div class="row" style="gap:6px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> going</span></div>${willBeThereBtn('event',e.id)}</div></div></div>`};
-matchRow=f=>{const gCount=f.going||34,fid=f.id!==undefined?f.id:0;return `<div class="card mrow" onclick="go('match',${fid})"><div class="row sp small muted"><span>${f.t}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div><div class="mrow-main"><div class="side">${crest(f.h,40)}<b>${f.h}</b></div><div class="mid">${f.sc?`<span class="scorepill">${f.sc}</span>`:`<span class="timepill">${f.t.split('·').pop().trim()}</span>`}</div><div class="side">${crest(f.a,40)}<b>${f.a}</b></div></div><div class="small muted" style="text-align:center">${ic('pin')} ${f.v}</div><div class="will-foot"><div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> going</span></div>${willBeThereBtn('fixture',fid)}</div></div>`};
+matchRow=f=>{const gCount=f.going||34,fid=f.id!==undefined?f.id:0,info=getAttendItem('fixture',fid);return `<div class="card mrow" onclick="go('match',${fid})"><div class="row sp small muted"><span>${f.t}</span><div class="row" style="gap:6px"><span class="tag ${info.isPaid?'gold':'ok'}">${info.feeLabel}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div></div><div class="mrow-main"><div class="side">${crest(f.h,40)}<b>${f.h}</b></div><div class="mid">${f.sc?`<span class="scorepill">${f.sc}</span>`:`<span class="timepill">${f.t.split('·').pop().trim()}</span>`}</div><div class="side">${crest(f.a,40)}<b>${f.a}</b></div></div><div class="small muted" style="text-align:center">${ic('pin')} ${f.v}</div><div class="will-foot"><div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> ${info.isPaid?'attending':'going'}</span></div>${willBeThereBtn('fixture',fid)}</div></div>`};
 
 SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Tunde Adeyemi')}</div><div><div class="b" style="font-size:17px">${S.user.name||'Tunde Adeyemi'}</div><button class="locl" onclick="event.stopPropagation();S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos${ic('chev')}</button></div></div><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div>
 <div class="search full" onclick="tab('explore')" style="margin:20px 0 0">${ic('search')}<span>Search pitches, games or events</span></div>
@@ -1411,6 +1513,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will need to sign
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=6"></script>
+<script src="fc-data.js?v=7"></script>
 </body>
 </html>
