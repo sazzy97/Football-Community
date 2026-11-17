@@ -1,4 +1,4 @@
-const CACHE_NAME = 'football-community-v8';
+const CACHE_NAME = 'football-community-v9';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -56,7 +56,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.html')
   ) {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: 'no-store' })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(req, copy));

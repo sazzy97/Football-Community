@@ -543,8 +543,15 @@ const FCData = {
 
   registerPWA() {
     if ('serviceWorker' in navigator) {
+      let hadController = Boolean(navigator.serviceWorker.controller);
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (hadController && !window._swReloading) {
+          window._swReloading = true;
+          window.location.reload();
+        }
+      });
       navigator.serviceWorker
-        .register('./sw.js?v=8')
+        .register('./sw.js?v=9', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
