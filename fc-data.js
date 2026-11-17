@@ -36,12 +36,15 @@ const FCData = {
 
   init() {
     S.permits = S.permits || {};
+    S.attending = S.attending || {};
     S.gpayMethod = S.gpayMethod || 'card';
     try {
       const savedPermits = localStorage.getItem('fc_permits');
       if (savedPermits) S.permits = { ...S.permits, ...JSON.parse(savedPermits) };
       const savedJoined = localStorage.getItem('fc_joined');
       if (savedJoined) S.joined = { ...S.joined, ...JSON.parse(savedJoined) };
+      const savedAttending = localStorage.getItem('fc_attending');
+      if (savedAttending) S.attending = { ...S.attending, ...JSON.parse(savedAttending) };
       const savedCfg = localStorage.getItem('fc_cloud_config');
       if (savedCfg) {
         const parsed = JSON.parse(savedCfg);
@@ -110,6 +113,7 @@ const FCData = {
       localStorage.setItem('fc_local_db', JSON.stringify(this.db));
       if (window.S && S.permits) localStorage.setItem('fc_permits', JSON.stringify(S.permits));
       if (window.S && S.joined) localStorage.setItem('fc_joined', JSON.stringify(S.joined));
+      if (window.S && S.attending) localStorage.setItem('fc_attending', JSON.stringify(S.attending));
     } catch (e) {}
   },
 
@@ -530,7 +534,7 @@ const FCData = {
   registerPWA() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker
-        .register('./sw.js?v=5')
+        .register('./sw.js?v=6')
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -583,6 +587,10 @@ const FCData = {
       } else if (params.has('event')) {
         const id = +params.get('event') || 0;
         S.stack = [{ s: 'event', a: id }];
+        render();
+      } else if (params.has('match')) {
+        const id = +params.get('match') || 0;
+        S.stack = [{ s: 'match', a: id }];
         render();
       } else if (params.has('team')) {
         const rawId = params.get('team');
@@ -898,6 +906,8 @@ SC.admin = () => {
 
   let content = '';
   if (k === 'Overview') {
+    const rsvpCount = (db.app_events || []).filter((e) => e.event_name === 'fixture_rsvp_going').length;
+    const verifiedCount = (db.app_events || []).filter((e) => e.event_name === 'fixture_attendance_verified').length;
     content = `
       <div class="card">
         <div class="row sp"><span class="muted small">Supabase Database</span><span class="tag ${sbOk ? 'ok' : 'warn'}">${sbOk ? 'Connected ✓' : 'Local Mode'}</span></div>
@@ -909,8 +919,8 @@ SC.admin = () => {
         <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='bookings';render()"><b>${db.bookings.length}</b><small>Bookings</small></div>
         <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='open_games';render()"><b>${db.open_games.length}</b><small>Games Created</small></div>
         <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='game_joins';render()"><b>${db.game_joins.length}</b><small>Game Joins</small></div>
-        <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='ticket_orders';render()"><b>${db.ticket_orders.length}</b><small>Tickets</small></div>
-        <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='app_events';render()"><b>${db.app_events.length}</b><small>Events Tracked</small></div>
+        <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='app_events';render()"><b>${rsvpCount}</b><small>"I'll Be There"</small></div>
+        <div class="stat-box" onclick="FCData.adminTab='Live Records';FCData.adminTable='app_events';render()"><b>${verifiedCount}</b><small>At Pitch ✓</small></div>
       </div>
       <div class="card">
         <div class="b">Where do I see all my data?</div>
