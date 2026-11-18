@@ -145,6 +145,14 @@ const FCData = {
       S.user.avail = {};
       meta.availability.forEach((a) => (S.user.avail[a] = true));
     }
+    if (meta.card && typeof meta.card === 'object') {
+      S.user.card = { ...(S.user.card || {}), ...meta.card };
+    } else if (!S.user.card) {
+      try {
+        const localC = localStorage.getItem('fc_my_card');
+        if (localC) S.user.card = JSON.parse(localC);
+      } catch (e) {}
+    }
     S.user.pass = '';
 
     // Returning signed-in users go straight to Home if no deep link
@@ -1244,7 +1252,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=14', { updateViaCache: 'none' })
+        .register('./sw.js?v=15', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -1302,8 +1310,33 @@ const FCData = {
         } catch (err) {}
       }
 
+      if (params.has('p')) {
+        try {
+          const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('p')))));
+          if (decoded && decoded.n) {
+            const existingIdx = players.findIndex((x) => x.n.toLowerCase() === String(decoded.n).toLowerCase());
+            if (existingIdx >= 0) players[existingIdx] = { ...players[existingIdx], ...decoded };
+            else players.unshift(decoded);
+            if (decoded.card) {
+              try {
+                const saved = JSON.parse(localStorage.getItem('fc_player_cards') || '{}');
+                saved[String(decoded.n).toLowerCase()] = { ...(saved[String(decoded.n).toLowerCase()] || {}), ...decoded.card };
+                localStorage.setItem('fc_player_cards', JSON.stringify(saved));
+              } catch (e) {}
+            }
+            S.stack = [{ s: 'player', a: decoded.n }];
+            render();
+            return;
+          }
+        } catch (err) {}
+      }
+
       if (params.has('admin') || window.location.hash === '#admin') {
         S.stack = [{ s: 'admin' }];
+        render();
+      } else if (params.has('player')) {
+        const rawName = params.get('player');
+        S.stack = [{ s: 'player', a: rawName }];
         render();
       } else if (params.has('game')) {
         const rawId = params.get('game');

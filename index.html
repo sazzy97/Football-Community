@@ -467,6 +467,144 @@ h2.sec{margin:28px 0 14px}
 .col>.btn,.col>.btn.sm,.btn-stack>.btn,.btn-stack>.btn.sm{width:100%}
 .btn-stack{display:flex;flex-direction:column;gap:10px;width:100%}
 .fix-batch-card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius-xl);padding:14px 16px;margin-bottom:14px;box-shadow:var(--sh-1)}
+/* ===================== FIFA / FUT Ultimate Player Rate Card ===================== */
+.fc-card{
+  --fc-bg1:#4B10A6;--fc-bg2:#340978;--fc-bg3:#230452;
+  --fc-up1:#32076E;--fc-up2:#1E0345;
+  --fc-low1:#5515BD;--fc-low2:#410C96;--fc-low3:#310775;
+  --fc-glow:#B94BFF;--fc-accent:#EC5EFF;--fc-dot:rgba(216,102,255,.32);
+  width:286px;height:418px;margin:8px auto 16px;border-radius:26px;position:relative;overflow:hidden;
+  background:linear-gradient(180deg,var(--fc-bg1) 0%,var(--fc-bg2) 55%,var(--fc-bg3) 100%);
+  box-shadow:0 22px 46px rgba(32,5,74,.46),inset 0 1px 1px rgba(255,255,255,.28);
+  color:#fff;user-select:none;font-family:var(--font-family);
+}
+.fc-card.theme-lagos{
+  --fc-bg1:#175E40;--fc-bg2:#10422C;--fc-bg3:#082619;
+  --fc-up1:#0E3B27;--fc-up2:#072115;
+  --fc-low1:#1B6B49;--fc-low2:#124D34;--fc-low3:#0B3321;
+  --fc-glow:#B8F34A;--fc-accent:#B8F34A;--fc-dot:rgba(184,243,74,.28);
+  box-shadow:0 22px 46px rgba(9,39,26,.46),inset 0 1px 1px rgba(255,255,255,.25);
+}
+.fc-card.theme-gold{
+  --fc-bg1:#8C6310;--fc-bg2:#5E4007;--fc-bg3:#382403;
+  --fc-up1:#543805;--fc-up2:#2E1D02;
+  --fc-low1:#9E7115;--fc-low2:#73500B;--fc-low3:#4F3505;
+  --fc-glow:#FFD86B;--fc-accent:#FFE07D;--fc-dot:rgba(255,216,107,.28);
+  box-shadow:0 22px 46px rgba(56,36,3,.48),inset 0 1px 1px rgba(255,255,255,.3);
+}
+.fc-card.theme-common{
+  --fc-bg1:#2A2E33;--fc-bg2:#181B1E;--fc-bg3:#0E1012;
+  --fc-up1:#16181B;--fc-up2:#0B0C0E;
+  --fc-low1:#262A2F;--fc-low2:#191C20;--fc-low3:#111316;
+  --fc-glow:#8A949E;--fc-accent:#66E2A3;--fc-dot:rgba(255,255,255,.14);
+  box-shadow:0 22px 46px rgba(0,0,0,.52),inset 0 1px 1px rgba(255,255,255,.18);
+}
+.fc-shield{
+  position:absolute;inset:12px 12px 14px 12px;
+  clip-path:polygon(0% 7%,14% 2.6%,32% 0.6%,50% 0%,68% 0.6%,86% 2.6%,100% 7%,100% 89.5%,50% 100%,0% 89.5%);
+  background:linear-gradient(180deg,var(--fc-up1) 0%,var(--fc-up2) 55%,var(--fc-low2) 100%);
+  overflow:hidden;
+}
+.fc-dots{
+  position:absolute;inset:0 0 42% 0;
+  background-image:radial-gradient(var(--fc-dot) 1.6px,transparent 1.6px);
+  background-size:8.5px 8.5px;
+  mask-image:radial-gradient(circle at 50% 35%,#000 35%,transparent 88%);
+  -webkit-mask-image:radial-gradient(circle at 50% 35%,#000 35%,transparent 88%);
+}
+.fc-top-meta{
+  position:absolute;top:18px;left:16px;right:16px;display:flex;justify-content:space-between;align-items:flex-start;z-index:4;
+}
+.fc-tier{
+  display:inline-block;padding:4px 12px;border-radius:999px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.22);
+  backdrop-filter:blur(6px);font-size:11px;font-weight:700;letter-spacing:.02em;color:#fff;
+}
+.fc-serial{
+  font-size:9.5px;font-weight:700;line-height:1.25;text-align:right;color:rgba(255,255,255,.9);letter-spacing:.03em;
+}
+.fc-ovr-col{
+  position:absolute;top:64px;left:20px;z-index:4;text-align:center;
+}
+.fc-ovr{
+  font-size:40px;font-weight:800;line-height:.95;letter-spacing:-1.5px;color:#fff;
+  text-shadow:0 4px 14px rgba(0,0,0,.35);
+}
+.fc-pos{
+  font-size:21px;font-weight:800;color:var(--fc-accent);margin-top:4px;letter-spacing:.04em;
+}
+.fc-flag-col{
+  position:absolute;top:86px;right:22px;z-index:4;display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+.fc-flag{
+  width:34px;height:34px;border-radius:50%;border:2px solid #fff;overflow:hidden;
+  box-shadow:0 4px 12px rgba(0,0,0,.32);display:grid;place-items:center;background:#123D2B;
+}
+.fc-portrait{
+  position:absolute;top:28px;left:50%;transform:translateX(-50%);
+  width:158px;height:186px;z-index:3;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;
+}
+.fc-portrait img{
+  width:100%;height:100%;object-fit:cover;object-position:top center;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.45));
+}
+.fc-lower{
+  position:absolute;left:0;right:0;bottom:0;height:212px;z-index:5;
+  clip-path:polygon(0 0,50% 13.5%,100% 0,100% 100%,0 100%);
+  background:linear-gradient(180deg,var(--fc-low1) 0%,var(--fc-low2) 62%,var(--fc-low3) 100%);
+  padding:34px 20px 16px;display:flex;flex-direction:column;align-items:center;
+}
+.fc-v-line{
+  position:absolute;top:179px;left:0;width:100%;height:34px;z-index:6;pointer-events:none;
+}
+.fc-name{
+  font-size:19px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:#fff;
+  text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;
+  text-shadow:0 2px 8px rgba(0,0,0,.25);
+}
+.fc-divider{
+  width:88%;height:1px;background:rgba(255,255,255,.16);margin:8px 0 10px;
+}
+.fc-stats{
+  width:90%;display:grid;grid-template-columns:1fr 1fr;gap:0;position:relative;
+}
+.fc-stats::after{
+  content:"";position:absolute;top:2px;bottom:2px;left:50%;width:1px;background:rgba(255,255,255,.15);
+}
+.fc-stat-col{
+  display:flex;flex-direction:column;gap:5px;
+}
+.fc-stat-col:first-child{padding-right:16px;align-items:flex-start}
+.fc-stat-col:last-child{padding-left:20px;align-items:flex-start}
+.fc-stat{
+  display:flex;align-items:baseline;gap:8px;font-size:14px;font-weight:800;letter-spacing:.04em;
+}
+.fc-stat b{
+  color:var(--fc-accent);min-width:22px;text-align:right;font-weight:800;
+}
+.fc-stat span{
+  color:#fff;font-weight:700;font-size:13.5px;
+}
+.fc-emblem{
+  margin-top:auto;opacity:.38;color:#fff;display:grid;place-items:center;padding-top:4px;
+}
+.fc-shield-outline{
+  position:absolute;inset:10px 10px 12px 10px;z-index:8;pointer-events:none;
+}
+.fc-mini-badge{
+  display:inline-flex;flex-direction:column;align-items:center;justify-content:center;
+  width:44px;height:52px;border-radius:10px 10px 16px 16px;
+  background:linear-gradient(160deg,#4B10A6,#260559);border:1.5px solid #B94BFF;
+  color:#fff;flex:none;box-shadow:0 4px 10px rgba(52,9,120,.28);line-height:1.05;
+}
+.fc-mini-badge.theme-lagos{background:linear-gradient(160deg,#175E40,#082619);border-color:#B8F34A}
+.fc-mini-badge.theme-gold{background:linear-gradient(160deg,#8C6310,#382403);border-color:#FFD86B}
+.fc-mini-badge.theme-common{background:linear-gradient(160deg,#2A2E33,#0E1012);border-color:#8A949E}
+.fc-mini-badge b{font-size:16px;font-weight:800;letter-spacing:-.5px}
+.fc-mini-badge small{font-size:9.5px;font-weight:800;color:#EC5EFF;letter-spacing:.04em}
+.fc-mini-badge.theme-lagos small{color:#B8F34A}
+.fc-mini-badge.theme-gold small{color:#FFE07D}
+.fc-mini-badge.theme-common small{color:#66E2A3}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -616,6 +754,7 @@ const getAllPlayers=()=>{
     const fmts=Object.keys(S.user.fmts||{}).filter(k=>S.user.fmts[k]);
     const pos=Object.keys(S.user.pos||{}).filter(k=>S.user.pos[k]);
     const avail=Object.keys(S.user.avail||{}).filter(k=>S.user.avail[k]);
+    const myT=teams.find(t=>t.role);
     addP({
       n:S.user.name.trim(),
       pos:pos[0]||'Midfielder',
@@ -624,29 +763,352 @@ const getAllPlayers=()=>{
       area:(S.user.loc||'Lekki').split(' and ')[0],
       av:avail.join(', ')||'Weekday evenings',
       exp:S.user.exp||'Intermediate',
-      team:'Lekki Lions',
+      team:myT?myT.name:'Lagos Community',
+      card:S.user.card||null,
       isMe:true
     });
   }
   if(window.FCData&&FCData.db&&Array.isArray(FCData.db.users)){
     for(const u of FCData.db.users){
       if(!u||!u.full_name)continue;
-      const fmtsArr=String(u.formats||'5-a-side').split(',').map(x=>x.trim()).filter(Boolean);
-      const posArr=String(u.positions||'Midfielder').split(',').map(x=>x.trim()).filter(Boolean);
+      const fmtsArr=Array.isArray(u.formats)?u.formats:String(u.formats||'5-a-side').split(',').map(x=>x.trim()).filter(Boolean);
+      const posArr=Array.isArray(u.positions)?u.positions:String(u.positions||'Midfielder').split(',').map(x=>x.trim()).filter(Boolean);
       addP({
         n:u.full_name,
         pos:posArr[0]||'Midfielder',
         fmt:fmtsArr[0]||'5-a-side',
         fmts:fmtsArr.join(', ')||'5-a-side',
-        area:String(u.area||'Lekki').split(' and ')[0],
-        av:u.availability||'Flexible',
-        exp:u.skill_level||'Intermediate',
-        team:'Community Player'
+        area:String(u.location_cluster||u.area||'Lekki').split(' and ')[0],
+        av:Array.isArray(u.availability)?u.availability.join(', '):(u.availability||'Flexible'),
+        exp:u.experience||u.skill_level||'Intermediate',
+        team:'Community Player',
+        card:u.card||null
       });
     }
   }
-  for(const p of players)addP({...p,fmts:p.fmt,exp:'Intermediate',team:'Lagos Community'});
+  for(const p of players)addP({...p,fmts:p.fmt,exp:p.exp||'Competitive',team:'Lagos Community'});
   return list;
+};
+
+/* ===== FIFA / FUT Player Rate Card Engine ===== */
+const hashStr=s=>{let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return Math.abs(h)};
+const formatFifaName=fullName=>{
+  const clean=String(fullName||'PLAYER').trim();
+  const parts=clean.split(/\s+/).filter(Boolean);
+  if(parts.length<=1)return clean.toUpperCase();
+  return (parts[0][0]+'. '+parts.slice(1).join(' ')).toUpperCase();
+};
+const posToCode=(posStr,h)=>{
+  const s=String(posStr||'Midfielder').toLowerCase();
+  if(s.includes('goal')||s==='gk')return 'GK';
+  if(s.includes('forw')||s.includes('strik')||s==='cf'||s==='st')return (h%2===0)?'CF':'ST';
+  if(s.includes('def')||s==='cb'||s==='lb'||s==='rb')return (h%3===0)?'CB':(h%3===1)?'RB':'CB';
+  return (h%2===0)?'CAM':'CM';
+};
+const getPlayerFifaCard=p=>{
+  const name=String((p&&p.n)||S.user.name||'Player').trim()||'Player';
+  const key=name.toLowerCase();
+  const h=hashStr(key);
+  let savedCards={};
+  try{savedCards=JSON.parse(localStorage.getItem('fc_player_cards')||'{}')}catch(e){}
+  let endorsements={};
+  try{endorsements=JSON.parse(localStorage.getItem('fc_player_endorsements')||'{}')}catch(e){}
+  // Merge cloud card updates and endorsements from app_events
+  if(window.FCData&&FCData.db&&Array.isArray(FCData.db.app_events)){
+    const chron=FCData.db.app_events.slice().reverse();
+    for(const ev of chron){
+      const pr=ev.properties||{};
+      if(ev.event_name==='player_card_updated'&&pr.player_key===key&&pr.card){
+        savedCards[key]={...(savedCards[key]||{}),...pr.card};
+      }else if(ev.event_name==='player_endorsed'&&pr.player_key===key&&pr.stat){
+        endorsements[key]=endorsements[key]||{count:0,stats:{}};
+        endorsements[key].stats[pr.stat]=(endorsements[key].stats[pr.stat]||0)+1;
+        endorsements[key].count=(endorsements[key].count||0)+1;
+      }
+    }
+  }
+  const custom=(p&&p.isMe&&S.user&&S.user.card)?S.user.card:(savedCards[key]||(p&&p.card)||null);
+  const endObj=endorsements[key]||{count:0,stats:{}};
+  const expStr=String((p&&p.exp)||'Intermediate').toLowerCase();
+  const baseBoost=expStr.includes('comp')?4:expStr.includes('beg')?-3:1;
+  const defaultPosCode=posToCode(p&&p.pos,h);
+  const posCode=(custom&&custom.posCode)||defaultPosCode;
+
+  // Position-archetype base stats (matching FIFA ratings like 82 PAC, 92 SHO, 80 PAS, 77 DRI, 72 DEF, 81 PHY)
+  let base={pac:82,sho:84,pas:81,dri:82,def:74,phy:80};
+  if(posCode==='CF'||posCode==='ST'||posCode==='RW'||posCode==='LW'){
+    base={pac:82+(h%9),sho:87+(h%7),pas:78+(h%7),dri:81+(h%9),def:68+(h%9),phy:79+(h%8)};
+  }else if(posCode==='CAM'||posCode==='CM'||posCode==='CDM'){
+    base={pac:80+(h%8),sho:81+(h%8),pas:86+(h%7),dri:85+(h%8),def:74+(h%9),phy:78+(h%8)};
+  }else if(posCode==='CB'||posCode==='LB'||posCode==='RB'){
+    base={pac:78+(h%9),sho:69+(h%9),pas:76+(h%8),dri:74+(h%8),def:87+(h%7),phy:86+(h%7)};
+  }else if(posCode==='GK'){
+    base={pac:84+(h%8),sho:82+(h%8),pas:80+(h%9),dri:86+(h%7),def:75+(h%9),phy:83+(h%8)};
+  }
+  const clamp=v=>Math.max(55,Math.min(99,Math.round(v)));
+  const stats={
+    pac:clamp(((custom&&custom.pac)||base.pac+baseBoost)+(endObj.stats.pac||0)),
+    sho:clamp(((custom&&custom.sho)||base.sho+baseBoost)+(endObj.stats.sho||0)),
+    pas:clamp(((custom&&custom.pas)||base.pas+baseBoost)+(endObj.stats.pas||0)),
+    dri:clamp(((custom&&custom.dri)||base.dri+baseBoost)+(endObj.stats.dri||0)),
+    def:clamp(((custom&&custom.def)||base.def+baseBoost)+(endObj.stats.def||0)),
+    phy:clamp(((custom&&custom.phy)||base.phy+baseBoost)+(endObj.stats.phy||0))
+  };
+  const sorted=Object.values(stats).slice().sort((a,b)=>b-a);
+  const calcOvr=clamp(Math.round((sorted[0]*0.32)+(sorted[1]*0.24)+(sorted[2]*0.18)+(sorted[3]*0.12)+(sorted[4]*0.08)+(sorted[5]*0.06))+3);
+  const ovr=(custom&&custom.ovr)?clamp(custom.ovr+Math.floor((endObj.count||0)/2)):calcOvr;
+  const tier=(custom&&custom.tier)||(ovr>=86?'Epic':ovr>=82?'Elite':ovr>=78?'Pro':'Common');
+  const theme=(custom&&custom.theme)||(tier==='Common'?'common':'epic');
+  const flag=(custom&&custom.flag)||'NG';
+  const serialNum=((h%880)+101);
+  const serial=`${serialNum}/1000`;
+  const photo=(custom&&custom.photo)||'';
+  return {
+    name,
+    cardName:formatFifaName(name),
+    posCode,
+    ovr,
+    tier,
+    theme,
+    flag,
+    season:'2026 - 2027',
+    serial,
+    photo,
+    endorseCount:endObj.count||0,
+    ...stats
+  };
+};
+const renderFlagSvg=code=>{
+  if(code==='BR'){
+    return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="36" height="36" fill="#169B42"/><polygon points="18,5 32,18 18,31 4,18" fill="#FEDD00"/><circle cx="18" cy="18" r="6.5" fill="#012169"/><path d="M12 17c3.8-1.6 8.2-1.2 12 .8" stroke="#fff" stroke-width="1.3" fill="none"/></svg>`;
+  }
+  if(code==='GH'){
+    return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="36" height="12" fill="#CF0921"/><rect y="12" width="36" height="12" fill="#FCD20F"/><rect y="24" width="36" height="12" fill="#006B3D"/><polygon points="18,13 19.5,17 23.5,17 20.2,19.3 21.5,23.2 18,20.8 14.5,23.2 15.8,19.3 12.5,17 16.5,17" fill="#000"/></svg>`;
+  }
+  if(code==='GB'){
+    return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="36" height="36" fill="#012169"/><path d="M0 0l36 36M36 0L0 36" stroke="#fff" stroke-width="5"/><path d="M18 0v36M0 18h36" stroke="#fff" stroke-width="8"/><path d="M18 0v36M0 18h36" stroke="#C8102E" stroke-width="4.5"/></svg>`;
+  }
+  if(code==='FR'){
+    return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="12" height="36" fill="#002395"/><rect x="12" width="12" height="36" fill="#fff"/><rect x="24" width="12" height="36" fill="#ED2939"/></svg>`;
+  }
+  if(code==='AR'){
+    return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="36" height="12" fill="#74ACDF"/><rect y="12" width="36" height="12" fill="#fff"/><rect y="24" width="36" height="12" fill="#74ACDF"/><circle cx="18" cy="18" r="3.5" fill="#F6B40E"/></svg>`;
+  }
+  if(code==='PT'){
+    return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="14" height="36" fill="#006600"/><rect x="14" width="22" height="36" fill="#FF0000"/><circle cx="14" cy="18" r="5" fill="#FFFF00"/></svg>`;
+  }
+  // Default NG (Nigeria Green-White-Green)
+  return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="12" height="36" fill="#008751"/><rect x="12" width="12" height="36" fill="#FFFFFF"/><rect x="24" width="12" height="36" fill="#008751"/></svg>`;
+};
+const renderFootballerPortrait=(p,card)=>{
+  if(card.photo){
+    return `<img src="${card.photo}" alt="${card.name}">`;
+  }
+  const h=hashStr(card.name.toLowerCase());
+  const skinTones=[
+    ['#A56943','#7C4929','#593118'],
+    ['#8D5524','#6B3E17','#4A290D'],
+    ['#C68642','#99622B','#6E441B'],
+    ['#6F4124','#512D16','#381D0C']
+  ][h%4];
+  const shirtTones=[
+    ['#E8F4F8','#B8D8E8','#123D2B'],
+    ['#E9F8EC','#B8E6C4','#123D2B'],
+    ['#FFF6D6','#E6C875','#3B2804'],
+    ['#F3E8FF','#D0B2F5','#340978']
+  ][h%4];
+  return `<svg viewBox="0 0 180 200" width="156" height="176" style="filter:drop-shadow(0 10px 18px rgba(0,0,0,.48))">
+    <defs>
+      <linearGradient id="sk_${h%99}" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="${skinTones[0]}"/>
+        <stop offset="65%" stop-color="${skinTones[1]}"/>
+        <stop offset="100%" stop-color="${skinTones[2]}"/>
+      </linearGradient>
+      <linearGradient id="sh_${h%99}" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${shirtTones[0]}"/>
+        <stop offset="100%" stop-color="${shirtTones[1]}"/>
+      </linearGradient>
+    </defs>
+    <!-- Jersey Shoulders -->
+    <path d="M14 200 C18 156, 48 144, 90 144 C132 144, 162 156, 166 200 Z" fill="url(#sh_${h%99})"/>
+    <path d="M35 154 L58 200 M145 154 L122 200" stroke="${shirtTones[2]}" stroke-width="3" opacity=".32"/>
+    <!-- Collar -->
+    <path d="M62 144 Q90 168 118 144 L112 138 Q90 156 68 138 Z" fill="#fff"/>
+    <!-- Neck -->
+    <path d="M72 114 L72 145 Q90 156 108 145 L108 114 Z" fill="url(#sk_${h%99})"/>
+    <path d="M72 118 Q90 132 108 118 L108 128 Q90 140 72 128 Z" fill="${skinTones[2]}" opacity=".45"/>
+    <!-- Ears -->
+    <ellipse cx="53" cy="82" rx="6" ry="11" fill="${skinTones[1]}"/>
+    <ellipse cx="127" cy="82" rx="6" ry="11" fill="${skinTones[2]}"/>
+    <!-- Head -->
+    <path d="M55 62 C55 34, 125 34, 125 62 C125 94, 116 122, 90 124 C64 122, 55 94, 55 62 Z" fill="url(#sk_${h%99})"/>
+    <!-- Hair (Textured Afro / Curly Fade like reference image) -->
+    <path d="M53 64 C50 38, 66 22, 90 22 C114 22, 130 38, 127 64 C124 47, 112 39, 90 39 C68 39, 56 47, 53 64 Z" fill="#1F1815"/>
+    <path d="M56 48 C62 24, 118 24, 124 48 C117 34, 63 34, 56 48 Z" fill="#C9A86A" opacity="${h%2===0?'.85':'.25'}"/>
+    <!-- Brows & Eyes -->
+    <path d="M67 71 Q76 68 83 72 M97 72 Q104 68 113 71" stroke="#181210" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+    <ellipse cx="75" cy="78" rx="4.2" ry="2.6" fill="#181210"/>
+    <ellipse cx="105" cy="78" rx="4.2" ry="2.6" fill="#181210"/>
+    <circle cx="74" cy="77.5" r="1" fill="#fff"/>
+    <circle cx="104" cy="77.5" r="1" fill="#fff"/>
+    <!-- Nose & Facial Hair / Goatee -->
+    <path d="M90 76 L87 92 Q90 95 94 92" stroke="${skinTones[2]}" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M78 103 Q90 100 102 103" stroke="#181210" stroke-width="3" stroke-linecap="round" fill="none"/>
+    <path d="M81 106 Q90 110 99 106" stroke="${skinTones[0]}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <path d="M58 94 C60 116, 75 124, 90 124 C105 124, 120 116, 122 94 C119 108, 108 119, 90 119 C72 119, 61 108, 58 94 Z" fill="#181210" opacity=".82"/>
+  </svg>`;
+};
+const renderFifaCard=p=>{
+  const c=getPlayerFifaCard(p);
+  const themeCls=c.theme&&c.theme!=='epic'?`theme-${c.theme}`:'';
+  return `<div class="fc-card ${themeCls}">
+    <div class="fc-shield">
+      <div class="fc-dots"></div>
+      <div class="fc-top-meta">
+        <span class="fc-tier">${c.tier}</span>
+        <div class="fc-serial">${c.season}<br>${c.serial}</div>
+      </div>
+      <div class="fc-ovr-col">
+        <div class="fc-ovr">${c.ovr}</div>
+        <div class="fc-pos">${c.posCode}</div>
+      </div>
+      <div class="fc-flag-col">
+        <div class="fc-flag">${renderFlagSvg(c.flag)}</div>
+      </div>
+      <div class="fc-portrait">${renderFootballerPortrait(p,c)}</div>
+      <svg class="fc-v-line" viewBox="0 0 262 34" preserveAspectRatio="none">
+        <path d="M0 1 L131 29 L262 1" stroke="var(--fc-glow)" stroke-width="2" fill="none" opacity=".85"/>
+      </svg>
+      <div class="fc-lower">
+        <div class="fc-name">${c.cardName}</div>
+        <div class="fc-divider"></div>
+        <div class="fc-stats">
+          <div class="fc-stat-col">
+            <div class="fc-stat"><b>${c.pac}</b><span>PAC</span></div>
+            <div class="fc-stat"><b>${c.sho}</b><span>SHO</span></div>
+            <div class="fc-stat"><b>${c.pas}</b><span>PAS</span></div>
+          </div>
+          <div class="fc-stat-col">
+            <div class="fc-stat"><b>${c.dri}</b><span>DRI</span></div>
+            <div class="fc-stat"><b>${c.def}</b><span>DEF</span></div>
+            <div class="fc-stat"><b>${c.phy}</b><span>PHY</span></div>
+          </div>
+        </div>
+        <div class="fc-emblem">
+          <svg width="20" height="16" viewBox="0 0 24 18" fill="currentColor"><path d="M2 2l7 5 3-4 3 4 7-5v14l-7-4-3 3-3-3-7 4z"/></svg>
+        </div>
+      </div>
+    </div>
+    <svg class="fc-shield-outline" viewBox="0 0 266 396" preserveAspectRatio="none">
+      <path d="M2 28 Q45 3 133 2 Q221 3 264 28 L264 353 L133 394 L2 353 Z" fill="none" stroke="var(--fc-glow)" stroke-width="2.2" opacity=".9"/>
+    </svg>
+  </div>`;
+};
+const openEditCard=()=>{
+  const me={
+    n:S.user.name||'Player',
+    pos:Object.keys(S.user.pos||{}).find(k=>S.user.pos[k])||'Midfielder',
+    exp:S.user.exp||'Intermediate',
+    isMe:true
+  };
+  const c=getPlayerFifaCard(me);
+  S.cardForm={
+    posCode:c.posCode,
+    theme:c.theme||'epic',
+    tier:c.tier||'Epic',
+    flag:c.flag||'NG',
+    pac:c.pac,sho:c.sho,pas:c.pas,dri:c.dri,def:c.def,phy:c.phy,
+    photo:c.photo||''
+  };
+  go('editCard');
+};
+const handleCardPhotoUpload=input=>{
+  const file=input&&input.files&&input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const maxW=280,maxH=320;
+      let w=img.width,h=img.height;
+      if(w>maxW){h=Math.round(h*(maxW/w));w=maxW}
+      if(h>maxH){w=Math.round(w*(maxH/h));h=maxH}
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      S.cardForm=S.cardForm||{};
+      S.cardForm.photo=canvas.toDataURL('image/jpeg',0.82);
+      toast('Portrait photo updated!');
+      render();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+const saveMyCard=()=>{
+  const f=S.cardForm;
+  if(!f)return;
+  const clamp=v=>Math.max(55,Math.min(99,Math.round(+v||80)));
+  const stats={pac:clamp(f.pac),sho:clamp(f.sho),pas:clamp(f.pas),dri:clamp(f.dri),def:clamp(f.def),phy:clamp(f.phy)};
+  const sorted=Object.values(stats).slice().sort((a,b)=>b-a);
+  const ovr=clamp(Math.round((sorted[0]*0.32)+(sorted[1]*0.24)+(sorted[2]*0.18)+(sorted[3]*0.12)+(sorted[4]*0.08)+(sorted[5]*0.06))+3);
+  const cardData={
+    posCode:f.posCode||'CF',
+    theme:f.theme||'epic',
+    tier:ovr>=86?'Epic':ovr>=82?'Elite':ovr>=78?'Pro':'Common',
+    flag:f.flag||'NG',
+    ovr,
+    photo:f.photo||'',
+    ...stats
+  };
+  S.user.card=cardData;
+  const key=(S.user.name||'Player').trim().toLowerCase();
+  try{
+    const saved=JSON.parse(localStorage.getItem('fc_player_cards')||'{}');
+    saved[key]=cardData;
+    localStorage.setItem('fc_player_cards',JSON.stringify(saved));
+    localStorage.setItem('fc_my_card',JSON.stringify(cardData));
+  }catch(e){}
+  if(window.FCData){
+    const syncCard={...cardData};
+    if(syncCard.photo&&syncCard.photo.length>40000)delete syncCard.photo;
+    FCData.record('app_events',{},'player_card_updated',{player_key:key,player_name:S.user.name||'Player',card:syncCard});
+    if(S.authUser&&FCData.authUpdateProfile){
+      FCData.authUpdateProfile({card:syncCard});
+    }
+  }
+  back();
+  toast('Your FIFA Rate Card is updated!');
+};
+const endorsePlayerStat=(playerName,statKey,statLabel)=>{
+  const key=String(playerName||'').trim().toLowerCase();
+  if(!key)return;
+  try{
+    const endMap=JSON.parse(localStorage.getItem('fc_player_endorsements')||'{}');
+    endMap[key]=endMap[key]||{count:0,stats:{}};
+    endMap[key].stats[statKey]=(endMap[key].stats[statKey]||0)+1;
+    endMap[key].count=(endMap[key].count||0)+1;
+    localStorage.setItem('fc_player_endorsements',JSON.stringify(endMap));
+  }catch(e){}
+  if(window.FCData){
+    FCData.record('app_events',{},'player_endorsed',{
+      player_key:key,
+      player_name:playerName,
+      stat:statKey,
+      endorsed_by:S.user.name||'Community Player'
+    });
+  }
+  showModal({
+    title:`Endorsed ${playerName}! ⭐`,
+    sub:`You boosted ${playerName}'s ${statLabel} (${statKey.toUpperCase()}) attribute on their official FIFA Rate Card.`,
+    meta:[
+      ['Player',playerName],
+      ['Attribute Boosted','+1 '+statKey.toUpperCase()+' ('+statLabel+')'],
+      ['Endorsed By',S.user.name||'Community Player']
+    ],
+    primary:'Done'
+  });
 };
 const getLiveFeedItems=()=>{
   const evs=(window.FCData&&FCData.db&&Array.isArray(FCData.db.app_events))?FCData.db.app_events:[];
@@ -1024,6 +1486,14 @@ const openShare=(type,id)=>{
     const shortU=base+'?match='+encodeURIComponent(f.id);
     item={type:'Match Fixture',id:f.id,title:f.h+' '+(f.sc||'vs')+' '+f.a,sub:(f.comp||'Lagos Grassroots Cup')+' · '+f.v,tag:f.s==='Live'?'LIVE · '+f.t:f.t,url:shortU,fullUrl:shortU+(enc?'&m='+enc:''),img:'event1'};
   }
+  else if(type==='player'){
+    const allP=getAllPlayers();
+    const p=allP.find(x=>x.n.toLowerCase()===String(id||'').toLowerCase())||allP[0];
+    const c=getPlayerFifaCard(p);
+    const enc=encodeShareObj({n:p.n,pos:p.pos,fmts:p.fmts||p.fmt,area:p.area,av:p.av,exp:p.exp,team:p.team,card:{...c,photo:''}});
+    const shortU=base+'?player='+encodeURIComponent(p.n);
+    item={type:'Player Rate Card',id:p.n,title:`${c.cardName} · ${c.ovr} OVR (${c.posCode})`,sub:`PAC ${c.pac} · SHO ${c.sho} · PAS ${c.pas} · DRI ${c.dri} · DEF ${c.def} · PHY ${c.phy}`,tag:`${c.tier} Card · ${p.area}, Lagos`,url:shortU,fullUrl:shortU+(enc?'&p='+enc:''),img:'game1'};
+  }
   else if(type==='ticket'){const e=events[0];item={type:'Ticket',id:0,title:e.title,sub:e.venue+' · '+e.when,tag:'General Entry',url:base+'?event=0',fullUrl:base+'?event=0',img:e.im}}
   S.shareItem=item;
   go('share');
@@ -1059,7 +1529,7 @@ let eventCard=e=>`<div class="card" onclick="go('event',${e.id})"><div ${pic(e.i
  <div class="row sp" style="margin-top:10px"><div class="b grow">${e.title}</div><button onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'var(--brand)':'var(--muted)'}">${ic('heart')}</button></div>
  <div class="sub">${e.venue}<br>${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="b small">${e.fee}</span></div></div>`;
 const teamCard=t=>`<div class="card row" onclick="go('team',${t.id})">${crest(t.name,44)}<div class="grow"><div class="b">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div></div>${t.role?`<span class="tag gold">${t.role}</span>`:ic('chev')}</div>`;
-const playerCard=p=>{const safeN=(p.n||'Player').replace(/'/g,"\\'");return `<div class="card row" onclick="go('player','${safeN}')"><div class="av">${ini(p.n)}</div><div class="grow"><div class="b">${p.n}${p.isMe?' <span class="tag ok" style="margin-left:4px">You</span>':''}</div><div class="sub">${p.pos} · ${p.fmts||p.fmt}<br>${p.area} · ${p.av}</div></div><button class="btn sm ghost" onclick="event.stopPropagation();showModal({title:'Invitation Sent!',sub:'${safeN} has been invited to connect and join your upcoming football activity.',meta:[['Player','${safeN}'],['Position','${p.pos} · ${p.fmt}'],['Area','${p.area}']],primary:'Done'})">Invite</button></div>`};
+const playerCard=p=>{const safeN=(p.n||'Player').replace(/'/g,"\\'");const c=getPlayerFifaCard(p);const tCls=c.theme&&c.theme!=='epic'?'theme-'+c.theme:'';return `<div class="card row" onclick="go('player','${safeN}')"><div class="fc-mini-badge ${tCls}"><b>${c.ovr}</b><small>${c.posCode}</small></div><div class="grow"><div class="b">${p.n}${p.isMe?' <span class="tag ok" style="margin-left:4px">You</span>':''}</div><div class="sub">${c.tier} · ${p.pos} · ${p.fmts||p.fmt}<br>${p.area} · PAC ${c.pac} · SHO ${c.sho} · PAS ${c.pas}</div></div><button class="btn sm ghost" onclick="event.stopPropagation();go('player','${safeN}')">Card</button></div>`};
 const getTog=(k,def)=>{S.p=S.p||{};return S.p[k]===undefined?def:S.p[k]};
 const flipTog=(k,def,ev)=>{if(ev)ev.stopPropagation();S.p=S.p||{};S.p[k]=!getTog(k,def);render()};
 const tog=(def,k)=>{const on=getTog(k,def);return `<div class="tog ${on?'on':''}" onclick="flipTog('${k}',${def},event)"><i></i></div>`};
@@ -1191,11 +1661,13 @@ async function finishOnb(){
       return;
     }
     S.stack=[];S.tab='home';
-    showModal({title:'Welcome to Football Community!',sub:'Your real account is live and synced across web and mobile.',meta:[['Player',profileMeta.full_name],['Email',S.user.email],['Location',S.user.loc],['Formats',fmts.join(', ')]],primary:'Start Exploring'});
+    const myC=getPlayerFifaCard({n:profileMeta.full_name,pos:pos[0]||'Midfielder',exp:S.user.exp||'Intermediate',isMe:true});
+    showModal({title:'Welcome to Football Community!',sub:'Your real account and official FIFA Player Rate Card are live across web and mobile.',meta:[['Player',profileMeta.full_name],['FIFA Rate Card',`${myC.ovr} OVR · ${myC.posCode} (${myC.tier})`],['Location',S.user.loc],['Formats',fmts.join(', ')]],primary:'View My FIFA Rate Card',primaryFn:()=>go('player'),secondary:'Start Exploring'});
     return;
   }
   S.onb=0;S.stack=[];S.tab='home';
-  showModal({title:'Welcome to Football Community!',sub:'Your profile and football preferences have been saved.',meta:[['Player',S.user.name||'Player'],['Location',S.user.loc],['Formats',fmts.join(', ')],['Position',pos.join(', ')]],primary:'Start Exploring'});
+  const myC=getPlayerFifaCard({n:S.user.name||'Player',pos:pos[0]||'Midfielder',exp:S.user.exp||'Intermediate',isMe:true});
+  showModal({title:'Welcome to Football Community!',sub:'Your profile and official FIFA Player Rate Card have been generated.',meta:[['Player',S.user.name||'Player'],['FIFA Rate Card',`${myC.ovr} OVR · ${myC.posCode} (${myC.tier})`],['Location',S.user.loc],['Formats',fmts.join(', ')]],primary:'View My FIFA Rate Card',primaryFn:()=>go('player'),secondary:'Start Exploring'});
 }
 
 SC.home=()=>`<div class="row sp"><div class="row"><div class="av">TA</div><div><div class="sub">Hi, welcome back</div><div class="b">${ic('pin')} Lekki, Lagos</div></div></div><button class="round" onclick="go('notifs')">${ic('bell')}</button></div>
@@ -1651,7 +2123,7 @@ SC.community=()=>{
  return `<h1>Community</h1>${tabsUI('community',cTabs)}${body}`};
 
 SC.team=id=>{const t=findTeam(id);return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><div class="col" style="margin-top:14px"><button class="btn gold sm" onclick="if(${!!t.role}){openShare('team','${t.id}')}else{S.followed['t${t.id}']=!S.followed['t${t.id}'];render()}">${t.role?'Invite players':S.followed['t'+t.id]?'Following':'Follow team'}</button><button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team','${t.id}')">${ic('share')}Share team</button></div></div>
- <h2 class="sec">Members</h2><div class="list">${(t.role?[[S.user.name||'You',t.role],['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player']]:[['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player'],['Sadiq M.','Player']]).map(m=>`<div class="card row"><div class="av sm">${ini(m[0])}</div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`).join('')}</div>
+ <h2 class="sec">Members <span class="small muted">Tap to view FIFA card</span></h2><div class="list">${(t.role?[[S.user.name||'You',t.role],['Emeka Obi','Captain'],['Femi Kuti-Ade','Assistant captain'],['Chidi Okonkwo','Player']]:[['Emeka Obi','Captain'],['Femi Kuti-Ade','Assistant captain'],['Chidi Okonkwo','Player'],['Sadiq Musa','Player']]).map(m=>{const c=getPlayerFifaCard({n:m[0]});const safeM=m[0].replace(/'/g,"\\'");return `<div class="card row" style="cursor:pointer" onclick="go('player',${m[0]===(S.user.name||'You')?'null':`'${safeM}'`})"><div class="fc-mini-badge ${c.theme&&c.theme!=='epic'?'theme-'+c.theme:''}" style="width:38px;height:44px"><b style="font-size:14px">${c.ovr}</b><small style="font-size:8.5px">${c.posCode}</small></div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`}).join('')}</div>
  <h2 class="sec">Upcoming games</h2>${gameCard(games[0])}<h2 class="sec">Match history</h2><div class="list">${matchRow(fixtures[2])}</div>
  ${t.role?'':`<button class="btn ghost" style="margin-top:14px" onclick="showModal({title:'Join Request Sent!',sub:'The team captain will review your request to join '+t.name+'.',meta:[['Team','${t.name}'],['Location','${t.loc}'],['Format','${t.fmt}']],primary:'Done'})">Request to join</button>`}<div style="text-align:center;margin-top:10px"><a class="small muted" style="cursor:pointer" onclick="showModal({title:'Report Submitted',sub:'Thank you. Our moderation team will review this team profile (PRD §15.5).',primary:'Close'})">Report team</a></div>`};
 
@@ -1687,19 +2159,110 @@ SC.player=target=>{
      av:avail.join(', ')||'Weekday evenings',
      exp:S.user.exp||'Intermediate',
      team:myT?myT.name:'Independent Player',
+     card:S.user.card||null,
      isMe:true
    };
  }else if(typeof target==='number'){
    p=allP[target]||allP[0];
  }else{
-   p=allP.find(x=>x.n.toLowerCase()===String(target).toLowerCase())||allP[0];
+   p=allP.find(x=>x.n.toLowerCase()===String(target).toLowerCase())||{
+     n:String(target),
+     pos:'Midfielder',
+     fmts:'5-a-side, 7-a-side',
+     area:'Lagos',
+     av:'Flexible',
+     exp:'Intermediate',
+     team:'Lagos Community',
+     isMe:Boolean(S.user&&S.user.name&&S.user.name.trim().toLowerCase()===String(target).trim().toLowerCase())
+   };
  }
  const safeN=(p.n||'Player').replace(/'/g,"\\'");
- return `${hdr('Player profile')}<div style="text-align:center"><div class="av lg" style="margin:0 auto 10px">${ini(p.n)}</div><h1>${p.n}</h1><div class="sub">${p.pos} · ${p.fmts||p.fmt}</div></div>
- <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Area</span><b>${p.area}, Lagos</b></div><div class="kv"><span class="muted">Availability</span><b>${p.av}</b></div><div class="kv"><span class="muted">Experience</span><b>${p.exp||'Intermediate'}</b></div><div class="kv"><span class="muted">Teams</span><b>${p.team||'Lagos Community'}</b></div></div>
+ const c=getPlayerFifaCard(p);
+ const statAttrs=[['pac','Pace'],['sho','Shooting'],['pas','Passing'],['dri','Dribbling'],['def','Defending'],['phy','Physical']];
+ return `${hdr('Player rate card',`<button class="round" onclick="openShare('player','${safeN}')">${ic('share')}</button>`)}
+ ${renderFifaCard(p)}
+ ${!p.isMe?`
+   <div class="card" style="margin-top:8px">
+     <div class="row sp"><b>⭐ Rate / Endorse ${p.n.split(' ')[0]}'s Attributes</b><span class="tag gold">${c.endorseCount||0} endorsements</span></div>
+     <div class="sub small" style="margin:4px 0 10px">Played with or against ${p.n}? Tap a stat to boost their official FIFA card rating (+1):</div>
+     <div class="grid3">
+       ${statAttrs.map(st=>`<button class="chip" style="justify-content:center;font-size:12px" onclick="endorsePlayerStat('${safeN}','${st[0]}','${st[1]}')">+1 ${st[0].toUpperCase()}</button>`).join('')}
+     </div>
+   </div>
+ `:''}
+ <div class="card" style="margin-top:12px">
+   <div class="kv"><span class="muted">Full name</span><b>${p.n}</b></div>
+   <div class="kv"><span class="muted">FIFA Rating &amp; Tier</span><b>${c.ovr} OVR · ${c.posCode} (${c.tier})</b></div>
+   <div class="kv"><span class="muted">Position &amp; Formats</span><b>${p.pos} · ${p.fmts||p.fmt}</b></div>
+   <div class="kv"><span class="muted">Area</span><b>${p.area}, Lagos</b></div>
+   <div class="kv"><span class="muted">Availability</span><b>${p.av}</b></div>
+   <div class="kv"><span class="muted">Experience</span><b>${p.exp||'Intermediate'}</b></div>
+   <div class="kv"><span class="muted">Team</span><b>${p.team||'Lagos Community'}</b></div>
+ </div>
  ${p.isMe
-   ? `<div class="col" style="margin-top:14px"><button class="btn" onclick="S.onb=2;S.authErr=null;go('onb')">Edit Football Preferences</button><button class="btn ghost" onclick="S.onb=0;S.authErr=null;go('onb')">Edit Personal Details</button></div>`
-   : `<div class="col" style="margin-top:14px"><button class="btn" onclick="showModal({title:'Invitation Sent!',sub:'${safeN} has been invited to your team and open game.',meta:[['Player','${safeN}'],['Position','${p.pos}'],['Area','${p.area}']],primary:'Done'})">Invite to team / game</button><button class="btn ghost" onclick="showModal({title:'Report Submitted',sub:'Our moderation team will review this player profile (PRD §15.5).',primary:'Close'})">Report</button></div>`}`;
+   ? `<div class="col" style="margin-top:14px">
+       <button class="btn" onclick="openEditCard()">Customize Rate Card &amp; Photo</button>
+       <button class="btn ghost" onclick="openShare('player','${safeN}')">${ic('share')}Share My FIFA Rate Card</button>
+       <button class="btn ghost" onclick="S.onb=2;S.authErr=null;go('onb')">Edit Football Preferences</button>
+       <button class="btn ghost" onclick="S.onb=0;S.authErr=null;go('onb')">Edit Personal Details</button>
+     </div>`
+   : `<div class="col" style="margin-top:14px">
+       <button class="btn" onclick="showModal({title:'Invitation Sent!',sub:'${safeN} has been invited to your team and open game.',meta:[['Player','${safeN}'],['FIFA Rating','${c.ovr} OVR (${c.posCode})'],['Area','${p.area}']],primary:'Done'})">Invite to team / game</button>
+       <button class="btn ghost" onclick="openShare('player','${safeN}')">${ic('share')}Share Player Rate Card</button>
+       <button class="btn ghost" onclick="showModal({title:'Report Submitted',sub:'Our moderation team will review this player profile (PRD §15.5).',primary:'Close'})">Report</button>
+     </div>`}`;
+};
+
+SC.editCard=()=>{
+ const f=S.cardForm||{posCode:'CF',theme:'epic',flag:'NG',pac:82,sho:92,pas:80,dri:77,def:72,phy:81,photo:''};
+ S.cardForm=f;
+ const clamp=v=>Math.max(55,Math.min(99,Math.round(+v||80)));
+ const sorted=[clamp(f.pac),clamp(f.sho),clamp(f.pas),clamp(f.dri),clamp(f.def),clamp(f.phy)].sort((a,b)=>b-a);
+ const liveOvr=clamp(Math.round((sorted[0]*0.32)+(sorted[1]*0.24)+(sorted[2]*0.18)+(sorted[3]*0.12)+(sorted[4]*0.08)+(sorted[5]*0.06))+3);
+ const previewPlayer={
+   n:S.user.name||'Player',
+   pos:f.posCode,
+   exp:S.user.exp||'Intermediate',
+   card:{
+     ...f,
+     ovr:liveOvr,
+     tier:liveOvr>=86?'Epic':liveOvr>=82?'Elite':liveOvr>=78?'Pro':'Common'
+   }
+ };
+ const posCodes=['CF','ST','RW','LW','CAM','CM','CDM','CB','LB','RB','GK'];
+ const themes=[['epic','Epic Purple'],['lagos','Lagos Emerald'],['gold','Icon Gold'],['common','Obsidian Dark']];
+ const flags=[['NG','🇳🇬 Nigeria'],['BR','🇧🇷 Brazil'],['GH','🇬🇭 Ghana'],['GB','🇬🇧 UK'],['FR','🇫🇷 France'],['AR','🇦🇷 Argentina'],['PT','🇵🇹 Portugal']];
+ const sliders=[['pac','PAC · Pace'],['sho','SHO · Shooting'],['pas','PAS · Passing'],['dri','DRI · Dribbling'],['def','DEF · Defending'],['phy','PHY · Physical']];
+ return `${hdr('Customize FIFA Rate Card')}
+ ${renderFifaCard(previewPlayer)}
+ <div class="card" style="margin-top:8px">
+   <div class="b small" style="margin-bottom:8px">Player Portrait Photo</div>
+   <div class="col">
+     <label class="btn sm" style="cursor:pointer;text-align:center">
+       📷 Upload My Portrait Photo
+       <input type="file" accept="image/*" style="display:none" onchange="handleCardPhotoUpload(this)">
+     </label>
+     ${f.photo?`<button type="button" class="btn sm ghost" onclick="S.cardForm.photo='';render()">Use Illustrated Footballer Avatar</button>`:''}
+   </div>
+ </div>
+ <div class="card" style="margin-top:12px">
+   <div class="field">Card Design Theme<select onchange="S.cardForm.theme=this.value;render()">${themes.map(t=>`<option value="${t[0]}" ${f.theme===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select></div>
+   <div class="row">
+     <div class="field grow">Position Code<select onchange="S.cardForm.posCode=this.value;render()">${posCodes.map(c=>`<option value="${c}" ${f.posCode===c?'selected':''}>${c}</option>`).join('')}</select></div>
+     <div class="field grow">Nationality Flag<select onchange="S.cardForm.flag=this.value;render()">${flags.map(fl=>`<option value="${fl[0]}" ${f.flag===fl[0]?'selected':''}>${fl[1]}</option>`).join('')}</select></div>
+   </div>
+   <div class="b small" style="margin:6px 0 10px">Attributes (Auto-calculates ${liveOvr} OVR)</div>
+   ${sliders.map(sl=>`
+     <div style="margin-bottom:10px">
+       <div class="row sp small"><span class="muted">${sl[1]}</span><b>${f[sl[0]]}</b></div>
+       <input type="range" min="55" max="99" value="${f[sl[0]]}" style="width:100%;accent-color:var(--brand)" oninput="S.cardForm.${sl[0]}=+this.value;render()">
+     </div>
+   `).join('')}
+ </div>
+ <div class="col" style="margin-top:16px">
+   <button class="btn" onclick="saveMyCard()">Save My FIFA Rate Card</button>
+   <button class="btn ghost" onclick="back()">Cancel</button>
+ </div>`;
 };
 
 SC.activity=()=>{
@@ -1805,9 +2368,20 @@ SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14
  if(ctx.isMatchOrg)activeMgmtRows.push(it('trophy',`Manage My Fixtures & Events (${ctx.myFixtures.length+ctx.myEvents.length})`,"S.sub.activity='Organised Matches';tab('activity')"));
  if(ctx.hasTeam)activeMgmtRows.push(it('users',`Manage My Teams (${ctx.myTeams.length})`,"S.sub.community='My Teams';tab('community')"));
  if(ctx.isPitchOwner)activeMgmtRows.push(it('pin',`Manage My Listed Pitches (${ctx.myVenues.length})`,"S.sub.activity='My Pitches';tab('activity')"));
+ const myCard=getPlayerFifaCard({n:S.user.name||'Player',pos:Object.keys(S.user.pos||{}).find(k=>S.user.pos[k])||'Midfielder',exp:S.user.exp||'Intermediate',card:S.user.card,isMe:true});
  return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px" onclick="S.adminTap=(S.adminTap||0)+1;if(S.adminTap>=5){S.isAdmin=!S.isAdmin;S.adminTap=0;toast(S.isAdmin?'Admin hub unlocked':'Admin hub hidden');render()}">${ini(S.user.name||'Guest')}</div><h1>${S.user.name||'Guest'}</h1><div class="sub">${S.user.loc} · ${ctx.roles.join(' · ')}</div>${acctCard}</div>
  <div class="pwa-bar"><div><div class="b" style="font-size:14px">Install Football Community</div><div style="font-size:11px;opacity:.85">Add to your phone home screen for 1-tap access</div></div><button class="btn sm" onclick="installPWA()">Install App</button></div>
- <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;S.authErr=null;go('onb')")}${it('ball','Player profile',"go('player')")}${it('cog','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}</div>
+ <h2 class="sec">Football identity &amp; FIFA Rate Card</h2>
+ <div class="list">
+   <div class="card row" style="padding:12px 14px;cursor:pointer" onclick="go('player')">
+     <div class="fc-mini-badge ${myCard.theme&&myCard.theme!=='epic'?'theme-'+myCard.theme:''}"><b>${myCard.ovr}</b><small>${myCard.posCode}</small></div>
+     <div class="grow"><div class="b">My FIFA Player Rate Card</div><div class="sub small">${myCard.tier} Card · PAC ${myCard.pac} · SHO ${myCard.sho} · PAS ${myCard.pas}</div></div>
+     ${ic('chev')}
+   </div>
+   ${it('cog','Customize My Rate Card & Photo',"openEditCard()")}
+   ${it('user','Personal details & location',"S.onb=0;S.authErr=null;go('onb')")}
+   ${it('ball','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}
+ </div>
  ${activeMgmtRows.length?`<h2 class="sec">Your active management views</h2><div class="list">${activeMgmtRows.join('')}</div>`:''}
  <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"go('createTeam')")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
  <h2 class="sec">Settings</h2><div class="list">${adminOk?it('list','Admin: Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')"):''}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout',signedIn?'Sign out':'Sign in / Switch account',signedIn?'confirmSignOut()':"S.authErr=null;go('signin')")}</div>
@@ -2231,9 +2805,9 @@ SC.game=id=>{
    : `<div class="card vrow" style="margin-top:12px" onclick="S.sub.venue='Overview';go('venue',{id:${g.v||0},fromGame:true})">${ic('pin')}<div class="grow"><div class="b">${vName}</div><div class="sub small">${g.pitch} · ${v.area}</div></div>${ic('chev')}</div>`;
  const rosterHtml=(canEdit||roster.length>0)
    ? `<div class="card" style="margin-top:12px">
-       <div class="row sp"><b>${canEdit?'Organiser Player Roster':'Joined Players'} (${roster.length})</b>${canEdit?`<span class="tag gold">Creator View</span>`:''}</div>
+       <div class="row sp"><b>${canEdit?'Organiser Player Roster':'Joined Players'} (${roster.length})</b>${canEdit?`<span class="tag gold">Creator View</span>`:`<span class="small muted">Tap for FIFA card</span>`}</div>
        ${roster.length
-         ? `<div class="list" style="margin-top:10px">${roster.map(r=>`<div class="row sp" style="padding:8px 0;border-top:1px solid var(--line)"><div class="row" style="gap:8px"><div class="av sm">${ini(r.name)}</div><div><div class="b small">${r.name}</div><div class="muted" style="font-size:11px">${canEdit?(r.contact||'Player')+' · '+(r.permitCode||'Permit Ready'):'Confirmed player'}</div></div></div><span class="tag ok">${canEdit?(r.permitCode||'Confirmed'):'In ✓'}</span></div>`).join('')}</div>`
+         ? `<div class="list" style="margin-top:10px">${roster.map(r=>{const rc=getPlayerFifaCard({n:r.name});const safeR=(r.name||'Player').replace(/'/g,"\\'");return `<div class="row sp" style="padding:8px 0;border-top:1px solid var(--line);cursor:pointer" onclick="go('player','${safeR}')"><div class="row" style="gap:8px"><div class="fc-mini-badge ${rc.theme&&rc.theme!=='epic'?'theme-'+rc.theme:''}" style="width:36px;height:42px"><b style="font-size:13px">${rc.ovr}</b><small style="font-size:8px">${rc.posCode}</small></div><div><div class="b small">${r.name}</div><div class="muted" style="font-size:11px">${canEdit?(r.contact||'Player')+' · '+(r.permitCode||'Permit Ready'):rc.tier+' · Tap to view Rate Card'}</div></div></div><span class="tag ok">${canEdit?(r.permitCode||'Confirmed'):'Card →'}</span></div>`}).join('')}</div>`
          : `<div class="sub small" style="margin-top:8px">No players have joined via link yet. Tap Share to invite players from WhatsApp!</div>`}
      </div>`
    : '';
@@ -2315,6 +2889,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=14"></script>
+<script src="fc-data.js?v=15"></script>
 </body>
 </html>
