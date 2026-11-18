@@ -708,16 +708,23 @@ const FCData = {
 
   rowToUiGame(row) {
     let vIdx = 0;
+    let isCustomVenue = false;
     if (window.venues && row.venue_name) {
       const foundIdx = venues.findIndex((v) => v.name.toLowerCase() === String(row.venue_name).toLowerCase());
-      if (foundIdx >= 0) vIdx = foundIdx;
+      if (foundIdx >= 0) {
+        vIdx = foundIdx;
+      } else {
+        vIdx = -1;
+        isCustomVenue = true;
+      }
     }
     const initSlots = row.slots_left !== undefined && row.slots_left !== null ? +row.slots_left : 4;
     return {
       id: row.id || 'g_' + (row.created_at || Date.now()),
       title: row.title || 'Open Game',
       v: vIdx,
-      venueName: row.venue_name || (window.venues ? venues[vIdx].name : 'Lagos Pitch'),
+      isCustomVenue,
+      venueName: row.venue_name || (window.venues ? venues[vIdx >= 0 ? vIdx : 0].name : 'Lagos Pitch'),
       pitch: row.pitch_name || 'Main Pitch',
       when: row.match_when || 'Upcoming',
       fmt: row.format || '5-a-side',
@@ -732,6 +739,57 @@ const FCData = {
       created_at: row.created_at || '',
       fromCloud: true
     };
+  },
+
+  getGameRoster(gameOrId) {
+    const g = typeof gameOrId === 'object' && gameOrId ? gameOrId : typeof findGame === 'function' ? findGame(gameOrId) : null;
+    if (!g) return [];
+    const gid = String(g.id);
+    const gtitle = String(g.title || '').toLowerCase();
+    const allEvs = (this.db.app_events || []).slice().reverse();
+    const map = new Map();
+
+    for (const ev of allEvs) {
+      const p = ev.properties || {};
+      const matchId = p.game_id !== undefined && String(p.game_id) === gid;
+      const matchTitle = !p.game_id && p.game_title && String(p.game_title).toLowerCase() === gtitle;
+      if (!matchId && !matchTitle) continue;
+      const contact = (p.player_contact || ev.user_contact || '').trim();
+      const name = (p.player_name || contact.split('@')[0] || 'Player').trim();
+      const key = (contact || name || p.permit_code || ev.created_at).toLowerCase();
+      if (ev.event_name === 'open_game_joined') {
+        map.set(key, {
+          name: name || 'Player',
+          contact: contact || '',
+          permitCode: p.permit_code || 'Confirmed',
+          paymentNote: p.payment_note || '',
+          joinedAt: ev.created_at || ''
+        });
+      } else if (ev.event_name === 'open_game_left') {
+        map.delete(key);
+      }
+    }
+
+    if (map.size === 0 && Array.isArray(this.db.game_joins)) {
+      for (const j of this.db.game_joins) {
+        if (j.game_title && String(j.game_title).toLowerCase() === gtitle) {
+          const contact = (j.player_contact || '').trim();
+          const name = (j.player_name || contact.split('@')[0] || 'Player').trim();
+          const key = (contact || name).toLowerCase();
+          if (!map.has(key)) {
+            map.set(key, {
+              name: name || 'Player',
+              contact,
+              permitCode: 'Confirmed',
+              paymentNote: +j.price_ngn > 0 ? 'Paid' : 'Free',
+              joinedAt: j.created_at || ''
+            });
+          }
+        }
+      }
+    }
+
+    return Array.from(map.values());
   },
 
   mergeLiveIntoUI() {
@@ -764,7 +822,10 @@ const FCData = {
         games.find((g) => String(g.id) === String(p.game_id));
       if (target) {
         if (p.title !== undefined) target.title = p.title;
-        if (p.v !== undefined) target.v = +p.v;
+        if (p.v !== undefined) {
+          target.v = +p.v;
+          target.isCustomVenue = +p.v < 0;
+        }
         if (p.venue_name !== undefined) target.venueName = p.venue_name;
         if (p.pitch_name !== undefined) target.pitch = p.pitch_name;
         if (p.match_when !== undefined) target.when = p.match_when;
@@ -782,8 +843,9 @@ const FCData = {
       }
     }
 
-    // Apply slot decrements from game_joins / open_game_joined events
+    // Apply net slot decrements from open_game_joined minus open_game_left events
     const joinEvents = allEvs.filter((ev) => ev.event_name === 'open_game_joined' && ev.properties);
+    const leaveEvents = allEvs.filter((ev) => ev.event_name === 'open_game_left' && ev.properties);
     for (const cg of cloudGames) {
       const joinsAfterEdit = joinEvents.filter((ev) => {
         const matchId = ev.properties.game_id && String(ev.properties.game_id) === String(cg.id);
@@ -792,8 +854,16 @@ const FCData = {
         if (cg.lastEditedAt && ev.created_at && ev.created_at < cg.lastEditedAt) return false;
         return true;
       }).length;
-      if (joinsAfterEdit > 0 && cg.initialLeft !== undefined) {
-        cg.left = Math.max(0, cg.initialLeft - joinsAfterEdit);
+      const leavesAfterEdit = leaveEvents.filter((ev) => {
+        const matchId = ev.properties.game_id && String(ev.properties.game_id) === String(cg.id);
+        const matchTitle = !ev.properties.game_id && ev.properties.game_title === cg.title;
+        if (!matchId && !matchTitle) return false;
+        if (cg.lastEditedAt && ev.created_at && ev.created_at < cg.lastEditedAt) return false;
+        return true;
+      }).length;
+      const netJoins = Math.max(0, joinsAfterEdit - leavesAfterEdit);
+      if (cg.initialLeft !== undefined) {
+        cg.left = Math.max(0, Math.min(+cg.need || 10, cg.initialLeft - netJoins));
       }
     }
 
@@ -978,6 +1048,9 @@ const FCData = {
         if (ev.event_name === 'open_game_joined' && p.game_id) {
           S.joined[p.game_id] = true;
           if (p.permit_code) S.permits[p.game_id] = p.permit_code;
+        } else if (ev.event_name === 'open_game_left' && p.game_id) {
+          delete S.joined[p.game_id];
+          delete S.permits[p.game_id];
         } else if (ev.event_name === 'ticket_purchased' && p.item_key) {
           S.tickets[p.item_key] = {
             key: p.item_key,
@@ -1164,7 +1237,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=12', { updateViaCache: 'none' })
+        .register('./sw.js?v=13', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -1405,8 +1478,10 @@ window.joinOpenGame = function (id) {
 window.completeGameJoin = function (id, paymentNote) {
   const g = findGame(id);
   if (!g) return;
-  const v = (window.venues && venues[g.v]) || venues[0];
+  const v = (window.venues && venues[g.v >= 0 ? g.v : 0]) || venues[0];
   const vName = g.venueName || v.name;
+  const playerContact = ((S.authUser && S.authUser.email) || S.user.email || '').trim();
+  const playerName = (S.user.name || (playerContact ? playerContact.split('@')[0] : 'Player')).trim();
 
   S.permits = S.permits || {};
   const permitCode = S.permits[g.id] || 'FCP-' + Math.floor(100000 + Math.random() * 900000);
@@ -1424,8 +1499,8 @@ window.completeGameJoin = function (id, paymentNote) {
       game_title: g.title,
       venue_name: vName + ' · ' + g.pitch,
       match_when: g.when,
-      player_name: S.user.name,
-      player_contact: S.user.email,
+      player_name: playerName,
+      player_contact: playerContact,
       price_ngn: +g.price || 0,
       status: g.approval ? 'pending_approval' : 'confirmed'
     },
@@ -1434,6 +1509,8 @@ window.completeGameJoin = function (id, paymentNote) {
       game_id: String(g.id),
       game_title: g.title,
       venue: vName,
+      player_name: playerName,
+      player_contact: playerContact,
       price_ngn: +g.price || 0,
       permit_code: permitCode,
       payment_note: paymentNote || ''
@@ -1447,6 +1524,85 @@ window.completeGameJoin = function (id, paymentNote) {
   }
   S.stack.push({ s: 'gamePass', a: g.id });
   render();
+};
+
+window.leaveOpenGame = function (id) {
+  const g = findGame(id);
+  if (!g || !(S.joined && S.joined[g.id])) return;
+  const v = (window.venues && venues[g.v >= 0 ? g.v : 0]) || venues[0];
+  const vName = g.venueName || v.name;
+  showModal({
+    title: 'Leave this open game?',
+    sub: `Your player slot in "${g.title}" will be released so another player can join.`,
+    icon: 'logout',
+    tone: 'warn',
+    danger: true,
+    meta: [
+      ['Game', g.title],
+      ['Venue', vName + ' · ' + g.pitch],
+      ['When', g.when]
+    ],
+    primary: 'Yes, Release My Slot',
+    secondary: 'Keep My Spot',
+    primaryFn: async () => {
+      const playerContact = ((S.authUser && S.authUser.email) || S.user.email || '').trim();
+      const playerName = (S.user.name || (playerContact ? playerContact.split('@')[0] : 'Player')).trim();
+      const oldPermit = (S.permits && S.permits[g.id]) || '';
+      delete S.joined[g.id];
+      if (S.permits) delete S.permits[g.id];
+      g.left = Math.min(+g.need || 10, (+g.left || 0) + 1);
+      FCData.persistLocal();
+
+      const payload = {
+        game_id: String(g.id),
+        game_title: g.title,
+        venue: vName,
+        player_name: playerName,
+        player_contact: playerContact,
+        permit_code: oldPermit,
+        slots_left: g.left
+      };
+      const ts = new Date().toISOString();
+      FCData.db.app_events.unshift({
+        event_name: 'open_game_left',
+        screen: 'game',
+        user_contact: playerContact,
+        properties: payload,
+        created_at: ts
+      });
+      FCData.persistLocal();
+      FCData.captureAnalytics('open_game_left', payload);
+
+      if (FCData.isSupabaseConfigured()) {
+        const baseUrl = FCData.cfg.supabaseUrl.replace(/\/+$/, '');
+        Promise.all([
+          FCData.supabaseInsert('app_events', {
+            event_name: 'open_game_left',
+            screen: 'game',
+            user_contact: playerContact,
+            properties: payload
+          }),
+          fetch(`${baseUrl}/rest/v1/open_games?id=eq.${encodeURIComponent(g.id)}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              apikey: FCData.cfg.supabaseKey,
+              Authorization: `Bearer ${FCData.cfg.supabaseKey}`,
+              Prefer: 'return=minimal'
+            },
+            body: JSON.stringify({ slots_left: +g.left })
+          }).catch(() => {})
+        ]);
+      }
+
+      const topCur = S.stack && S.stack[S.stack.length - 1];
+      if (topCur && topCur.s === 'gamePass') {
+        S.stack.pop();
+      }
+      toast('You left the game and released your slot');
+      render();
+    }
+  });
 };
 
 window.payForGameSlot = function (id) {
@@ -1539,6 +1695,7 @@ SC.gamePass = (id) => {
     <div class="col" style="margin-top:18px">
       <button class="btn" onclick="openShare('game','${g.id}')">${ic('share')}Invite &amp; Share Game</button>
       <button class="btn ghost" onclick="S.sub.activity='Games Joined';S.stack=[];S.tab='activity';render()">View in My Activity</button>
+      <button class="btn sm ghost" style="color:var(--bad)" onclick="leaveOpenGame('${g.id}')">Leave Game (Release Slot)</button>
     </div>`;
 };
 
