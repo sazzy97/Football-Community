@@ -1571,6 +1571,19 @@ let matchRow=f=>`<div class="card" onclick="go('match',0)"><div class="row sp sm
  <div class="row sp" style="margin-top:8px"><span class="row grow">${crest(f.h,26)}<b>${f.h}</b></span><span class="b">${f.sc||'vs'}</span><span class="row grow" style="justify-content:flex-end"><b>${f.a}</b>${crest(f.a,26)}</span></div></div>`;
 
 /* ===== screens ===== */
+const becomeGuest=()=>{
+  S.authBusy=false;
+  S.authErr=null;
+  S.onb=0;
+  if(!S.user.name||!S.user.name.trim())S.user.name='Guest Player';
+  if(!S.user.loc)S.user.loc='Lekki and Ajah';
+  S.authUser=null;
+  S.user.pass='';
+  S.stack=[];
+  S.tab='home';
+  toast('Browsing as guest');
+  render();
+};
 const SC={};
 SC.onb=()=>{
  const locs=['Lekki and Ajah','Yaba and Surulere','Ikeja','Victoria Island and Ikoyi','Festac and Amuwo-Odofin','Ikorodu'];
@@ -1610,9 +1623,10 @@ SC.onb=()=>{
   </div>
   <div class="row" style="margin-bottom:20px">${[0,1,2].map(i=>`<div class="bar grow" style="cursor:pointer" onclick="S.onb=${i};render()"><i style="width:${i<=S.onb?100:0}%"></i></div>`).join('')}</div>
   <h1>${st[0]}</h1><p class="sub" style="margin:6px 0 20px">${st[1]}</p>${st[2]}
-  <div style="margin-top:26px">
+  <div style="margin-top:26px" class="col">
     <button class="btn" ${S.authBusy?'disabled style="opacity:.6"':''} onclick="onbStepSubmit()">${S.authBusy?(editingProfile?'Saving profile...':'Creating account...'):(S.onb<2?'Continue':(editingProfile?'Save Profile':'Create Account'))}</button>
-    ${editingProfile?'':`<div style="text-align:center;margin-top:16px"><button class="small b" style="color:var(--brand);text-decoration:underline" onclick="S.authErr=null;wlSignin()">I already have an account</button></div>`}
+    ${editingProfile?'':`<button type="button" class="btn ghost" onclick="becomeGuest()">${ic('user')}Become a Guest</button>`}
+    ${editingProfile?'':`<div style="text-align:center;margin-top:4px"><button class="small b" style="color:var(--brand);text-decoration:underline" onclick="S.authErr=null;wlSignin()">I already have an account</button></div>`}
   </div></div>`};
 function onbStepSubmit(){
   if(S.authBusy)return;
@@ -2851,7 +2865,7 @@ SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.aut
  <div class="field">Password<div class="pw-wrap"><input type="${S.showPw?'text':'password'}" value="${S.user.pass||''}" oninput="S.user.pass=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter your password" autocomplete="current-password"><button type="button" class="pw-eye" onclick="S.showPw=!S.showPw;render()" aria-label="Show password">${ic(S.showPw?'eyeOff':'eye')}</button></div></div>
  <div class="row sp" style="margin:-4px 0 22px"><span class="small muted">Forgot your password?</span><button class="small b" style="color:var(--brand)" onclick="submitPasswordReset()">Reset it</button></div>
  <button class="btn" ${S.authBusy?'disabled style="opacity:.6"':''} onclick="submitSignIn()">${S.authBusy?'Signing in...':'Sign in'}</button>
- <button class="btn ghost" style="margin-top:10px" onclick="S.authErr=null;S.stack=[];S.tab='home';toast('Browsing as guest');render()">Continue as guest</button>
+ <button class="btn ghost" style="margin-top:10px" onclick="becomeGuest()">${ic('user')}Become a Guest</button>
  <p class="small muted" style="text-align:center;margin-top:20px">New here? <button class="b" style="color:var(--brand)" onclick="S.authErr=null;S.onb=0;S.user.name='';S.user.email='';S.user.pass='';S.stack=[{s:'onb'}];render()">Create an account</button></p></div>`;
 async function submitSignIn(){
   if(S.authBusy)return;
@@ -2889,6 +2903,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=15"></script>
+<script src="fc-data.js?v=16"></script>
 </body>
 </html>
