@@ -464,6 +464,9 @@ h2.sec{margin:28px 0 14px}
 .mini-stat b{display:block;font-size:16px;font-weight:800;color:var(--brand)}
 [data-theme=dark] .mini-stat b{color:var(--color-accent)}
 .mini-stat small{font-size:10px;color:var(--muted);font-weight:600}
+.col>.btn,.col>.btn.sm,.btn-stack>.btn,.btn-stack>.btn.sm{width:100%}
+.btn-stack{display:flex;flex-direction:column;gap:10px;width:100%}
+.fix-batch-card{background:var(--surface);border:1.5px solid var(--line);border-radius:var(--radius-xl);padding:14px 16px;margin-bottom:14px;box-shadow:var(--sh-1)}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
@@ -568,7 +571,7 @@ const fixtures=[
  {id:2,h:'Akoka Boys FC',a:'Bariga All-Stars',t:'Sun 15 Nov · 16:30',s:'Upcoming',v:'St. Finbarr\'s Field, Akoka',comp:'Lagos Grassroots Cup',going:29,attended:0,fee:'Free',price:0},
  {id:3,h:'Ikeja Stars',a:'Mainland FC',t:'Sat 7 Nov',s:'Completed',sc:'0 : 3',v:'Ikeja Sports Ground',comp:'Lagos Grassroots Cup',going:41,attended:32,fee:'Free',price:0}
 ];
-const teams=[{id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:'Captain'},{id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},{id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null}];
+const teams=[{id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:null},{id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},{id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null}];
 const players=[
  {n:'Emeka Obi',pos:'Midfielder',fmt:'5-a-side',area:'Lekki',av:'Weekday evenings'},
  {n:'Ayo Bello',pos:'Goalkeeper',fmt:'7-a-side',area:'Yaba',av:'Weekends'},
@@ -579,8 +582,8 @@ const players=[
 ];
 
 /* ===== state & routing ===== */
-const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Bookings',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},q:{pitch:'',game:'',event:'',comp:'',player:''},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Overview',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline'},
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},q:{pitch:'',game:'',event:'',comp:'',player:''},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},myVenues:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,isAdmin:false,adminTap:0,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 const $=id=>document.getElementById(id);
 const setSearch=(k,val,inputId)=>{
   S.q=S.q||{};
@@ -690,7 +693,8 @@ const getUserBookings=()=>{
   });
 };
 const go=(s,a)=>{S.stack.push({s,a});render()};
-const back=()=>{S.stack.pop();render()};
+const back=()=>{S.authErr=null;if(S.stack.length>0){S.stack.pop()}else if(S.tab!=='home'){S.tab='home'};render()};
+const replaceTop=(s,a)=>{if(S.stack.length>0){S.stack[S.stack.length-1]={s,a}}else{S.stack.push({s,a})};render()};
 const tab=t=>{S.tab=t;S.stack=[];render()};
 const sub=(k,v)=>{S.sub[k]=v;render()};
 const toast=m=>{S.toast=m;render();setTimeout(()=>{S.toast=null;render()},1800)};
@@ -706,35 +710,91 @@ const findEvent=id=>{
 };
 const currentUserEmail=()=>((S.authUser&&S.authUser.email)||S.user.email||'').trim().toLowerCase();
 const currentUserId=()=>(S.authUser&&S.authUser.id)||'';
+const ADMIN_EMAILS=['osazeabuhaymus@gmail.com','admin@footballcommunity.ng'];
+const isAdminUser=()=>{
+  if(S.isAdmin)return true;
+  try{
+    const p=new URLSearchParams(window.location.search);
+    if(p.has('admin')||window.location.hash==='#admin'){S.isAdmin=true;return true}
+  }catch(e){}
+  const em=currentUserEmail();
+  return Boolean(em&&ADMIN_EMAILS.includes(em));
+};
 const isGameCreator=g=>{
   if(!g)return false;
   const uid=currentUserId(),em=currentUserEmail();
-  if(S.authUser){
-    if(g.creator_id&&uid&&String(g.creator_id)===String(uid))return true;
-    if(g.creator_email&&em&&String(g.creator_email).toLowerCase()===em)return true;
-    if(g.creator_id||g.creator_email)return false;
-  }
+  if(g.creator_id&&uid&&String(g.creator_id)===String(uid))return true;
+  if(g.creator_email&&em&&String(g.creator_email).toLowerCase()===em)return true;
+  if(g.creator_id||g.creator_email)return false;
   return Boolean(g.isMine||(S.myGames&&S.myGames[g.id]));
 };
 const isFixtureCreator=f=>{
   if(!f)return false;
   const uid=currentUserId(),em=currentUserEmail();
-  if(S.authUser){
-    if(f.creator_id&&uid&&String(f.creator_id)===String(uid))return true;
-    if(f.creator_email&&em&&String(f.creator_email).toLowerCase()===em)return true;
-    if(f.creator_id||f.creator_email)return false;
-  }
+  if(f.creator_id&&uid&&String(f.creator_id)===String(uid))return true;
+  if(f.creator_email&&em&&String(f.creator_email).toLowerCase()===em)return true;
+  if(f.creator_id||f.creator_email)return false;
   return Boolean(f.isMine||(S.myFixtures&&S.myFixtures[f.id]));
 };
 const isEventCreator=e=>{
   if(!e)return false;
   const uid=currentUserId(),em=currentUserEmail();
-  if(S.authUser){
-    if(e.creator_id&&uid&&String(e.creator_id)===String(uid))return true;
-    if(e.creator_email&&em&&String(e.creator_email).toLowerCase()===em)return true;
-    if(e.creator_id||e.creator_email)return false;
-  }
+  if(e.creator_id&&uid&&String(e.creator_id)===String(uid))return true;
+  if(e.creator_email&&em&&String(e.creator_email).toLowerCase()===em)return true;
+  if(e.creator_id||e.creator_email)return false;
   return Boolean(e.isMine||(S.myEvents&&S.myEvents[e.id]));
+};
+const isVenueCreator=v=>{
+  if(!v)return false;
+  const uid=currentUserId(),em=currentUserEmail();
+  if(v.creator_id&&uid&&String(v.creator_id)===String(uid))return true;
+  if(v.creator_email&&em&&String(v.creator_email).toLowerCase()===em)return true;
+  if(v.creator_id||v.creator_email)return false;
+  return Boolean(v.isMine||(S.myVenues&&S.myVenues[v.id]));
+};
+const getUserContext=()=>{
+  const myGames=games.filter(g=>isGameCreator(g));
+  const joinedGames=games.filter(g=>S.joined&&S.joined[g.id]);
+  const myFixtures=fixtures.filter(f=>isFixtureCreator(f));
+  const myEvents=events.filter(e=>isEventCreator(e));
+  const myWatching=Object.values(S.attending||{});
+  const myTickets=Object.values(S.tickets||{});
+  const myBookings=getUserBookings();
+  const myTeams=teams.filter(t=>t.role);
+  const myVenues=venues.filter(v=>isVenueCreator(v));
+  const paidGames=joinedGames.filter(g=>+g.price>0);
+  const payRows=[
+    ...myBookings.map(b=>{const st=b.status||b.payment_status||'Confirmed';const isP=String(st).toLowerCase().includes('pend');return {title:b.venue_name+' ('+b.pitch_name+')',ref:b.booking_ref||'TX-BOOK',amt:N(+b.amount_ngn||+b.amount_paid_ngn||+b.total_price_ngn||0),st:isP?'Pending':'Successful',cls:isP?'warn':'ok'}}),
+    ...paidGames.map(g=>({title:'Open Game · '+g.title,ref:(S.permits&&S.permits[g.id])||'FCP-SLOT',amt:N(+g.price),st:'Successful',cls:'ok'})),
+    ...myTickets.map(t=>({title:'Ticket · '+t.title,ref:t.code||'TIX-PASS',amt:N(+t.total||1500),st:'Successful',cls:'ok'}))
+  ];
+  const roles=[];
+  if(joinedGames.length>0||myBookings.length>0||S.user.name)roles.push('Player');
+  if(myWatching.length>0||myTickets.length>0)roles.push('Match Viewer');
+  if(myGames.length>0)roles.push('Game Organiser');
+  if(myFixtures.length>0||myEvents.length>0)roles.push('Match/Event Organiser');
+  if(myTeams.length>0)roles.push('Team '+myTeams[0].role);
+  if(myVenues.length>0)roles.push('Pitch Owner');
+  if(!roles.length)roles.push('Community Member');
+
+  const activityTabs=['Overview'];
+  if(joinedGames.length>0)activityTabs.push('Games Joined');
+  if(myGames.length>0)activityTabs.push('Games Created');
+  if(myWatching.length>0)activityTabs.push('Matches Watching');
+  if(myFixtures.length>0||myEvents.length>0)activityTabs.push('Organised Matches');
+  if(myTickets.length>0)activityTabs.push('Tickets');
+  if(myBookings.length>0)activityTabs.push('Bookings');
+  if(myVenues.length>0)activityTabs.push('My Pitches');
+  if(payRows.length>0)activityTabs.push('Payments');
+
+  return {
+    myGames,joinedGames,myFixtures,myEvents,myWatching,myTickets,myBookings,myTeams,myVenues,payRows,roles,activityTabs,
+    isGameOrg:myGames.length>0,
+    isMatchOrg:myFixtures.length>0||myEvents.length>0,
+    isOrganiser:myGames.length>0||myFixtures.length>0||myEvents.length>0,
+    isPitchOwner:myVenues.length>0,
+    hasTeam:myTeams.length>0
+  };
 };
 const findTeam=id=>{
   if(id===undefined||id===null)return teams[0];
@@ -1015,14 +1075,24 @@ const openTimePicker=(target,cur)=>{
 const applyPicker=()=>{
   if(!S.picker)return;
   S.form=S.form||{};
+  let formatted='';
   if(S.picker.type==='date'){
     const dnames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
     const mnames=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const dt=new Date(S.picker.year,S.picker.month,S.picker.day);
-    const formatted=dnames[dt.getDay()]+' '+S.picker.day+' '+mnames[S.picker.month];
-    S.form[S.picker.target]=formatted;
+    formatted=dnames[dt.getDay()]+' '+S.picker.day+' '+mnames[S.picker.month];
   }else if(S.picker.type==='time'){
-    S.form[S.picker.target]=S.picker.start+'–'+S.picker.end;
+    formatted=S.picker.start+'–'+S.picker.end;
+  }
+  const tgt=String(S.picker.target||'');
+  if(tgt.startsWith('fdate_')&&Array.isArray(S.form.frows)){
+    const idx=+tgt.split('_')[1]||0;
+    if(S.form.frows[idx])S.form.frows[idx].date=formatted;
+  }else if(tgt.startsWith('ftime_')&&Array.isArray(S.form.frows)){
+    const idx=+tgt.split('_')[1]||0;
+    if(S.form.frows[idx])S.form.frows[idx].time=formatted;
+  }else{
+    S.form[tgt]=formatted;
   }
   S.picker=null;
   render();
@@ -1064,7 +1134,7 @@ SC.onb=()=>{
  ][S.onb];
  return `<div style="padding-top:8px">
   <div class="row sp" style="margin-bottom:14px">
-    <button class="round" onclick="S.authErr=null;if(S.onb>0){S.onb--;render()}else if(S.authUser){back()}else{S.stack=[{s:'welcome'}];render()}">${ic('back')}</button>
+    <button class="round" onclick="S.authErr=null;if(S.onb>0){S.onb--;render()}else if(S.stack.length>1||S.authUser||(S.user&&S.user.name)){back()}else{S.stack=[{s:'welcome'}];render()}">${ic('back')}</button>
     <span class="small muted b">Step ${S.onb+1} of 3</span>
     <span style="width:40px"></span>
   </div>
@@ -1167,9 +1237,9 @@ SC.explore=()=>{const k=S.sub.explore;let body='';S.q=S.q||{};
   const flist=fixtures.filter(f=>!q||String(f.h||'').toLowerCase().includes(q)||String(f.a||'').toLowerCase().includes(q)||String(f.v||'').toLowerCase().includes(q)||String(f.comp||'').toLowerCase().includes(q));
   const elist=events.filter(e=>(ec==='All'||e.cat.toLowerCase().includes(ec.toLowerCase()))&&(!q||String(e.title||'').toLowerCase().includes(q)||String(e.venue||'').toLowerCase().includes(q)||String(e.cat||'').toLowerCase().includes(q)||String(e.org||'').toLowerCase().includes(q)));
   body=`<div class="row"><div class="grow search">${ic('search')}<input id="q_event" value="${S.q.event||''}" oninput="setSearch('event',this.value,'q_event')" placeholder="Search fixtures, events or venues"></div>${q?`<button class="btn sm ghost" onclick="setSearch('event','','q_event')">Clear</button>`:''}</div>
-  <div class="row" style="margin-top:12px">
-    <button class="btn sm grow" onclick="startCreateFixture()">${ic('plus')}Publish Fixture</button>
-    <button class="btn sm ghost grow" onclick="startCreateEvent()">${ic('plus')}Publish Event</button>
+  <div class="col" style="margin-top:12px">
+    <button class="btn sm" onclick="startCreateFixture()">${ic('plus')}Publish Fixture(s)</button>
+    <button class="btn sm ghost" onclick="startCreateEvent()">${ic('plus')}Publish Event</button>
   </div>
   <div class="hscroll" style="margin-top:10px">${etabs.map(f=>`<button class="chip ${ec===f?'on':''}" onclick="S.fil.ecat='${f}';render()">${f}</button>`).join('')}</div>
   <h2 class="sec" style="margin-top:14px">Fixtures to watch <a onclick="S.sub.explore='Competitions';render()">Competitions ${ic('chev')}</a></h2>
@@ -1217,9 +1287,22 @@ SC.review=()=>{const v=venues[S.b.v],p=v.pitches[S.b.p],tot=p.p,dep=Math.round(t
  <h2 class="sec">Cancellation policy</h2><div class="note">${v.policy}</div>
  <div style="margin-top:20px"><button class="btn" onclick="payNow()">${S.b.pay==='other'?'Send booking request':'Pay '+N(now)}</button></div>`};
 
-SC.confirm=()=>{const v=venues[S.b.v],pend=S.b.pay==='other';return `<div style="text-align:center;padding-top:30px"><div class="av lg" style="margin:0 auto 16px;background:${pend?'var(--warn)':'var(--ok)'};color:#fff">${pend?ic('clock'):ic('check')}</div><h1>${pend?'Booking pending':'Booking confirmed'}</h1><p class="sub" style="margin:6px 0 20px">${pend?'Unpaid until the venue verifies your arrangement.':'Payment verified by our server.'}</p></div>
+SC.confirm=()=>{const v=venues[S.b.v]||venues[0],pend=S.b.pay==='other';return `${hdr('Booking status')}
+ <div style="text-align:center;padding-top:10px"><div class="av lg" style="margin:0 auto 16px;background:${pend?'var(--warn)':'var(--ok)'};color:#fff">${pend?ic('clock'):ic('check')}</div><h1>${pend?'Booking pending':'Booking confirmed'}</h1><p class="sub" style="margin:6px 0 20px">${pend?'Unpaid until the venue verifies your arrangement.':'Payment verified by our server.'}</p></div>
  <div class="card"><div class="kv"><span class="muted">Booking reference</span><b>${S.b.ref}</b></div><div class="kv"><span class="muted">Venue</span><b>${v.name}</b></div><div class="kv"><span class="muted">Pitch</span><b>${v.pitches[S.b.p].n}</b></div><div class="kv"><span class="muted">Time</span><b>${S.b.t}</b></div><div class="kv"><span class="muted">Payment status</span><span class="tag ${pend?'warn':'ok'}">${pend?'Pending':'Successful'}</span></div></div>
- <div class="col" style="margin-top:20px"><button class="btn" onclick="go('createGame')">Create an open game for this booking</button><button class="btn ghost" onclick="S.sub.activity='Bookings';tab('activity')">View in My Activity</button></div>`};
+ <div class="col" style="margin-top:20px"><button class="btn" onclick="startCreateGameFromBooking()">Create an open game for this booking</button><button class="btn ghost" onclick="S.sub.activity='Bookings';tab('activity')">View in My Activity</button></div>`};
+
+const startCreateGameFromBooking=()=>{
+ S.editingGameId=null;
+ const vIdx=S.b&&S.b.v!==undefined?S.b.v:0;
+ const v=venues[vIdx]||venues[0];
+ const p=v.pitches[(S.b&&S.b.p)||0]||v.pitches[0];
+ const bdate='Wed '+(11+((S.b&&S.b.d)||2)-2)+' Nov';
+ const tStart=(S.b&&S.b.t)||'18:00';
+ const tEnd=String(+tStart.slice(0,2)+1).padStart(2,'0')+':00';
+ S.form={gtitle:v.name.split(' ')[0]+' Evening '+p.f.split('-')[0]+'s',gv:vIdx,gcustomVenue:'',gpitch:p.n,gdate:bdate,gtime:tStart+'–'+tEnd,gneed:p.f==='7-a-side'?14:p.f==='11-a-side'?22:10,gleft:4,gfree:false,gprice:2500,gfmt:p.f||'5-a-side',glevel:'All levels',gnotes:''};
+ go('createGame');
+};
 
 SC.game=id=>{const g=games[id],v=venues[g.v],j=S.joined[id];return `${hdr('Open game',`<button class="round" onclick="toast('Link copied')">${ic('share')}</button>`)}
  <div class="hero"><span class="tag gold">${g.fmt}</span><div style="font-size:22px;font-weight:800;margin:8px 0">${g.title}</div><div class="sub">${v.name} · ${g.pitch}<br>${g.when}</div></div>
@@ -1332,7 +1415,7 @@ function publishGame(){
        FCData.updateOpenGame(g);
      }
      S.editingGameId=null;
-     S.stack=[{s:'game',a:g.id}];
+     replaceTop('game',g.id);
      const pLabel=g.price===0?'Free':N(g.price)+'/player';
      showModal({title:'Game Changes Saved!',sub:'Your updated game details are now live across all devices and shared links.',meta:[['Game',g.title],['Venue',venueName+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+pLabel+')']],primary:'Share Updated Game',primaryFn:()=>openShare('game',g.id),secondary:'View Game'});
      return;
@@ -1349,7 +1432,7 @@ function publishGame(){
    FCData.persistLocal();
    FCData.record('open_games',{id:gid,title:g.title,organiser_name:S.user.name,organiser_contact:creatorEmail,venue_name:venueName,pitch_name:g.pitch,match_when:g.when,format:g.fmt,players_needed:+g.need,slots_left:+g.left,price_ngn:+g.price,skill_level:g.level,requires_approval:g.approval},'open_game_created',{game_id:gid,title:g.title,venue:venueName,format:g.fmt,price_ngn:g.price,creator_id:creatorId,creator_email:creatorEmail},g);
  }
- S.stack=[{s:'game',a:g.id}];
+ replaceTop('game',g.id);
  const pLabel=g.price===0?'Free':N(g.price)+'/player';
  showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery across web and mobile.',meta:[['Game',g.title],['Venue',venueName+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+pLabel+')']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',g.id),secondary:'Edit Game',secFn:()=>openEditGame(g.id)});
 }
@@ -1381,7 +1464,7 @@ SC.event=id=>{
  <h2 class="sec">About</h2><p class="sub">${e.about||'Description, entry requirements and contact information appear here as provided by the organiser.'}</p>
  ${e.comp>=0&&comps[e.comp]?`<h2 class="sec">Competition</h2><div class="card row" onclick="go('comp',${e.comp})"><div class="grow b">${comps[e.comp].name}</div>${ic('chev')}</div>`:''}
  <div class="map" style="height:110px;margin-top:14px"><span class="pin" style="top:40px;left:150px">${ic('pin')}</span></div>
- <div class="row" style="margin-top:16px">${willBeThereBtn('event',e.id,true)}<button class="btn ghost" onclick="openShare('event','${sid}')">Share event</button></div>`};
+ <div class="col" style="margin-top:16px">${willBeThereBtn('event',e.id,true)}<button class="btn ghost" onclick="openShare('event','${sid}')">${ic('share')}Share event</button></div>`};
 
 SC.ticket=arg=>{
  const tType=arg&&typeof arg==='object'?arg.type:'event';
@@ -1443,8 +1526,8 @@ SC.ticketPass=arg=>{
  S.tickets=S.tickets||{};
  const tix=S.tickets[info.key]||{code:'TIX-'+Math.floor(100000+Math.random()*900000),qty:1,total:info.price||1500};
  S.tickets[info.key]={...tix,key:info.key,type:tType,id:info.id,title:info.title,venue:info.venue,when:info.when};
- return `
-  <div style="text-align:center;padding-top:18px">
+ return `${hdr('Match ticket pass',`<button class="round" onclick="openShare('${tType==='event'?'event':'match'}','${sid}')">${ic('share')}</button>`)}
+  <div style="text-align:center;padding-top:6px">
     <div class="modal-ico" style="margin:0 auto 14px">${ic('check')}</div>
     <h1>Ticket Confirmed!</h1>
     <p class="sub" style="margin:6px 0 18px">Present this ticket entry code at ${info.venue} on match day.</p>
@@ -1452,7 +1535,7 @@ SC.ticketPass=arg=>{
   <div class="card" style="text-align:center;border:2px dashed var(--brand);background:var(--surface)">
     <span class="tag gold">OFFICIAL TICKET ENTRY CODE</span>
     <div style="font-size:28px;font-weight:800;letter-spacing:2px;margin:10px 0 4px;color:var(--brand)">${tix.code}</div>
-    <div class="small muted">${tix.qty||1} × General Entry · ${S.user.name}</div>
+    <div class="small muted">${tix.qty||1} × General Entry · ${S.user.name||'Spectator'}</div>
     <div style="margin:14px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)">
       <svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg>
     </div>
@@ -1471,7 +1554,7 @@ SC.ticketPass=arg=>{
   </div>`;
 };
 
-SC.comp=id=>{const c=comps[id]||comps[0],k=S.sub.compTab;const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div><button class="btn" style="margin-top:14px" onclick="startCreateFixture('${c.name}')">${ic('plus')}Add Fixture to ${c.name}</button>`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
+SC.comp=id=>{const c=comps[id]||comps[0],k=S.sub.compTab,ctx=getUserContext();const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>${ctx.isMatchOrg?`<button class="btn" style="margin-top:14px" onclick="startCreateFixture('${c.name}')">${ic('plus')}Add Fixtures to ${c.name}</button>`:''}`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
  Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
  Teams:`<div class="list">${teams.map(teamCard).join('')}</div>`,Updates:`<div class="card small">Fixtures published for the next round. <span class="muted">· 2 days ago</span></div>`}[k];
  return `${hdr('Competition',`<button class="round" onclick="openShare('comp',${id})">${ic('share')}</button>`)}
@@ -1529,7 +1612,7 @@ SC.match=id=>{
      <div class="mini-stat"><b>${f.tixSold||0}</b><small>Tickets Sold</small></div>
    </div>
    ${f.s==='Upcoming'?`<button class="btn sm" style="width:100%" onclick="orgUpdateMatch('${sid}','kickoff')">⚽ Kick Off Match (Go Live)</button>`:''}
-   ${f.s==='Live'?`<div class="row" style="margin-bottom:8px"><button class="btn sm grow" onclick="orgUpdateMatch('${sid}','goalH')">+1 ${f.h.split(' ')[0]}</button><button class="btn sm grow" onclick="orgUpdateMatch('${sid}','goalA')">+1 ${f.a.split(' ')[0]}</button></div><button class="btn sm ghost" style="width:100%" onclick="orgUpdateMatch('${sid}','ft')">🏁 End Match (Full Time)</button>`:''}
+   ${f.s==='Live'?`<div class="col"><button class="btn sm" onclick="orgUpdateMatch('${sid}','goalH')">⚽ +1 Goal · ${f.h}</button><button class="btn sm" onclick="orgUpdateMatch('${sid}','goalA')">⚽ +1 Goal · ${f.a}</button><button class="btn sm ghost" onclick="orgUpdateMatch('${sid}','ft')">🏁 End Match (Full Time)</button></div>`:''}
    ${f.s==='Completed'?`<button class="btn sm ghost" style="width:100%" onclick="openEditFixture('${sid}')">Edit Final Result / Details</button>`:''}
  </div>`:''}
  <div class="pitch-box">
@@ -1543,7 +1626,11 @@ SC.match=id=>{
  ${tabsUI('matchTab',['Timeline','Lineups','Stats','Info'])}${mbody}
  <div class="note" style="margin-top:12px">${info.isPaid?'Present your digital ticket code at '+f.v+' for matchday entry.':'Open this match when you arrive at '+f.v+' to verify your spectator attendance.'}</div>`};
 
-SC.community=()=>{const k=S.sub.community;let body='';S.q=S.q||{};
+SC.community=()=>{
+ const ctx=getUserContext();
+ const cTabs=ctx.hasTeam?['Activity','Teams','Discover Players','My Teams','Invitations']:['Activity','Teams','Discover Players','Invitations'];
+ if(!cTabs.includes(S.sub.community))S.sub.community='Activity';
+ const k=S.sub.community;let body='';S.q=S.q||{};
  if(k==='Activity'){
   const feed=getLiveFeedItems();
   body=`<div class="list">${feed.map(item=>`<div class="card row" style="cursor:pointer" onclick="${item.act||''}"><div class="av sm">${ic(item.ico||'ball')}</div><div class="grow small"><b>${item.text}</b><div class="muted">${item.when}</div></div>${ic('chev')}</div>`).join('')}</div>`;
@@ -1558,16 +1645,15 @@ SC.community=()=>{const k=S.sub.community;let body='';S.q=S.q||{};
   body=`<div class="row"><div class="grow search">${ic('search')}<input id="q_player" value="${S.q.player||''}" oninput="setSearch('player',this.value,'q_player')" placeholder="Search players by name, area or position"></div>${q?`<button class="btn sm ghost" onclick="setSearch('player','','q_player')">Clear</button>`:''}</div><div class="hscroll" style="margin-top:10px">${ptabs.map(f=>`<button class="chip ${pf===f?'on':''}" onclick="S.fil.pfilt='${f}';render()">${f}</button>`).join('')}</div>${plist.length?`<div class="list">${plist.map(playerCard).join('')}</div>`:`<div class="card" style="text-align:center;padding:22px"><div class="b">No players match your filter</div><div class="sub small" style="margin-top:4px">Try clearing the search or selecting another position/area.</div></div>`}`;
  }
  if(k==='My Teams'){
-  const myT=teams.filter(t=>t.role);
-  body=`<div class="list">${(myT.length?myT:[teams[0]]).map(teamCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="go('createTeam')">${ic('plus')}Create Team</button>`;
+  body=`<div class="list">${ctx.myTeams.map(teamCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="go('createTeam')">${ic('plus')}Create Another Team</button>`;
  }
- if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="toast('Invitation declined')">Decline</button><button class="btn sm" onclick="showModal({title:'Joined Mainland FC!',sub:'You are now a member of Mainland FC and can participate in team games.',meta:[['Team','Mainland FC'],['Role','Player'],['Format','11-a-side']],primary:'View Team',primaryFn:()=>go('team',1)})">Accept</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Open game slot available in ${games[0].title}</div><div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="toast('Dismissed')">Dismiss</button><button class="btn sm" onclick="go('game','${games[0].id}')">View Game</button></div></div></div>`;
- return `<h1>Community</h1>${tabsUI('community',['Activity','Teams','Discover Players','My Teams','Invitations'])}${body}`};
+ if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="col" style="margin-top:12px"><button class="btn sm" onclick="teams[1].role='Player';showModal({title:'Joined Mainland FC!',sub:'You are now a member of Mainland FC and can participate in team games.',meta:[['Team','Mainland FC'],['Role','Player'],['Format','11-a-side']],primary:'View Team',primaryFn:()=>go('team',1)})">Accept Invitation</button><button class="btn sm ghost" onclick="toast('Invitation declined')">Decline</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Open game slot available in ${games[0].title}</div><div class="col" style="margin-top:12px"><button class="btn sm" onclick="go('game','${games[0].id}')">View Open Game</button><button class="btn sm ghost" onclick="toast('Dismissed')">Dismiss</button></div></div></div>`;
+ return `<h1>Community</h1>${tabsUI('community',cTabs)}${body}`};
 
-SC.team=id=>{const t=findTeam(id);return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><div class="row" style="justify-content:center;margin-top:14px"><button class="btn gold sm" onclick="if(${!!t.role}){openShare('team','${t.id}')}else{S.followed['t${t.id}']=!S.followed['t${t.id}'];render()}">${t.role?'Invite players':S.followed['t'+t.id]?'Following':'Follow team'}</button><button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team','${t.id}')">${ic('share')}Share</button></div></div>
- <h2 class="sec">Members</h2><div class="list">${[[S.user.name||'Team Captain','Owner'],['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player']].map(m=>`<div class="card row"><div class="av sm">${ini(m[0])}</div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`).join('')}</div>
+SC.team=id=>{const t=findTeam(id);return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><div class="col" style="margin-top:14px"><button class="btn gold sm" onclick="if(${!!t.role}){openShare('team','${t.id}')}else{S.followed['t${t.id}']=!S.followed['t${t.id}'];render()}">${t.role?'Invite players':S.followed['t'+t.id]?'Following':'Follow team'}</button><button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team','${t.id}')">${ic('share')}Share team</button></div></div>
+ <h2 class="sec">Members</h2><div class="list">${(t.role?[[S.user.name||'You',t.role],['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player']]:[['Emeka O.','Captain'],['Femi K.','Assistant captain'],['Chidi O.','Player'],['Sadiq M.','Player']]).map(m=>`<div class="card row"><div class="av sm">${ini(m[0])}</div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`).join('')}</div>
  <h2 class="sec">Upcoming games</h2>${gameCard(games[0])}<h2 class="sec">Match history</h2><div class="list">${matchRow(fixtures[2])}</div>
- <button class="btn ghost" style="margin-top:14px" onclick="showModal({title:'Join Request Sent!',sub:'The team captain will review your request to join '+t.name+'.',meta:[['Team','${t.name}'],['Location','${t.loc}'],['Format','${t.fmt}']],primary:'Done'})">Request to join</button><div style="text-align:center;margin-top:10px"><a class="small muted" style="cursor:pointer" onclick="showModal({title:'Report Submitted',sub:'Thank you. Our moderation team will review this team profile (PRD §15.5).',primary:'Close'})">Report team</a></div>`};
+ ${t.role?'':`<button class="btn ghost" style="margin-top:14px" onclick="showModal({title:'Join Request Sent!',sub:'The team captain will review your request to join '+t.name+'.',meta:[['Team','${t.name}'],['Location','${t.loc}'],['Format','${t.fmt}']],primary:'Done'})">Request to join</button>`}<div style="text-align:center;margin-top:10px"><a class="small muted" style="cursor:pointer" onclick="showModal({title:'Report Submitted',sub:'Thank you. Our moderation team will review this team profile (PRD §15.5).',primary:'Close'})">Report team</a></div>`};
 
 SC.createTeam=()=>{const f=S.form;if(!f.tname)f.tname='Victoria Island FC';if(!f.tloc)f.tloc=S.user.loc.split(' ')[0]||'Lekki';if(!f.tfmt)f.tfmt='7-a-side';
  return `${hdr('Create team')}<div class="row"><div class="av lg" style="background:var(--surface2);color:var(--muted)">${ic('plus')}</div><div class="sub">Upload team logo and cover image</div></div><div style="height:14px"></div>
@@ -1579,9 +1665,9 @@ function createNewTeam(){
  const t={id:newId,name:f.tname||'Victoria Island FC',loc:f.tloc||'Lekki',fmt:f.tfmt||'7-a-side',m:1,role:'Owner'};
  teams.unshift(t);
  if(window.FCData){
-   FCData.record('teams',{team_name:t.name,location:t.loc,format:t.fmt,owner_name:S.user.name,owner_contact:S.user.email},'team_created',{team_name:t.name,location:t.loc,format:t.fmt});
+   FCData.record('teams',{team_name:t.name,location:t.loc,format:t.fmt,owner_name:S.user.name,owner_contact:currentUserEmail()||S.user.email},'team_created',{team_name:t.name,location:t.loc,format:t.fmt});
  }
- S.stack=[{s:'team',a:t.id}];
+ replaceTop('team',t.id);
  showModal({title:'Team Created!',sub:'You are now the Owner & Captain of '+t.name+'. Invite players to build your squad.',meta:[['Team',t.name],['Location',t.loc],['Format',t.fmt],['Your Role','Owner & Captain']],primary:'Invite Players',primaryFn:()=>openShare('team',t.id),secondary:'View Team Profile'});
 }
 
@@ -1592,6 +1678,7 @@ SC.player=target=>{
    const fmts=Object.keys(S.user.fmts||{}).filter(k=>S.user.fmts[k]);
    const pos=Object.keys(S.user.pos||{}).filter(k=>S.user.pos[k]);
    const avail=Object.keys(S.user.avail||{}).filter(k=>S.user.avail[k]);
+   const myT=teams.find(t=>t.role);
    p={
      n:S.user.name||'Guest Player',
      pos:pos.join(', ')||'Midfielder',
@@ -1599,7 +1686,7 @@ SC.player=target=>{
      area:(S.user.loc||'Lekki').split(' and ')[0],
      av:avail.join(', ')||'Weekday evenings',
      exp:S.user.exp||'Intermediate',
-     team:(teams.find(t=>t.role)||teams[0]).name,
+     team:myT?myT.name:'Independent Player',
      isMe:true
    };
  }else if(typeof target==='number'){
@@ -1611,92 +1698,119 @@ SC.player=target=>{
  return `${hdr('Player profile')}<div style="text-align:center"><div class="av lg" style="margin:0 auto 10px">${ini(p.n)}</div><h1>${p.n}</h1><div class="sub">${p.pos} · ${p.fmts||p.fmt}</div></div>
  <div class="card" style="margin-top:14px"><div class="kv"><span class="muted">Area</span><b>${p.area}, Lagos</b></div><div class="kv"><span class="muted">Availability</span><b>${p.av}</b></div><div class="kv"><span class="muted">Experience</span><b>${p.exp||'Intermediate'}</b></div><div class="kv"><span class="muted">Teams</span><b>${p.team||'Lagos Community'}</b></div></div>
  ${p.isMe
-   ? `<div class="row" style="margin-top:14px"><button class="btn ghost grow" onclick="S.onb=0;S.authErr=null;go('onb')">Edit Personal Details</button><button class="btn grow" onclick="S.onb=2;S.authErr=null;go('onb')">Edit Football Prefs</button></div>`
-   : `<div class="row" style="margin-top:14px"><button class="btn ghost" onclick="showModal({title:'Report Submitted',sub:'Our moderation team will review this player profile (PRD §15.5).',primary:'Close'})">Report</button><button class="btn" onclick="showModal({title:'Invitation Sent!',sub:'${safeN} has been invited to your team and open game.',meta:[['Player','${safeN}'],['Position','${p.pos}'],['Area','${p.area}']],primary:'Done'})">Invite to team / game</button></div>`}`;
+   ? `<div class="col" style="margin-top:14px"><button class="btn" onclick="S.onb=2;S.authErr=null;go('onb')">Edit Football Preferences</button><button class="btn ghost" onclick="S.onb=0;S.authErr=null;go('onb')">Edit Personal Details</button></div>`
+   : `<div class="col" style="margin-top:14px"><button class="btn" onclick="showModal({title:'Invitation Sent!',sub:'${safeN} has been invited to your team and open game.',meta:[['Player','${safeN}'],['Position','${p.pos}'],['Area','${p.area}']],primary:'Done'})">Invite to team / game</button><button class="btn ghost" onclick="showModal({title:'Report Submitted',sub:'Our moderation team will review this player profile (PRD §15.5).',primary:'Close'})">Report</button></div>`}`;
 };
 
-SC.activity=()=>{const k=S.sub.activity;let body='';
- if(k==='Bookings'){
-   const myB=getUserBookings();
-   body=myB.length
-     ? `<div class="list">${myB.map(b=>{
-         const st=b.status||b.payment_status||'confirmed';
-         const isPend=String(st).toLowerCase().includes('pend');
-         const tSlot=b.booking_time||b.time_slot||'18:00';
-         const amt=+b.amount_ngn||+b.amount_paid_ngn||+b.total_price_ngn||25000;
-         return `<div class="card"><div class="row sp"><b>${b.venue_name||'Lagos Pitch'}</b><span class="tag ${isPend?'warn':'ok'}">${isPend?'Pending verification':'Confirmed'}</span></div><div class="sub" style="margin:4px 0">${b.booking_date||'Upcoming'} · ${tSlot} · ${b.pitch_name||'Pitch A'}</div><div class="row sp small"><span class="muted">Ref ${b.booking_ref||'FCP-BOOK'}</span><span>${b.payment_option==='deposit'?'Deposit paid ('+N(amt)+')':b.payment_option==='other'?'Venue arrangement':'Paid '+N(amt)}</span></div></div>`;
-       }).join('')}</div>`
-     : `<div class="card" style="text-align:center;padding:24px"><div class="b">No pitch bookings yet</div><div class="sub small" style="margin:6px 0 14px">Book a verified pitch in Lekki, Yaba, or Ikeja to see your booking reference and status here.</div><button class="btn sm" style="margin:0 auto" onclick="jump('venues')">${ic('pin')}Browse &amp; Book Pitches</button></div>`;
+SC.activity=()=>{
+ const ctx=getUserContext();
+ const aTabs=ctx.activityTabs;
+ if(!aTabs.includes(S.sub.activity))S.sub.activity=aTabs[0];
+ const k=S.sub.activity;
+ let body='';
+
+ const renderBookingsList=list=>list.map(b=>{
+   const st=b.status||b.payment_status||'confirmed';
+   const isPend=String(st).toLowerCase().includes('pend');
+   const tSlot=b.booking_time||b.time_slot||'18:00';
+   const amt=+b.amount_ngn||+b.amount_paid_ngn||+b.total_price_ngn||25000;
+   return `<div class="card"><div class="row sp"><b>${b.venue_name||'Lagos Pitch'}</b><span class="tag ${isPend?'warn':'ok'}">${isPend?'Pending verification':'Confirmed'}</span></div><div class="sub" style="margin:4px 0">${b.booking_date||'Upcoming'} · ${tSlot} · ${b.pitch_name||'Pitch A'}</div><div class="row sp small"><span class="muted">Ref ${b.booking_ref||'FCP-BOOK'}</span><span>${b.payment_option==='deposit'?'Deposit paid ('+N(amt)+')':b.payment_option==='other'?'Venue arrangement':'Paid '+N(amt)}</span></div></div>`;
+ }).join('');
+
+ const renderJoinedGamesList=list=>list.map(g=>`<div>${gameCard(g)}<div class="col" style="margin-top:8px"><button class="btn sm" onclick="go('gamePass','${g.id}')">View Permit Code</button><button class="btn sm ghost" onclick="openShare('game','${g.id}')">Share Game</button><button class="btn sm ghost" style="color:var(--bad)" onclick="leaveOpenGame('${g.id}')">Leave Game (Release Slot)</button></div></div>`).join('');
+
+ const renderCreatedGamesList=list=>list.map(g=>`<div>${gameCard(g)}<div class="col" style="margin-top:8px"><button class="btn sm" onclick="openShare('game','${g.id}')">Invite &amp; Share Game</button><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game Details</button></div></div>`).join('');
+
+ const renderWatchingList=list=>list.map(a=>`<div class="card"><div class="row sp"><b>${a.title}</b><span class="tag ${a.status==='attended'?'ok':'gold'}">${a.status==='attended'?'Checked In ✓':'Going'}</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${a.venue} · ${a.when}</div>${a.status==='going'?`<div class="col" style="margin-top:10px"><button class="btn sm gold" onclick="verifyPitchPresence('${a.type}','${a.id}')">📍 I'm at the venue (Check In)</button><button class="btn sm ghost" onclick="go('${a.type==='event'?'event':'match'}','${a.id}')">View Match Details</button></div>`:`<div class="col" style="margin-top:10px"><button class="btn sm" onclick="go('${a.type==='event'?'event':'match'}','${a.id}')">View Match</button><button class="btn sm ghost" onclick="openShare('${a.type==='event'?'event':'match'}','${a.id}')">Share Match</button></div>`}</div>`).join('');
+
+ const renderOrganisedMatches=(myFix,myEvs)=>[
+   ...myFix.map(f=>`<div class="card"><div class="row sp"><b>${f.h} vs ${f.a}</b><span class="tag ${f.s==='Live'?'live':'gold'}">${f.s} · Organiser</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${f.v} · ${f.t}</div><div class="col" style="margin-top:10px"><button class="btn sm" onclick="go('match','${f.id}')">Open Match Console</button><button class="btn sm ghost" onclick="openEditFixture('${f.id}')">Edit Fixture</button><button class="btn sm ghost" onclick="openShare('match','${f.id}')">Share Match Link</button></div></div>`),
+   ...myEvs.map(e=>`<div class="card"><div class="row sp"><b>${e.title}</b><span class="tag gold">${e.cat} · Organiser</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${e.venue} · ${e.when}</div><div class="col" style="margin-top:10px"><button class="btn sm" onclick="go('event','${e.id}')">Manage Event</button><button class="btn sm ghost" onclick="openEditEvent('${e.id}')">Edit Event</button><button class="btn sm ghost" onclick="openShare('event','${e.id}')">Share Event Link</button></div></div>`)
+ ].join('');
+
+ const renderTicketsList=list=>list.map(t=>`<div class="card" style="text-align:center"><span class="tag gold">TICKET ENTRY CODE</span><div style="font-size:22px;font-weight:800;letter-spacing:1.5px;margin:8px 0 2px;color:var(--brand)">${t.code}</div><div class="b">${t.title}</div><div class="sub small">${t.venue} · ${t.when}</div><div class="sub small" style="margin-top:2px">${t.qty||1} × General Entry · Paid ${N(t.total||1500)}</div><div style="margin:12px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><div class="col" style="margin-top:10px"><button class="btn sm" onclick="openTicketPass('${t.type||'event'}','${t.id!==undefined?t.id:0}',event)">View Full Ticket</button><button class="btn sm ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${t.code}');toast('Ticket code ${t.code} copied!')">Copy Code</button></div></div>`).join('');
+
+ if(k==='Overview'){
+   const sections=[];
+   if(ctx.joinedGames.length)sections.push(`<h2 class="sec">Games you joined (${ctx.joinedGames.length})</h2><div class="list">${renderJoinedGamesList(ctx.joinedGames)}</div>`);
+   if(ctx.myWatching.length)sections.push(`<h2 class="sec">Matches you're watching (${ctx.myWatching.length})</h2><div class="list">${renderWatchingList(ctx.myWatching)}</div>`);
+   if(ctx.myTickets.length)sections.push(`<h2 class="sec">Your match tickets (${ctx.myTickets.length})</h2><div class="list">${renderTicketsList(ctx.myTickets)}</div>`);
+   if(ctx.myBookings.length)sections.push(`<h2 class="sec">Your pitch bookings (${ctx.myBookings.length})</h2><div class="list">${renderBookingsList(ctx.myBookings)}</div>`);
+   if(ctx.myGames.length)sections.push(`<h2 class="sec">Open games you created (${ctx.myGames.length})</h2><div class="list">${renderCreatedGamesList(ctx.myGames)}</div>`);
+   if(ctx.myFixtures.length||ctx.myEvents.length)sections.push(`<h2 class="sec">Matches &amp; events you organise (${ctx.myFixtures.length+ctx.myEvents.length})</h2><div class="list">${renderOrganisedMatches(ctx.myFixtures,ctx.myEvents)}</div>`);
+   if(ctx.myVenues.length)sections.push(`<h2 class="sec">Pitches you manage (${ctx.myVenues.length})</h2><div class="list">${ctx.myVenues.map(venueCard).join('')}</div>`);
+
+   if(!sections.length){
+     body=`<div class="card" style="text-align:center;padding:24px">
+       <div class="b" style="font-size:17px">Your activity hub is personalized to what you do</div>
+       <div class="sub small" style="margin:8px 0 18px">As you join open games, watch matches, book pitches, or organise games and fixtures, only the views relevant to your actions will appear here.</div>
+       <div class="col">
+         <button class="btn sm" onclick="jump('games')">${ic('ball')}Join an Open Game</button>
+         <button class="btn sm ghost" onclick="jump('events')">${ic('trophy')}Watch Matches &amp; Events</button>
+         <button class="btn sm ghost" onclick="jump('venues')">${ic('pin')}Book a Pitch</button>
+       </div>
+     </div>`;
+   }else{
+     body=sections.join('');
+   }
  }
- if(k==='Games Joined'){
-   const joinedList=games.filter(g=>S.joined&&S.joined[g.id]);
-   body=joinedList.length
-     ? `<div class="list">${joinedList.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm" onclick="go('gamePass','${g.id}')">View Permit Code</button><button class="btn sm ghost" onclick="openShare('game','${g.id}')">Share</button><button class="btn sm ghost" style="color:var(--bad)" onclick="leaveOpenGame('${g.id}')">Leave</button></div></div>`).join('')}</div>`
-     : `<div class="card" style="text-align:center;padding:24px"><div class="b">You haven't joined any open games yet</div><div class="sub small" style="margin:6px 0 14px">Join an open game near you to get your instant player entry permit code.</div><button class="btn sm" style="margin:0 auto" onclick="jump('games')">${ic('ball')}Find Open Games</button></div>`;
+ if(k==='Games Joined')body=`<div class="list">${renderJoinedGamesList(ctx.joinedGames)}</div>`;
+ if(k==='Games Created')body=`<div class="list">${renderCreatedGamesList(ctx.myGames)}</div><button class="btn" style="margin-top:14px" onclick="startCreateGame()">${ic('plus')}Create Another Open Game</button>`;
+ if(k==='Matches Watching')body=`<div class="list">${renderWatchingList(ctx.myWatching)}</div>`;
+ if(k==='Organised Matches'){
+   body=`<div class="col" style="margin-bottom:14px"><button class="btn sm" onclick="startCreateFixture()">${ic('plus')}Publish Fixture(s)</button><button class="btn sm ghost" onclick="startCreateEvent()">${ic('plus')}Publish Event</button></div><div class="list">${renderOrganisedMatches(ctx.myFixtures,ctx.myEvents)}</div>`;
  }
- if(k==='Games Created'){
-   const myGames=games.filter(g=>isGameCreator(g));
-   body=myGames.length
-     ? `<div class="list">${myGames.map(g=>`<div>${gameCard(g)}<div class="row" style="margin-top:8px"><button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button><button class="btn sm" onclick="openShare('game','${g.id}')">Invite &amp; Share</button></div></div>`).join('')}</div>`
-     : `<div class="card" style="text-align:center;padding:24px"><div class="b">No games created yet</div><div class="sub small" style="margin:6px 0 14px">Create an open game to invite players and manage your game details here.</div><button class="btn sm" style="margin:0 auto" onclick="startCreateGame()">${ic('plus')}Create Open Game</button></div>`;
- }
- if(k==='Events'){
-   const myFix=fixtures.filter(f=>isFixtureCreator(f));
-   const myEvs=events.filter(e=>isEventCreator(e));
-   const orgCards=[
-     ...myFix.map(f=>`<div class="card"><div class="row sp"><b>${f.h} vs ${f.a}</b><span class="tag ${f.s==='Live'?'live':'gold'}">${f.s} · Organiser</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${f.v} · ${f.t}</div><div class="row" style="margin-top:10px"><button class="btn sm" onclick="go('match','${f.id}')">Match Console</button><button class="btn sm ghost" onclick="openEditFixture('${f.id}')">Edit</button><button class="btn sm ghost" onclick="openShare('match','${f.id}')">Share</button></div></div>`),
-     ...myEvs.map(e=>`<div class="card"><div class="row sp"><b>${e.title}</b><span class="tag gold">${e.cat} · Organiser</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${e.venue} · ${e.when}</div><div class="row" style="margin-top:10px"><button class="btn sm" onclick="go('event','${e.id}')">Manage Event</button><button class="btn sm ghost" onclick="openEditEvent('${e.id}')">Edit</button><button class="btn sm ghost" onclick="openShare('event','${e.id}')">Share</button></div></div>`)
-   ].join('');
-   const attEntries=Object.values(S.attending||{});
-   const attCards=attEntries.length?attEntries.map(a=>`<div class="card"><div class="row sp"><b>${a.title}</b><span class="tag ${a.status==='attended'?'ok':'gold'}">${a.status==='attended'?'Checked In ✓':'Going'}</span></div><div class="sub small" style="margin:4px 0">${ic('pin')} ${a.venue} · ${a.when}</div>${a.status==='going'?`<div style="margin-top:10px"><button class="btn sm gold" style="width:100%" onclick="verifyPitchPresence('${a.type}','${a.id}')">📍 I'm at the venue (Check In)</button></div>`:`<div class="row" style="margin-top:10px"><button class="btn sm ghost" onclick="go('${a.type==='event'?'event':'match'}','${a.id}')">View Match</button><button class="btn sm ghost" onclick="openShare('${a.type==='event'?'event':'match'}','${a.id}')">Share</button></div>`}</div>`).join(''):'';
-   body=`<div class="row" style="margin-bottom:12px"><button class="btn sm grow" onclick="startCreateFixture()">${ic('plus')}Publish Fixture</button><button class="btn sm ghost grow" onclick="startCreateEvent()">${ic('plus')}Publish Event</button></div>`
-     +`${orgCards?`<h2 class="sec" style="margin-top:6px">Organised by you (${myFix.length+myEvs.length})</h2><div class="list">${orgCards}</div>`:''}`
-     +`${attCards?`<h2 class="sec" style="margin-top:14px">Matches you're watching (${attEntries.length})</h2><div class="list">${attCards}</div>`:''}`
-     +`${!orgCards&&!attCards?`<div class="card" style="text-align:center;padding:20px;margin-bottom:12px"><div class="b">No fixtures or events tracked yet</div><div class="sub small" style="margin-top:4px">Tap "I will be there" on any match you plan to watch, or publish your own fixture above.</div></div>`:''}`
-     +`<h2 class="sec">Discover more</h2><div class="list">${matchRow(fixtures[0])}${eventCard(events[0])}</div>`;
- }
- if(k==='Tickets'){
-   const tixList=Object.values(S.tickets||{});
-   body=tixList.length
-     ? `<div class="list">${tixList.map(t=>`<div class="card" style="text-align:center"><span class="tag gold">TICKET ENTRY CODE</span><div style="font-size:22px;font-weight:800;letter-spacing:1.5px;margin:8px 0 2px;color:var(--brand)">${t.code}</div><div class="b">${t.title}</div><div class="sub small">${t.venue} · ${t.when}</div><div class="sub small" style="margin-top:2px">${t.qty||1} × General Entry · Paid ${N(t.total||1500)}</div><div style="margin:12px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><div class="row" style="justify-content:center;margin-top:8px"><button class="btn sm" onclick="openTicketPass('${t.type||'event'}','${t.id!==undefined?t.id:0}',event)">View Full Ticket</button><button class="btn sm ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${t.code}');toast('Ticket code ${t.code} copied!')">Copy Code</button></div></div>`).join('')}</div>`
-     : `<div class="card" style="text-align:center;padding:24px"><div class="b">No tickets purchased yet</div><div class="sub small" style="margin:6px 0 14px">When you get a ticket for a paid match or tournament, your official QR entry pass and code will appear here.</div><button class="btn sm" style="margin:0 auto" onclick="jump('events')">${ic('ticket')}Browse Matches &amp; Events</button></div>`;
- }
- if(k==='History'){
-   const myB=getUserBookings();
-   const checkedIn=Object.values(S.attending||{}).filter(a=>a.status==='attended');
-   const joinedG=games.filter(g=>S.joined&&S.joined[g.id]);
-   const items=[
-     ...checkedIn.map(a=>`<div class="card"><div class="row sp"><b>${a.title}</b><span class="tag ok">Verified at Venue ✓</span></div><div class="sub small" style="margin:4px 0">${a.venue} · ${a.when}</div></div>`),
-     ...joinedG.map(g=>`<div class="card"><div class="row sp"><b>${g.title}</b><span class="tag ok">Joined · ${S.permits&&S.permits[g.id]||'Permit Issued'}</span></div><div class="sub small" style="margin:4px 0">${g.venueName||(venues[g.v>=0?g.v:0]||venues[0]).name} · ${g.when}</div></div>`),
-     ...myB.map(b=>`<div class="card"><div class="row sp"><b>${b.venue_name}</b><span class="tag">${b.status||b.payment_status||'Booked'}</span></div><div class="sub small" style="margin:4px 0">${b.booking_date} · ${b.booking_time||b.time_slot||'18:00'} · Ref ${b.booking_ref}</div></div>`)
-   ];
-   body=items.length?`<div class="list">${items.join('')}</div>`:`<div class="card" style="text-align:center;padding:24px"><div class="b">No activity history yet</div><div class="sub small" style="margin-top:4px">Your completed games, venue check-ins, and pitch bookings will appear here.</div></div>`;
- }
- if(k==='Payments'){
-   const myB=getUserBookings();
-   const paidGames=games.filter(g=>S.joined&&S.joined[g.id]&&+g.price>0);
-   const tixList=Object.values(S.tickets||{});
-   const payRows=[
-     ...myB.map(b=>{const st=b.status||b.payment_status||'Confirmed';const isP=String(st).toLowerCase().includes('pend');return {title:b.venue_name+' ('+b.pitch_name+')',ref:b.booking_ref||'TX-BOOK',amt:N(+b.amount_ngn||+b.amount_paid_ngn||+b.total_price_ngn||0),st:isP?'Pending':'Successful',cls:isP?'warn':'ok'}}),
-     ...paidGames.map(g=>({title:'Open Game · '+g.title,ref:(S.permits&&S.permits[g.id])||'FCP-SLOT',amt:N(+g.price),st:'Successful',cls:'ok'})),
-     ...tixList.map(t=>({title:'Ticket · '+t.title,ref:t.code||'TIX-PASS',amt:N(+t.total||1500),st:'Successful',cls:'ok'}))
-   ];
-   body=payRows.length
-     ? `<div class="list">${payRows.map(p=>`<div class="card row sp"><div><b>${p.title}</b><div class="small muted">Ref ${p.ref}</div></div><div style="text-align:right"><b>${p.amt}</b><div><span class="tag ${p.cls}">${p.st}</span></div></div></div>`).join('')}</div>`
-     : `<div class="card" style="text-align:center;padding:24px"><div class="b">No payments recorded yet</div><div class="sub small" style="margin-top:4px">Receipts for pitch bookings, paid open games, and match tickets will appear here.</div></div>`;
- }
- return `<h1>My Activity</h1>${tabsUI('activity',['Bookings','Games Joined','Games Created','Events','Tickets','History','Payments'])}${body}`};
+ if(k==='Tickets')body=`<div class="list">${renderTicketsList(ctx.myTickets)}</div>`;
+ if(k==='Bookings')body=`<div class="list">${renderBookingsList(ctx.myBookings)}</div>`;
+ if(k==='My Pitches')body=`<div class="list">${ctx.myVenues.map(venueCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="startCreateVenue()">${ic('plus')}List Another Pitch</button>`;
+ if(k==='Payments')body=`<div class="list">${ctx.payRows.map(p=>`<div class="card row sp"><div><b>${p.title}</b><div class="small muted">Ref ${p.ref}</div></div><div style="text-align:right"><b>${p.amt}</b><div><span class="tag ${p.cls}">${p.st}</span></div></div></div>`).join('')}</div>`;
+
+ return `<h1>My Activity</h1>${aTabs.length>1?tabsUI('activity',aTabs):''}${body}`};
+
+const startCreateVenue=()=>{
+ S.form={vname:'',varea:S.user.loc.split(' and ')[0]||'Lekki',vprice:25000,vfmt:'5-a-side',vhours:'07:00 – 23:00',vpolicy:'Free cancellation up to 24 hours before kickoff.'};
+ go('createVenue');
+};
+SC.createVenue=()=>{
+ const f=S.form;
+ return `${hdr('List your pitch / venue')}
+ <div class="note" style="margin-bottom:14px">List your football turf or local facility on Football Community so players and organisers can discover and book it.</div>
+ <div class="field">Venue / facility name<input value="${f.vname||''}" oninput="S.form.vname=this.value" placeholder="e.g. Lekki Phase 1 Turf Arena"></div>
+ <div class="field">Area in Lagos<input value="${f.varea||''}" oninput="S.form.varea=this.value" placeholder="e.g. Lekki Phase 1, Surulere, Ikeja"></div>
+ <div class="field">Primary pitch format<select onchange="S.form.vfmt=this.value"><option ${f.vfmt==='5-a-side'?'selected':''}>5-a-side</option><option ${f.vfmt==='7-a-side'?'selected':''}>7-a-side</option><option ${f.vfmt==='9-a-side'?'selected':''}>9-a-side</option><option ${f.vfmt==='11-a-side'?'selected':''}>11-a-side</option></select></div>
+ <div class="field">Hourly rate (₦)<input type="number" value="${f.vprice||25000}" oninput="S.form.vprice=+this.value" placeholder="e.g. 25000"></div>
+ <div class="field">Opening hours<input value="${f.vhours||'07:00 – 23:00'}" oninput="S.form.vhours=this.value"></div>
+ <div style="margin-top:20px"><button class="btn" onclick="publishVenue()">Publish Pitch Facility</button></div>`;
+};
+function publishVenue(){
+ const f=S.form;
+ if(!(f.vname||'').trim()){toast('Please enter your venue name');return}
+ const newId=venues.length;
+ const v={im:'venue1',id:newId,name:f.vname.trim(),area:(f.varea||'Lagos').trim(),km:1.5,rating:5.0,rev:1,from:+f.vprice||25000,verified:true,fmts:[f.vfmt||'5-a-side'],fac:['Floodlights','Parking'],hours:f.vhours||'07:00 – 23:00',policy:f.vpolicy||'Free cancellation up to 24 hours before kickoff.',deposit:true,pitches:[{n:'Main Pitch',f:f.vfmt||'5-a-side',p:+f.vprice||25000}],creator_id:currentUserId(),creator_email:currentUserEmail(),isMine:true};
+ venues.unshift(v);
+ S.myVenues=S.myVenues||{};S.myVenues[newId]=true;
+ replaceTop('venue',newId);
+ showModal({title:'Pitch Facility Listed!',sub:'Your pitch is now live in Explore → Pitches and in your My Pitches dashboard.',meta:[['Venue',v.name],['Area',v.area],['Format',v.fmts[0]],['Rate',N(v.from)+'/hr']],primary:'View Venue'});
+}
 
 SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px;cursor:pointer" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
  const signedIn=Boolean(S.authUser);
+ const ctx=getUserContext();
+ const adminOk=isAdminUser();
  const acctCard=signedIn
   ? `<div class="auth-banner"><div><span class="tag ok">${ic('shield')}Verified Account</span><div class="b small" style="margin-top:4px">${S.authUser.email}</div><div class="muted" style="font-size:11px">Synced across laptop &amp; mobile via Supabase Auth</div></div><button class="btn sm ghost" onclick="confirmSignOut()">Sign Out</button></div>`
   : `<div class="auth-banner"><div><span class="tag warn">Guest Mode</span><div class="b small" style="margin-top:4px">Sign in to sync your account</div><div class="muted" style="font-size:11px">Keep creator permissions &amp; tickets across devices</div></div><button class="btn sm" onclick="S.authErr=null;go('signin')">Sign In</button></div>`;
- return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px">${ini(S.user.name||'Guest')}</div><h1>${S.user.name||'Guest'}</h1><div class="sub">${S.user.loc} · Player · Organiser · Spectator</div>${acctCard}</div>
+ const activeMgmtRows=[];
+ if(ctx.isGameOrg)activeMgmtRows.push(it('ball',`Manage My Created Games (${ctx.myGames.length})`,"S.sub.activity='Games Created';tab('activity')"));
+ if(ctx.isMatchOrg)activeMgmtRows.push(it('trophy',`Manage My Fixtures & Events (${ctx.myFixtures.length+ctx.myEvents.length})`,"S.sub.activity='Organised Matches';tab('activity')"));
+ if(ctx.hasTeam)activeMgmtRows.push(it('users',`Manage My Teams (${ctx.myTeams.length})`,"S.sub.community='My Teams';tab('community')"));
+ if(ctx.isPitchOwner)activeMgmtRows.push(it('pin',`Manage My Listed Pitches (${ctx.myVenues.length})`,"S.sub.activity='My Pitches';tab('activity')"));
+ return `<div style="text-align:center;padding-top:6px"><div class="av lg" style="margin:0 auto 10px" onclick="S.adminTap=(S.adminTap||0)+1;if(S.adminTap>=5){S.isAdmin=!S.isAdmin;S.adminTap=0;toast(S.isAdmin?'Admin hub unlocked':'Admin hub hidden');render()}">${ini(S.user.name||'Guest')}</div><h1>${S.user.name||'Guest'}</h1><div class="sub">${S.user.loc} · ${ctx.roles.join(' · ')}</div>${acctCard}</div>
  <div class="pwa-bar"><div><div class="b" style="font-size:14px">Install Football Community</div><div style="font-size:11px;opacity:.85">Add to your phone home screen for 1-tap access</div></div><button class="btn sm" onclick="installPWA()">Install App</button></div>
- <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;S.authErr=null;go('onb')")}${it('ball','Player profile',"go('player')")}${it('users','Teams',"S.sub.community='My Teams';tab('community')")}</div>
- <h2 class="sec">Organiser tools</h2><div class="list">${it('plus','Publish a Match Fixture',"startCreateFixture()")}${it('trophy','Publish a Football Event',"startCreateEvent()")}${it('cal','Manage My Fixtures & Events',"S.sub.activity='Events';tab('activity')")}</div>
- <h2 class="sec">Settings &amp; Owner Hub</h2><div class="list">${it('list','Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')")}${it('cog','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout',signedIn?'Sign out':'Sign in / Switch account',signedIn?'confirmSignOut()':"S.authErr=null;go('signin')")}</div>
+ <h2 class="sec">Football identity</h2><div class="list">${it('user','Personal details & location',"S.onb=0;S.authErr=null;go('onb')")}${it('ball','Player profile',"go('player')")}${it('cog','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}</div>
+ ${activeMgmtRows.length?`<h2 class="sec">Your active management views</h2><div class="list">${activeMgmtRows.join('')}</div>`:''}
+ <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"go('createTeam')")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
+ <h2 class="sec">Settings</h2><div class="list">${adminOk?it('list','Admin: Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')"):''}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout',signedIn?'Sign out':'Sign in / Switch account',signedIn?'confirmSignOut()':"S.authErr=null;go('signin')")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
 SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others can view your football profile',true],['Discoverable by players','Appear in player discovery',true],['Show public activity','Games and teams on your profile',false]].map((r,i)=>`<div class="opt" onclick="flipTog('pv${i}',${r[2]},event)"><div class="grow"><b>${r[0]}</b><div class="sub">${r[1]}</div></div>${tog(r[2],'pv'+i)}</div>`).join('')}</div><div class="note" style="margin-top:12px">Sensitive personal information is not shown publicly by default. You can also block or report users.</div>`;
@@ -1723,11 +1837,31 @@ SC.notifs=()=>{
  <h2 class="sec">Preferences</h2><div class="opt" onclick="flipTog('n1',true,event)"><div class="grow"><b>Booking and payment alerts</b></div>${tog(true,'n1')}</div><div class="opt" style="margin-top:8px" onclick="flipTog('n2',true,event)"><div class="grow"><b>Event and competition updates</b></div>${tog(true,'n2')}</div><div class="opt" style="margin-top:8px" onclick="flipTog('n3',true,event)"><div class="grow"><b>Team and open-game invitations</b></div>${tog(true,'n3')}</div>`;
 };
 
-/* ===== Real Fixture & Event Creation (Organiser Flows) ===== */
+/* ===== Real Fixture & Event Creation (Organiser Flows — Single & Multi-Fixture Batch Publishing) ===== */
+const makeFixtureDraftRow=(defVenue,defDate,defTime)=>({
+ h:'',a:'',v:defVenue||"St. Finbarr's Field, Akoka",date:defDate||'Sat 21 Nov',time:defTime||'16:00–17:30',status:'Upcoming',score:''
+});
 const startCreateFixture=(compName)=>{
  S.editingFixtureId=null;
- S.form={fh:'Lekki Lions',fa:'Ajah Warriors',fcomp:compName||'Lagos Grassroots Cup',fvenue:"St. Finbarr's Field, Akoka",fdate:'Sat 21 Nov',ftime:'16:00–17:30',ffree:true,fprice:1500,fstatus:'Upcoming',fscore:''};
+ S.form={
+   fcomp:compName||'Lagos Grassroots Cup',
+   ffree:true,
+   fprice:1500,
+   frows:[{h:'Lekki Lions',a:'Ajah Warriors',v:"St. Finbarr's Field, Akoka",date:'Sat 21 Nov',time:'16:00–17:30',status:'Upcoming',score:''}]
+ };
  go('createFixture');
+};
+const addFixtureDraftRow=()=>{
+ S.form=S.form||{};
+ S.form.frows=S.form.frows||[];
+ const last=S.form.frows[S.form.frows.length-1]||{};
+ S.form.frows.push(makeFixtureDraftRow(last.v,last.date,last.time));
+ render();
+};
+const removeFixtureDraftRow=idx=>{
+ if(!S.form||!Array.isArray(S.form.frows)||S.form.frows.length<=1)return;
+ S.form.frows.splice(idx,1);
+ render();
 };
 const openEditFixture=id=>{
  const f=findFixture(id);
@@ -1741,35 +1875,71 @@ const openEditFixture=id=>{
 };
 SC.createFixture=()=>{
  const f=S.form,isEdit=!!S.editingFixtureId;
- if(!f.fh)f.fh='Lekki Lions';if(!f.fa)f.fa='Ajah Warriors';if(!f.fcomp)f.fcomp='Lagos Grassroots Cup';
- if(!f.fvenue)f.fvenue="St. Finbarr's Field, Akoka";if(!f.fdate)f.fdate='Sat 21 Nov';if(!f.ftime)f.ftime='16:00–17:30';
- if(f.ffree===undefined)f.ffree=true;if(f.fprice===undefined)f.fprice=1500;if(!f.fstatus)f.fstatus='Upcoming';
- return `${hdr(isEdit?'Edit match fixture':'Publish match fixture')}
- <div class="note" style="margin-bottom:14px">Publish a local grassroots or competition match. Fans can tap <b>"I will be there"</b> (free) or <b>"Get Ticket"</b> (paid), and you can update scores live!</div>
- <div class="row">
-   <div class="field grow">Home team<input value="${f.fh}" oninput="S.form.fh=this.value" placeholder="e.g. Lekki Lions"></div>
-   <div class="field grow">Away team<input value="${f.fa}" oninput="S.form.fa=this.value" placeholder="e.g. Ajah Warriors"></div>
- </div>
+ if(!f.fcomp)f.fcomp='Lagos Grassroots Cup';
+ if(f.ffree===undefined)f.ffree=true;if(f.fprice===undefined)f.fprice=1500;
+ if(isEdit){
+   if(!f.fh)f.fh='Lekki Lions';if(!f.fa)f.fa='Ajah Warriors';
+   if(!f.fvenue)f.fvenue="St. Finbarr's Field, Akoka";if(!f.fdate)f.fdate='Sat 21 Nov';if(!f.ftime)f.ftime='16:00–17:30';
+   if(!f.fstatus)f.fstatus='Upcoming';
+   return `${hdr('Edit match fixture')}
+   <div class="field">Competition / Tournament<input value="${f.fcomp}" oninput="S.form.fcomp=this.value" placeholder="e.g. Lagos Grassroots Cup or Friendly"></div>
+   <div class="row">
+     <div class="field grow">Home team<input value="${f.fh}" oninput="S.form.fh=this.value" placeholder="e.g. Lekki Lions"></div>
+     <div class="field grow">Away team<input value="${f.fa}" oninput="S.form.fa=this.value" placeholder="e.g. Ajah Warriors"></div>
+   </div>
+   <div class="field">Field / Venue<input value="${f.fvenue}" oninput="S.form.fvenue=this.value" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
+   <div class="row">
+     <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('fdate','${f.fdate}')"><span>${f.fdate}</span>${ic('cal')}</button></div>
+     <div class="field grow">Kickoff time<button type="button" class="picker-field" onclick="openTimePicker('ftime','${f.ftime}')"><span>${f.ftime}</span>${ic('clock')}</button></div>
+   </div>
+   <div class="row">
+     <div class="field grow">Spectator entry<select onchange="S.form.ffree=(this.value==='free');if(!S.form.ffree&&!S.form.fprice)S.form.fprice=1500;render()"><option value="free" ${f.ffree?'selected':''}>Free</option><option value="paid" ${!f.ffree?'selected':''}>Paid (Ticketed)</option></select></div>
+     <div class="field grow">Match status<select onchange="S.form.fstatus=this.value;render()"><option ${f.fstatus==='Upcoming'?'selected':''}>Upcoming</option><option ${f.fstatus==='Live'?'selected':''}>Live</option><option ${f.fstatus==='Completed'?'selected':''}>Completed</option></select></div>
+   </div>
+   ${f.ffree?'':`<div class="field">Ticket price (₦)<input type="number" value="${f.fprice}" oninput="S.form.fprice=+this.value" placeholder="e.g. 1500"></div>`}
+   ${f.fstatus!=='Upcoming'?`<div class="field">Current / Final Score<input value="${f.fscore||''}" oninput="S.form.fscore=this.value" placeholder="e.g. 2 : 1"></div>`:''}
+   <div style="margin-top:20px"><button class="btn" onclick="publishFixture()">Save Fixture Changes</button></div>`;
+ }
+ if(!Array.isArray(f.frows)||!f.frows.length){
+   f.frows=[makeFixtureDraftRow()];
+ }
+ return `${hdr('Publish match fixtures')}
+ <div class="note" style="margin-bottom:14px">Publish one or multiple match fixtures at once. Fans can tap <b>"I will be there"</b> (free) or <b>"Get Ticket"</b> (paid), and you can update scores live!</div>
  <div class="field">Competition / Tournament<input value="${f.fcomp}" oninput="S.form.fcomp=this.value" placeholder="e.g. Lagos Grassroots Cup or Friendly"></div>
- <div class="field">Field / Venue<input value="${f.fvenue}" oninput="S.form.fvenue=this.value" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
- <div class="row">
-   <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('fdate','${f.fdate}')"><span>${f.fdate}</span>${ic('cal')}</button></div>
-   <div class="field grow">Kickoff time<button type="button" class="picker-field" onclick="openTimePicker('ftime','${f.ftime}')"><span>${f.ftime}</span>${ic('clock')}</button></div>
- </div>
  <div class="row">
    <div class="field grow">Spectator entry<select onchange="S.form.ffree=(this.value==='free');if(!S.form.ffree&&!S.form.fprice)S.form.fprice=1500;render()"><option value="free" ${f.ffree?'selected':''}>Free</option><option value="paid" ${!f.ffree?'selected':''}>Paid (Ticketed)</option></select></div>
-   <div class="field grow">Match status<select onchange="S.form.fstatus=this.value;render()"><option ${f.fstatus==='Upcoming'?'selected':''}>Upcoming</option><option ${f.fstatus==='Live'?'selected':''}>Live</option><option ${f.fstatus==='Completed'?'selected':''}>Completed</option></select></div>
+   ${f.ffree?'':`<div class="field grow">Ticket price (₦)<input type="number" value="${f.fprice}" oninput="S.form.fprice=+this.value" placeholder="1500"></div>`}
  </div>
- ${f.ffree?'':`<div class="field">Ticket price (₦)<input type="number" value="${f.fprice}" oninput="S.form.fprice=+this.value" placeholder="e.g. 1500"></div>`}
- ${f.fstatus!=='Upcoming'?`<div class="field">Current / Final Score<input value="${f.fscore||''}" oninput="S.form.fscore=this.value" placeholder="e.g. 2 : 1"></div>`:''}
- <div style="margin-top:20px"><button class="btn" onclick="publishFixture()">${isEdit?'Save Fixture Changes':'Publish Fixture Live'}</button></div>`;
+ ${f.frows.map((r,idx)=>`
+   <div class="fix-batch-card">
+     <div class="row sp" style="margin-bottom:10px">
+       <span class="tag gold">Fixture #${idx+1}</span>
+       ${f.frows.length>1?`<button type="button" class="small b" style="color:var(--bad)" onclick="removeFixtureDraftRow(${idx})">Remove</button>`:''}
+     </div>
+     <div class="row">
+       <div class="field grow">Home team<input value="${r.h||''}" oninput="S.form.frows[${idx}].h=this.value" placeholder="e.g. Lekki Lions"></div>
+       <div class="field grow">Away team<input value="${r.a||''}" oninput="S.form.frows[${idx}].a=this.value" placeholder="e.g. Ajah Warriors"></div>
+     </div>
+     <div class="field">Field / Venue<input value="${r.v||''}" oninput="S.form.frows[${idx}].v=this.value" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
+     <div class="row">
+       <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('fdate_${idx}','${r.date||'Sat 21 Nov'}')"><span>${r.date||'Sat 21 Nov'}</span>${ic('cal')}</button></div>
+       <div class="field grow">Kickoff time<button type="button" class="picker-field" onclick="openTimePicker('ftime_${idx}','${r.time||'16:00–17:30'}')"><span>${r.time||'16:00–17:30'}</span>${ic('clock')}</button></div>
+     </div>
+     <div class="field" style="margin-bottom:${r.status&&r.status!=='Upcoming'?'12px':'0'}">Match status<select onchange="S.form.frows[${idx}].status=this.value;render()"><option ${(r.status||'Upcoming')==='Upcoming'?'selected':''}>Upcoming</option><option ${r.status==='Live'?'selected':''}>Live</option><option ${r.status==='Completed'?'selected':''}>Completed</option></select></div>
+     ${r.status&&r.status!=='Upcoming'?`<div class="field" style="margin-bottom:0">Current / Final Score<input value="${r.score||''}" oninput="S.form.frows[${idx}].score=this.value" placeholder="e.g. 2 : 1"></div>`:''}
+   </div>
+ `).join('')}
+ <div class="col" style="margin-top:16px">
+   <button type="button" class="btn ghost" onclick="addFixtureDraftRow()">${ic('plus')}Add Another Fixture</button>
+   <button type="button" class="btn" onclick="publishFixture()">Publish ${f.frows.length>1?f.frows.length+' Fixtures Live':'Fixture Live'}</button>
+ </div>`;
 };
 function publishFixture(){
  const f=S.form,isEdit=!!S.editingFixtureId;
  const priceVal=f.ffree?0:(+f.fprice||1500);
  const feeLabel=priceVal>0?N(priceVal):'Free';
- const kickoffStr=(f.fdate||'Sat 21 Nov')+' · '+(f.ftime||'16:00').split('–')[0].trim();
  if(isEdit){
+   const kickoffStr=(f.fdate||'Sat 21 Nov')+' · '+(f.ftime||'16:00').split('–')[0].trim();
    const item=findFixture(S.editingFixtureId);
    if(item){
      item.h=(f.fh||item.h).trim();item.a=(f.fa||item.a).trim();item.comp=(f.fcomp||item.comp).trim();
@@ -1778,29 +1948,59 @@ function publishFixture(){
      item.price=priceVal;item.fee=feeLabel;
      if(window.FCData)FCData.updateFixture(item);
      S.editingFixtureId=null;
-     S.stack=[{s:'match',a:item.id}];
+     replaceTop('match',item.id);
      showModal({title:'Fixture Updated!',sub:'Your updated match fixture is live across all devices.',meta:[['Match',item.h+' vs '+item.a],['Venue',item.v],['Kickoff',item.t],['Entry',feeLabel]],primary:'Share Fixture',primaryFn:()=>openShare('match',item.id),secondary:'View Match'});
      return;
    }
  }
- const fid=makeUUID();
- S.myFixtures=S.myFixtures||{};S.myFixtures[fid]=true;
+ const rows=(Array.isArray(f.frows)&&f.frows.length)?f.frows:[{h:f.fh||'Lekki Lions',a:f.fa||'Ajah Warriors',v:f.fvenue||"St. Finbarr's Field, Akoka",date:f.fdate||'Sat 21 Nov',time:f.ftime||'16:00–17:30',status:f.fstatus||'Upcoming',score:f.fscore||''}];
+ for(let i=0;i<rows.length;i++){
+   if(!(rows[i].h||'').trim()||!(rows[i].a||'').trim()){
+     toast(`Please enter Home and Away team names for Fixture #${i+1}`);
+     return;
+   }
+ }
+ S.myFixtures=S.myFixtures||{};
  const creatorEmail=currentUserEmail()||S.user.email||'';
  const creatorId=currentUserId();
- const item={
-   id:fid,h:(f.fh||'Lekki Lions').trim(),a:(f.fa||'Ajah Warriors').trim(),
-   t:kickoffStr,s:f.fstatus||'Upcoming',sc:f.fstatus==='Upcoming'?'':(f.fscore||'0 : 0'),
-   v:(f.fvenue||"St. Finbarr's Field, Akoka").trim(),comp:(f.fcomp||'Lagos Grassroots Cup').trim(),
-   fee:feeLabel,price:priceVal,going:1,attended:0,tixSold:0,timeline:[],
-   org:S.user.name||'Organiser',creator_id:creatorId,creator_email:creatorEmail,isMine:true,fromCloud:true
- };
- fixtures.unshift(item);
- if(window.FCData){
-   FCData.persistLocal();
-   FCData.publishFixture(item);
+ const compName=(f.fcomp||'Lagos Grassroots Cup').trim();
+ const createdItems=[];
+ for(let i=rows.length-1;i>=0;i--){
+   const r=rows[i];
+   const fid=makeUUID();
+   S.myFixtures[fid]=true;
+   const kStr=(r.date||'Sat 21 Nov')+' · '+(r.time||'16:00').split('–')[0].trim();
+   const st=r.status||'Upcoming';
+   const item={
+     id:fid,h:r.h.trim(),a:r.a.trim(),
+     t:kStr,s:st,sc:st==='Upcoming'?'':(r.score||'0 : 0'),
+     v:(r.v||"St. Finbarr's Field, Akoka").trim(),comp:compName,
+     fee:feeLabel,price:priceVal,going:1,attended:0,tixSold:0,timeline:[],
+     org:S.user.name||'Organiser',creator_id:creatorId,creator_email:creatorEmail,isMine:true,fromCloud:true
+   };
+   fixtures.unshift(item);
+   createdItems.unshift(item);
+   if(window.FCData){
+     FCData.publishFixture(item);
+   }
  }
- S.stack=[{s:'match',a:fid}];
- showModal({title:'Match Fixture Published!',sub:'Your fixture is now live across all devices. You can update live scores and view verified spectators from your Match Console.',meta:[['Match',item.h+' vs '+item.a],['Venue',item.v],['Kickoff',item.t],['Entry',feeLabel]],primary:'Share Match Link',primaryFn:()=>openShare('match',fid),secondary:'Open Match Console'});
+ if(window.FCData)FCData.persistLocal();
+ const firstId=createdItems[0].id;
+ if(createdItems.length===1){
+   const item=createdItems[0];
+   replaceTop('match',firstId);
+   showModal({title:'Match Fixture Published!',sub:'Your fixture is now live across all devices. You can update live scores and view verified spectators from your Match Console.',meta:[['Match',item.h+' vs '+item.a],['Venue',item.v],['Kickoff',item.t],['Entry',feeLabel]],primary:'Share Match Link',primaryFn:()=>openShare('match',firstId),secondary:'Open Match Console'});
+ }else{
+   S.stack=[];S.tab='explore';S.sub.explore='Matches & Events';render();
+   showModal({
+     title:`${createdItems.length} Fixtures Published Live! ⚽`,
+     sub:`All ${createdItems.length} fixtures for ${compName} are now live in Matches & Events and your Organiser Console.`,
+     meta:createdItems.slice(0,5).map((it,idx)=>[`Match #${idx+1}`,`${it.h} vs ${it.a} (${it.t})`]),
+     primary:'Manage My Fixtures',
+     primaryFn:()=>{S.sub.activity='Organised Matches';tab('activity')},
+     secondary:'View in Explore'
+   });
+ }
 }
 
 const startCreateEvent=()=>{
@@ -1856,7 +2056,7 @@ function publishEvent(){
      item.fee=feeLabel;item.tix=priceVal>0;item.left=priceVal>0?(+f.eleft||150):0;item.about=f.eabout||'';
      if(window.FCData)FCData.updateEvent(item);
      S.editingEventId=null;
-     S.stack=[{s:'event',a:item.id}];
+     replaceTop('event',item.id);
      showModal({title:'Event Changes Saved!',sub:'Your updated event is live across web and mobile.',meta:[['Event',item.title],['Venue',item.venue],['When',item.when],['Entry',feeLabel]],primary:'Share Event',primaryFn:()=>openShare('event',item.id),secondary:'View Event'});
      return;
    }
@@ -1877,7 +2077,7 @@ function publishEvent(){
    FCData.persistLocal();
    FCData.publishEvent(item);
  }
- S.stack=[{s:'event',a:eid}];
+ replaceTop('event',eid);
  showModal({title:'Event Published Live!',sub:'Your event is now live in Matches & Events across all devices.',meta:[['Event',item.title],['Category',item.cat],['Venue',item.venue],['When',item.when],['Entry',feeLabel]],primary:'Share Event Link',primaryFn:()=>openShare('event',eid),secondary:'View Event'});
 }
 
@@ -1893,10 +2093,10 @@ function payNow(){
     if(window.FCData)FCData.record('bookings',{booking_ref:S.b.ref,user_name:S.user.name,user_contact:S.user.email,venue_name:v.name,pitch_name:p.n,format:p.f,booking_date:bdate,booking_time:S.b.t,amount_ngn:amt,payment_option:S.b.pay,status:'confirmed'},'pitch_booked',{venue:v.name,pitch:p.n,payment_option:S.b.pay,amount_ngn:amt});
     showModal({title:'Booking Confirmed!',sub:'Payment verified by our server. Your pitch is reserved.',meta:[['Booking Ref',S.b.ref],['Venue',v.name],['Pitch',p.n+' · '+p.f],['Time',S.b.t],['Status',S.b.pay==='deposit'?'Deposit Paid':'Paid in Full']],primary:'Done',secondary:'Share Booking',secFn:()=>openShare('venue',S.b.v)})}else{render()}}},1700)}
 SC.processing=()=>`<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Verifying payment</h1><p class="sub" style="margin-top:6px">Please keep the app open. We confirm with our server before marking your booking paid.</p></div>`;
-SC.failed=()=>`<div style="text-align:center;padding-top:60px"><div class="av lg" style="margin:0 auto 16px;background:var(--bad);color:#fff;font-size:34px">!</div><h1>Payment failed</h1><p class="sub" style="margin:6px 0 20px">You have not been charged. Your slot is still held while the timer runs.</p></div>
+SC.failed=()=>`${hdr('Payment failed')}<div style="text-align:center;padding-top:24px"><div class="av lg" style="margin:0 auto 16px;background:var(--bad);color:#fff;font-size:34px">!</div><h1>Payment failed</h1><p class="sub" style="margin:6px 0 20px">You have not been charged. Your slot is still held while the timer runs.</p></div>
  <div class="card"><div class="kv"><span class="muted">Payment status</span><span class="tag bad">Failed</span></div><div class="kv"><span class="muted">Slot hold</span><b id="hold">${Math.floor(S.hold/60)}:${String(S.hold%60).padStart(2,'0')}</b></div></div>
- <div class="col" style="margin-top:20px"><button class="btn" onclick="S.stack.pop();render()">Try again</button><button class="btn ghost" onclick="S.stack=[];S.tab='home';render()">Back to Home</button></div>`;
-SC.expired=()=>`<div style="text-align:center;padding-top:80px"><div class="av lg" style="margin:0 auto 16px;background:var(--warn);color:#fff">${ic('clock')}</div><h1>Slot hold expired</h1><p class="sub" style="margin:6px 0 20px">The slot was released so others can book it. Please pick a time again.</p></div><button class="btn" onclick="S.stack=[{s:'venue',a:S.b.v},{s:'book'}];render()">Choose a time</button>`;
+ <div class="col" style="margin-top:20px"><button class="btn" onclick="back()">Try again</button><button class="btn ghost" onclick="S.stack=[];S.tab='home';render()">Back to Home</button></div>`;
+SC.expired=()=>`${hdr('Slot expired')}<div style="text-align:center;padding-top:36px"><div class="av lg" style="margin:0 auto 16px;background:var(--warn);color:#fff">${ic('clock')}</div><h1>Slot hold expired</h1><p class="sub" style="margin:6px 0 20px">The slot was released so others can book it. Please pick a time again.</p></div><button class="btn" onclick="S.stack=[{s:'venue',a:S.b.v},{s:'book'}];render()">Choose a time</button>`;
 SC.welcome=()=>`<div class="welcome"><span class="tag" style="background:var(--color-accent);color:var(--color-primary);align-self:flex-start">Lagos, Nigeria</span><h1>The home of football communities</h1><p style="opacity:.85;margin-bottom:22px">Find places to play, people to play with, and matches to watch.</p><button class="btn" style="background:var(--color-accent);color:var(--color-primary)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Get started</button><button class="btn ghost" style="margin-top:10px" onclick="S.stack=[];render()">I already have an account</button></div>`;
 
 SC.share=()=>{
@@ -1968,7 +2168,7 @@ function render(){
       phtml=`<div class="cal-hdr"><button type="button" class="round" style="width:34px;height:34px" onclick="if(S.picker.month>0){S.picker.month--}else{S.picker.month=11;S.picker.year--};render()">${ic('back')}</button><b>${mnames[pk.month]} ${pk.year}</b><button type="button" class="round" style="width:34px;height:34px" onclick="if(S.picker.month<11){S.picker.month++}else{S.picker.month=0;S.picker.year++};render()">${ic('chev')}</button></div>
       <div class="cal-wk"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
       <div class="cal-grid">${cells.join('')}</div>
-      <div class="row" style="margin-top:18px"><button type="button" class="btn ghost" onclick="S.picker=null;render()">Cancel</button><button type="button" class="btn" onclick="applyPicker()">Confirm Date</button></div>`;
+      <div class="col" style="margin-top:18px"><button type="button" class="btn" onclick="applyPicker()">Confirm Date</button><button type="button" class="btn ghost" onclick="S.picker=null;render()">Cancel</button></div>`;
     }else{
       const starts=['08:00','10:00','14:00','16:00','17:00','18:00','19:00','20:00','21:00'];
       const ends=['09:00','11:00','15:00','17:00','18:00','19:00','20:00','21:00','22:00'];
@@ -1977,7 +2177,7 @@ function render(){
       <div class="time-grid">${starts.map((t,idx)=>`<button type="button" class="time-pill ${pk.start===t?'on':''}" onclick="S.picker.start='${t}';S.picker.end='${ends[idx]}';render()">${t}</button>`).join('')}</div>
       <div style="text-align:left;font-size:12px;font-weight:700;color:var(--muted)">End time</div>
       <div class="time-grid">${ends.map(t=>`<button type="button" class="time-pill ${pk.end===t?'on':''}" onclick="S.picker.end='${t}';render()">${t}</button>`).join('')}</div>
-      <div class="row" style="margin-top:14px"><button type="button" class="btn ghost" onclick="S.picker=null;render()">Cancel</button><button type="button" class="btn" onclick="applyPicker()">Confirm Time</button></div>`;
+      <div class="col" style="margin-top:14px"><button type="button" class="btn" onclick="applyPicker()">Confirm Time</button><button type="button" class="btn ghost" onclick="S.picker=null;render()">Cancel</button></div>`;
     }
     $('phone').insertAdjacentHTML('beforeend',`<div class="modal-backdrop picker-backdrop" onclick="S.picker=null;render()"><div class="modal-card" onclick="event.stopPropagation()">${phtml}</div></div>`);
   }
@@ -2037,7 +2237,7 @@ SC.game=id=>{
          : `<div class="sub small" style="margin-top:8px">No players have joined via link yet. Tap Share to invite players from WhatsApp!</div>`}
      </div>`
    : '';
- return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="if(S.stack.length>1){back()}else{S.stack=[];S.tab='home';render()}">${ic('back')}</button><button class="round ov r" onclick="openShare('game','${g.id}')">${ic('share')}</button></div>
+ return `<div class="bleed"><div ${pic('game1',230)}></div><button class="round ov l" onclick="back()">${ic('back')}</button><button class="round ov r" onclick="openShare('game','${g.id}')">${ic('share')}</button></div>
 <div class="sheetcard"><div class="row sp"><h1 style="font-size:22px">${g.title}</h1><span class="tag gold">${g.fmt}</span></div><div class="row" style="margin:8px 0 14px"><span class="tag">${g.level}</span><span class="tag ${isFull?'bad':g.left<=2?'warn':'ok'}">${isFull?'0 slots left · Full':g.left+' slot'+(g.left===1?'':'s')+' left'}</span></div>
 <div class="card row"><div class="av">${ini(g.org||'Org')}</div><div class="grow"><div class="small muted">Hosted by</div><div class="b">${g.org}</div></div>${canEdit?`<button class="btn sm ghost" onclick="openEditGame('${g.id}')">Edit Game</button>`:`<span class="tag">Organiser</span>`}</div>
 <div class="tiles"><div class="tile">${ic('clock')}<small>Date &amp; time</small><b>${g.when}</b></div><div class="tile">${ic('users')}<small>Players</small><b>${filled} of ${g.need} joined</b></div><div class="tile">${ic('ball')}<small>Format</small><b>${g.fmt}</b></div><div class="tile">${ic('card')}<small>Price per player</small><b>${pLabel}</b></div></div>
@@ -2070,7 +2270,7 @@ const wlCoded=(d,extra)=>{const c=d.card;
  <button class="wl-go" onclick="wlNext()" aria-label="${S.ws===2?'Create account':'Next slide'}">${ic('chev')}</button>
  <button class="wl-link" onclick="wlSignin()">I already have an account</button></div>`};
 SC.welcome=()=>wlCoded(WS[S.ws]);
-SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.authErr=null;S.ws=0;S.stack=[{s:'welcome'}];render()" aria-label="Back">${ic('back')}</button>
+SC.signin=()=>`<div style="padding-top:8px"><button class="round" onclick="S.authErr=null;if(S.stack.length>1||S.tab==='profile'){back()}else{S.ws=0;S.stack=[{s:'welcome'}];render()}" aria-label="Back">${ic('back')}</button>
  <h1 style="margin-top:24px;font-size:30px">Welcome back</h1><p class="sub" style="margin:8px 0 22px">Sign in with your account to sync your games, creator permissions, and tickets across devices.</p>
  ${S.authErr?`<div class="auth-err">${S.authErr}</div>`:''}
  <div class="field">Email address<input type="email" value="${S.user.email||''}" oninput="S.user.email=this.value;S.authErr=null" onfocus="this.dataset.ph=this.placeholder;this.placeholder=''" onblur="if(this.dataset.ph)this.placeholder=this.dataset.ph" placeholder="Enter your email address" autocomplete="email"></div>
@@ -2115,6 +2315,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=13"></script>
+<script src="fc-data.js?v=14"></script>
 </body>
 </html>

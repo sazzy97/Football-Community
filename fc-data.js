@@ -311,11 +311,15 @@ const FCData = {
     S.myGames = {};
     S.myFixtures = {};
     S.myEvents = {};
+    S.myVenues = {};
     S.attending = {};
     S.tickets = {};
+    S.isAdmin = false;
     if (window.games) games.forEach((g) => (g.isMine = false));
     if (window.fixtures) fixtures.forEach((f) => (f.isMine = false));
     if (window.events) events.forEach((e) => (e.isMine = false));
+    if (window.venues) venues.forEach((v) => (v.isMine = false));
+    if (window.teams) teams.forEach((t) => (t.role = null));
     ['fc_joined', 'fc_permits', 'fc_my_games', 'fc_my_fixtures', 'fc_my_events', 'fc_attending', 'fc_tickets'].forEach((k) => {
       try {
         localStorage.removeItem(k);
@@ -1095,16 +1099,19 @@ const FCData = {
       for (let i = this.db.teams.length - 1; i >= 0; i--) {
         const rt = this.db.teams[i];
         if (!rt.team_name) continue;
-        const exists = teams.some((t) => t.name.toLowerCase() === rt.team_name.toLowerCase());
-        if (!exists) {
+        const isMyTeam = Boolean(authEmail && rt.owner_contact && String(rt.owner_contact).toLowerCase() === authEmail);
+        const existingIdx = teams.findIndex((t) => t.name.toLowerCase() === rt.team_name.toLowerCase());
+        if (existingIdx < 0) {
           teams.unshift({
             id: rt.id || 't_' + i,
             name: rt.team_name,
             loc: rt.location || 'Lagos',
             fmt: rt.format || '7-a-side',
             m: 1,
-            role: 'Owner'
+            role: isMyTeam ? 'Owner' : null
           });
+        } else if (isMyTeam) {
+          teams[existingIdx].role = 'Owner';
         }
       }
     }
@@ -1237,7 +1244,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=13', { updateViaCache: 'none' })
+        .register('./sw.js?v=14', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -1662,7 +1669,7 @@ SC.gamePay = (id) => {
 /* ===== Game Join Success & Permit Code Screen (SC.gamePass) ===== */
 SC.gamePass = (id) => {
   const g = findGame(id);
-  const v = (window.venues && venues[g.v]) || venues[0];
+  const v = (window.venues && venues[g.v >= 0 ? g.v : 0]) || venues[0];
   const vName = g.venueName || v.name;
   const isFree = !g.price || +g.price === 0;
   S.permits = S.permits || {};
@@ -1670,8 +1677,8 @@ SC.gamePass = (id) => {
     S.permits[g.id] = 'FCP-' + Math.floor(100000 + Math.random() * 900000);
   }
   const code = S.permits[g.id];
-  return `
-    <div style="text-align:center;padding-top:18px">
+  return `${hdr('Player entry permit', `<button class="round" onclick="openShare('game','${g.id}')">${ic('share')}</button>`)}
+    <div style="text-align:center;padding-top:6px">
       <div class="modal-ico" style="margin:0 auto 14px">${ic('check')}</div>
       <h1>${g.approval ? 'Join Request & Permit Ready' : 'You’re In! Spot Confirmed'}</h1>
       <p class="sub" style="margin:6px 0 18px">Present this permit code to the game organiser (${g.org}) when you arrive at the pitch.</p>
@@ -1737,7 +1744,7 @@ SC.admin = () => {
           2. <b>Supabase Table Editor:</b> Connected to your live Supabase database.<br>
           3. <b>PostHog Dashboard:</b> Recording live events and user journeys.
         </div>
-        <div class="row" style="margin-top:12px">
+        <div class="col" style="margin-top:12px">
           <button class="btn sm" onclick="FCData.pullLiveRecords().then(()=>toast('Synced from Supabase'))">Refresh Live Data</button>
           <button class="btn sm ghost" onclick="FCData.syncAllLocalToSupabase()">Push Local to Cloud</button>
         </div>
