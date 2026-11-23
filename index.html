@@ -670,7 +670,13 @@ eyeOff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45
 };
 const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
 const pic=(n,h)=>`class="img has" style="height:${h}px;background-image:url(img/${n}.jpg)"`;
-const crest=(n,z=44)=>{const c=['#123D2B','#2878C7','#D94343','#7A3FA0','#D98B16','#16834A','#26734D'];let h=0;for(const ch of n)h=(h*31+ch.charCodeAt(0))%c.length;
+const crest=(n,z=44)=>{
+ const tList=typeof teams!=='undefined'?teams:(window.teams||[]);
+ const regTeam=tList.find(t=>t.name&&t.name.toLowerCase()===(n||'').toLowerCase());
+ if(regTeam&&regTeam.logo){
+   return `<img src="${regTeam.logo}" alt="${n}" style="width:${z}px;height:${z}px;border-radius:${Math.round(z*0.28)}px;object-fit:cover;border:1.5px solid var(--accent);flex:none;box-shadow:var(--sh-1);display:inline-block">`;
+ }
+ const c=['#123D2B','#2878C7','#D94343','#7A3FA0','#D98B16','#16834A','#26734D'];let h=0;for(const ch of (n||'FC'))h=(h*31+ch.charCodeAt(0))%c.length;
  return `<svg width="${z}" height="${z*1.1}" viewBox="0 0 40 44" style="flex:none"><path d="M3 3h34v20c0 10-8 15-17 18C11 38 3 33 3 23z" fill="${c[h]}" stroke="#B8F34A" stroke-width="2"/><text x="20" y="26" text-anchor="middle" fill="#fff" font-size="14" font-weight="800" font-family="Inter,sans-serif">${ini(n)}</text></svg>`};
 const ini=s=>((s||'FC').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'FC');
 const N=n=>'₦'+n.toLocaleString('en-NG');
@@ -702,7 +708,7 @@ const events=[
  {im:"event4",id:10,title:"Open Technical & Fitness Clinic",cat:'Training',trust:'Organiser-published',venue:'Ikeja Sports Ground',when:'Thu 19 Nov · 08:00',fee:'₦3,000',status:'Upcoming',org:'ProTouch Coaching',tix:true,left:24,comp:-1,b:'',going:14,attended:0}
 ];
 const comps=[
- {id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8,format:'11-a-side',area:'Surulere',venue:'Teslim Balogun Stadium',fee:'Free',prize:'₦1,000,000 + Gold Trophy',verified:true,desc:'Premier grassroots knockout tournament for local academies.',enrolledTeams:['Mainland FC','Surulere United','Lekki Lions','Yaba Rovers','Ikeja Stars','Akoka Boys FC','Bariga All-Stars','Festac Warriors'],standings:[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]]},
+ {id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8,format:'11-a-side',area:'Surulere',venue:'Teslim Balogun Stadium',fee:'Free',prize:'₦1,000,000 + Gold Trophy',verified:true,desc:'Premier grassroots knockout tournament for local academies.',rulesDoc:{name:'Lagos_Grassroots_Cup_Official_Rules_2026.pdf',size:'240 KB',type:'application/pdf',data:'data:text/plain;charset=utf-8,LAGOS%20GRASSROOTS%20CUP%202026%20-%20OFFICIAL%20RULES%20%26%20REGULATIONS%0A%0A1.%20FORMAT%20%26%20STRUCTURE%0A-%2011-a-side%20knockout%20tournament%0A-%20Match%20duration%3A%2090%20minutes%20(two%2045-minute%20halves)%0A-%20In%20case%20of%20a%20draw%20in%20knockout%20rounds%2C%20extra%20time%20(2x15m)%20followed%20by%20penalties%0A%0A2.%20SQUAD%20%26%20SUBSTITUTIONS%0A-%20Maximum%2023-man%20registered%20squad%0A-%20Up%20to%205%20substitutions%20permitted%20across%203%20substitution%20windows%0A%0A3.%20DISCIPLINARY%20CODE%0A-%20Two%20yellow%20cards%20result%20in%20a%20one-match%20suspension%0A-%20Straight%20red%20card%20results%20in%20an%20automatic%20two-match%20ban%0A%0A4.%20PRIZES%20%26%20AWARDS%0A-%20Champion%3A%20NGN%201%2C000%2C000%20%2B%20Gold%20Trophy%20%2B%20Gold%20Medals%0A-%20Runners-up%3A%20NGN%20400%2C000%20%2B%20Silver%20Medals%0A-%20Golden%20Boot%20and%20Golden%20Glove%20honours'},enrolledTeams:['Mainland FC','Surulere United','Lekki Lions','Yaba Rovers','Ikeja Stars','Akoka Boys FC','Bariga All-Stars','Festac Warriors'],standings:[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]]},
  {id:1,name:'Campus 7s League',type:'University competition',season:'2026/27',teams:6,format:'7-a-side',area:'Yaba',venue:'Unilag Sports Field',fee:'₦15,000 / team',prize:'₦400,000 + Trophy',verified:true,desc:'Inter-faculty campus league in Lagos.',enrolledTeams:['Mainland FC','Yaba Rovers','Surulere Social','Lekki Lions'],standings:[['Yaba Rovers',4,3,1,0,8,2],['Mainland FC',4,2,1,1,6,4],['Surulere Social',4,1,1,2,4,5],['Lekki Lions',4,0,1,3,2,9]]}
 ];
 const standings=[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]];
@@ -1536,7 +1542,7 @@ const jump=s=>{S.stack=[];S.tab=s==='createGame'||s==='games'||s==='venues'||s==
   else if(s==='comps'){tab('explore');S.sub.explore='Competitions'}
   else if(s==='createGame'){go('createGame')}
   else if(s==='createComp'){startCreateComp()}
-  else if(s==='createTeam'){S.tab='community';S.stack=[{s:'createTeam'}]}
+  else if(s==='createTeam'){startCreateTeam()}
   else if(s==='notifs'){S.stack=[{s:'notifs'}]}
   render()};
 
@@ -1554,7 +1560,7 @@ let gameCard=g=>`<div class="card" onclick="go('game',${g.id})"><div ${pic("game
 let eventCard=e=>`<div class="card" onclick="go('event',${e.id})"><div ${pic(e.im,100)}>${e.cat}</div>
  <div class="row sp" style="margin-top:10px"><div class="b grow">${e.title}</div><button onclick="event.stopPropagation();S.saved[${e.id}]=!S.saved[${e.id}];render()" style="color:${S.saved[e.id]?'var(--brand)':'var(--muted)'}">${ic('heart')}</button></div>
  <div class="sub">${e.venue}<br>${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="b small">${e.fee}</span></div></div>`;
-const teamCard=t=>`<div class="card row" onclick="go('team',${t.id})">${crest(t.name,44)}<div class="grow"><div class="b">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div></div>${t.role?`<span class="tag gold">${t.role}</span>`:ic('chev')}</div>`;
+const teamCard=t=>`<div class="card row" onclick="go('team','${t.id}')">${t.logo?`<img src="${t.logo}" style="width:44px;height:44px;border-radius:12px;object-fit:cover;border:1.5px solid var(--accent);flex:none;box-shadow:var(--sh-1)">`:crest(t.name,44)}<div class="grow"><div class="b">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div></div>${t.role?`<span class="tag gold">${t.role}</span>`:ic('chev')}</div>`;
 const playerCard=p=>{const safeN=(p.n||'Player').replace(/'/g,"\\'");const c=getPlayerFifaCard(p);const tCls=c.theme&&c.theme!=='epic'?'theme-'+c.theme:'';return `<div class="card row" onclick="go('player','${safeN}')"><div class="fc-mini-badge ${tCls}"><b>${c.ovr}</b><small>${c.posCode}</small></div><div class="grow"><div class="b">${p.n}${p.isMe?' <span class="tag ok" style="margin-left:4px">You</span>':''}</div><div class="sub">${c.tier} · ${p.pos} · ${p.fmts||p.fmt}<br>${p.area} · PAC ${c.pac} · SHO ${c.sho} · PAS ${c.pas}</div></div><button class="btn sm ghost" onclick="event.stopPropagation();go('player','${safeN}')">Card</button></div>`};
 const getTog=(k,def)=>{S.p=S.p||{};return S.p[k]===undefined?def:S.p[k]};
 const flipTog=(k,def,ev)=>{if(ev)ev.stopPropagation();S.p=S.p||{};S.p[k]=!getTog(k,def);render()};
@@ -2178,7 +2184,24 @@ SC.comp=id=>{
         <div class="kv"><span class="muted">Prize Pool</span><b style="color:var(--accent)">${c.prize||'Trophy + Medals'}</b></div>
         <div class="kv"><span class="muted">Organiser</span><b>${c.org||'Football Community Lagos'}</b></div>
       </div>
-      ${c.desc?`<div class="card" style="margin-top:12px"><h2 class="sec" style="margin-top:0">Rules &amp; Description</h2><p class="sub" style="margin:0;line-height:1.5">${c.desc}</p></div>`:''}
+      ${c.desc || c.rulesDoc ? `
+        <div class="card" style="margin-top:12px">
+          <h2 class="sec" style="margin-top:0">Tournament Rules &amp; Details</h2>
+          ${c.desc ? `<p class="sub" style="margin:0 0 ${c.rulesDoc?'12px':'0'};line-height:1.5;white-space:pre-line">${c.desc}</p>` : ''}
+          ${c.rulesDoc ? `
+            <div class="row sp" style="padding:10px 12px;background:var(--subtle);border-radius:12px;border:1px solid var(--line);align-items:center">
+              <div class="row" style="align-items:center;gap:10px;min-width:0">
+                <span style="font-size:24px">📄</span>
+                <div style="min-width:0">
+                  <div class="b" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${c.rulesDoc.name||'Tournament_Rules.pdf'}</div>
+                  <div class="muted small">${c.rulesDoc.size||'Attached Document'}</div>
+                </div>
+              </div>
+              <button class="btn sm" onclick="downloadRulesDoc('${c.id}')" style="flex:none;height:32px;padding:0 12px;font-size:12px">${ic('download')} Download</button>
+            </div>
+          ` : ''}
+        </div>
+      ` : ''}
       <div class="col" style="margin-top:16px">
         <button class="btn" onclick="openShare('comp','${c.id}')">${ic('share')}Share Competition</button>
         ${isCreator?`<button class="btn ghost" onclick="startCreateFixture('${c.name.replace(/'/g,"\\'")}')">${ic('plus')}Add Fixtures</button>`:''}
@@ -2277,6 +2300,76 @@ SC.match=id=>{
  ${tabsUI('matchTab',['Timeline','Lineups','Stats','Info'])}${mbody}
  <div class="note" style="margin-top:12px">${info.isPaid?'Present your digital ticket code at '+f.v+' for matchday entry.':'Open this match when you arrive at '+f.v+' to verify your spectator attendance.'}</div>`};
 
+const handleTeamLogoUpload=input=>{
+  const file=input&&input.files&&input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const maxW=200,maxH=200;
+      let w=img.width,h=img.height;
+      if(w>maxW||h>maxH){
+        if(w>h){h=Math.round(h*(maxW/w));w=maxW}
+        else{w=Math.round(w*(maxH/h));h=maxH}
+      }
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      S.form=S.form||{};
+      S.form.tlogo=canvas.toDataURL('image/png',0.9);
+      toast('Team logo uploaded!');
+      render();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+const removeTeamLogo=()=>{
+  if(S.form){delete S.form.tlogo;toast('Logo removed');render()}
+};
+const handleTeamBannerUpload=input=>{
+  const file=input&&input.files&&input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      const maxW=800,maxH=400;
+      let w=img.width,h=img.height;
+      if(w>maxW||h>maxH){
+        if(w/h>maxW/maxH){h=Math.round(h*(maxW/w));w=maxW}
+        else{w=Math.round(w*(maxH/h));h=maxH}
+      }
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      S.form=S.form||{};
+      S.form.tbanner=canvas.toDataURL('image/jpeg',0.85);
+      toast('Cover banner uploaded!');
+      render();
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+const removeTeamBanner=()=>{
+  if(S.form){delete S.form.tbanner;toast('Banner removed');render()}
+};
+const startCreateTeam=()=>{
+  S.form={
+    tname:'',
+    tdesc:'',
+    tloc:(S.user&&S.user.loc?S.user.loc.split(' ')[0]:'')||'Lekki',
+    tfmt:'7-a-side',
+    tlogo:'',
+    tbanner:''
+  };
+  go('createTeam');
+};
+
 SC.community=()=>{
  const ctx=getUserContext();
  const cTabs=ctx.hasTeam?['Activity','Teams','Discover Players','My Teams','Invitations']:['Activity','Teams','Discover Players','Invitations'];
@@ -2286,7 +2379,7 @@ SC.community=()=>{
   const feed=getLiveFeedItems();
   body=`<div class="list">${feed.map(item=>`<div class="card row" style="cursor:pointer" onclick="${item.act||''}"><div class="av sm">${ic(item.ico||'ball')}</div><div class="grow small"><b>${item.text}</b><div class="muted">${item.when}</div></div>${ic('chev')}</div>`).join('')}</div>`;
  }
- if(k==='Teams')body=`<div class="list">${teams.map(teamCard).join('')}</div><button class="btn ghost" style="margin-top:14px" onclick="go('createTeam')">${ic('plus')}Create Team</button>`;
+ if(k==='Teams')body=`<div class="list">${teams.map(teamCard).join('')}</div><button class="btn ghost" style="margin-top:14px" onclick="startCreateTeam()">${ic('plus')}Create Team</button>`;
  if(k==='Discover Players'){
   const ptabs=['All','Midfielder','Forward','Defender','Goalkeeper','5-a-side','7-a-side','11-a-side','Lekki','Yaba','Ikeja'];
   const pf=S.fil.pfilt||'All';
@@ -2296,30 +2389,170 @@ SC.community=()=>{
   body=`<div class="row"><div class="grow search">${ic('search')}<input id="q_player" value="${S.q.player||''}" oninput="setSearch('player',this.value,'q_player')" placeholder="Search players by name, area or position"></div>${q?`<button class="btn sm ghost" onclick="setSearch('player','','q_player')">Clear</button>`:''}</div><div class="hscroll" style="margin-top:10px">${ptabs.map(f=>`<button class="chip ${pf===f?'on':''}" onclick="S.fil.pfilt='${f}';render()">${f}</button>`).join('')}</div>${plist.length?`<div class="list">${plist.map(playerCard).join('')}</div>`:`<div class="card" style="text-align:center;padding:22px"><div class="b">No players match your filter</div><div class="sub small" style="margin-top:4px">Try clearing the search or selecting another position/area.</div></div>`}`;
  }
  if(k==='My Teams'){
-  body=`<div class="list">${ctx.myTeams.map(teamCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="go('createTeam')">${ic('plus')}Create Another Team</button>`;
+  body=`<div class="list">${ctx.myTeams.map(teamCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="startCreateTeam()">${ic('plus')}Create Another Team</button>`;
  }
  if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="col" style="margin-top:12px"><button class="btn sm" onclick="teams[1].role='Player';showModal({title:'Joined Mainland FC!',sub:'You are now a member of Mainland FC and can participate in team games.',meta:[['Team','Mainland FC'],['Role','Player'],['Format','11-a-side']],primary:'View Team',primaryFn:()=>go('team',1)})">Accept Invitation</button><button class="btn sm ghost" onclick="toast('Invitation declined')">Decline</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Open game slot available in ${games[0].title}</div><div class="col" style="margin-top:12px"><button class="btn sm" onclick="go('game','${games[0].id}')">View Open Game</button><button class="btn sm ghost" onclick="toast('Dismissed')">Dismiss</button></div></div></div>`;
  return `<h1>Community</h1>${tabsUI('community',cTabs)}${body}`};
 
-SC.team=id=>{const t=findTeam(id);return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}<div class="hero" style="text-align:center"><div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div><div style="font-size:21px;font-weight:800">${t.name}</div><div class="sub">${t.loc} · ${t.fmt} · ${t.m} members</div><div class="col" style="margin-top:14px"><button class="btn gold sm" onclick="if(${!!t.role}){openShare('team','${t.id}')}else{S.followed['t${t.id}']=!S.followed['t${t.id}'];render()}">${t.role?'Invite players':S.followed['t'+t.id]?'Following':'Follow team'}</button><button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team','${t.id}')">${ic('share')}Share team</button></div></div>
+SC.team=id=>{
+ const t=findTeam(id);
+ const heroStyle=t.banner
+   ? `background:linear-gradient(180deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.88) 100%),url('${t.banner}') center/cover no-repeat;min-height:160px;text-align:center;position:relative;border-radius:18px`
+   : `text-align:center`;
+ const logoDisplay=t.logo
+   ? `<img src="${t.logo}" style="margin:0 auto 10px;width:68px;height:68px;border-radius:20px;object-fit:cover;border:2.5px solid var(--accent);box-shadow:var(--sh-2);display:block">`
+   : `<div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div>`;
+
+ return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}
+ <div class="hero" style="${heroStyle}">
+   ${logoDisplay}
+   <div style="font-size:21px;font-weight:800">${t.name}</div>
+   <div class="sub">${t.loc} · ${t.fmt} · ${t.m} member${t.m>1?'s':''}</div>
+   ${t.desc?`<div class="small" style="margin-top:8px;color:rgba(255,255,255,0.9);max-width:320px;margin-left:auto;margin-right:auto;line-height:1.4">${t.desc}</div>`:''}
+   <div class="col" style="margin-top:14px">
+     <button class="btn gold sm" onclick="if(${!!t.role}){openShare('team','${t.id}')}else{S.followed['t${t.id}']=!S.followed['t${t.id}'];render()}">${t.role?'Invite players':S.followed['t'+t.id]?'Following':'Follow team'}</button>
+     <button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team','${t.id}')">${ic('share')}Share team</button>
+   </div>
+ </div>
  <h2 class="sec">Members <span class="small muted">Tap to view FIFA card</span></h2><div class="list">${(t.role?[[S.user.name||'You',t.role],['Emeka Obi','Captain'],['Femi Kuti-Ade','Assistant captain'],['Chidi Okonkwo','Player']]:[['Emeka Obi','Captain'],['Femi Kuti-Ade','Assistant captain'],['Chidi Okonkwo','Player'],['Sadiq Musa','Player']]).map(m=>{const c=getPlayerFifaCard({n:m[0]});const safeM=m[0].replace(/'/g,"\\'");return `<div class="card row" style="cursor:pointer" onclick="go('player',${m[0]===(S.user.name||'You')?'null':`'${safeM}'`})"><div class="fc-mini-badge ${c.theme&&c.theme!=='epic'?'theme-'+c.theme:''}" style="width:38px;height:44px"><b style="font-size:14px">${c.ovr}</b><small style="font-size:8.5px">${c.posCode}</small></div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`}).join('')}</div>
  <h2 class="sec">Upcoming games</h2>${gameCard(games[0])}<h2 class="sec">Match history</h2><div class="list">${matchRow(fixtures[2])}</div>
  ${t.role?'':`<button class="btn ghost" style="margin-top:14px" onclick="showModal({title:'Join Request Sent!',sub:'The team captain will review your request to join '+t.name+'.',meta:[['Team','${t.name}'],['Location','${t.loc}'],['Format','${t.fmt}']],primary:'Done'})">Request to join</button>`}<div style="text-align:center;margin-top:10px"><a class="small muted" style="cursor:pointer" onclick="showModal({title:'Report Submitted',sub:'Thank you. Our moderation team will review this team profile (PRD §15.5).',primary:'Close'})">Report team</a></div>`};
 
-SC.createTeam=()=>{const f=S.form;if(!f.tname)f.tname='Victoria Island FC';if(!f.tloc)f.tloc=S.user.loc.split(' ')[0]||'Lekki';if(!f.tfmt)f.tfmt='7-a-side';
- return `${hdr('Create team')}<div class="row"><div class="av lg" style="background:var(--surface2);color:var(--muted)">${ic('plus')}</div><div class="sub">Upload team logo and cover image</div></div><div style="height:14px"></div>
- <div class="field">Team name<input value="${f.tname}" oninput="S.form.tname=this.value" placeholder="e.g. Lekki Lions"></div><div class="field">Description<input placeholder="About your team"></div><div class="field">Location<input value="${f.tloc}" oninput="S.form.tloc=this.value"></div><div class="field">Preferred football format<select onchange="S.form.tfmt=this.value"><option>7-a-side</option><option>5-a-side</option><option>9-a-side</option><option>11-a-side</option></select></div>
- <div class="opt" onclick="flipTog('tv',true,event)"><div class="grow"><b>Team visibility</b><div class="sub">Public teams can be found by players</div></div>${tog(true,'tv')}</div><p class="small muted" style="margin:10px 0">You will become the team owner or captain and can invite players afterwards.</p>
- <button class="btn" onclick="createNewTeam()">Create team</button>`};
+SC.createTeam=()=>{
+ S.form=S.form||{};
+ const f=S.form;
+ if(f.tname===undefined)f.tname='';
+ if(f.tdesc===undefined)f.tdesc='';
+ if(!f.tloc)f.tloc=(S.user&&S.user.loc?S.user.loc.split(' ')[0]:'')||'Lekki';
+ if(!f.tfmt)f.tfmt='7-a-side';
+
+ const bannerUI=f.tbanner ? `
+   <div style="position:relative;height:120px;border-radius:14px;overflow:hidden;background:url('${f.tbanner}') center/cover no-repeat;margin-bottom:14px;border:1px solid var(--line);box-shadow:var(--sh-1)">
+     <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.7) 100%)"></div>
+     <span class="tag ok" style="position:absolute;top:8px;left:8px;font-size:11px">${ic('check')} Cover Banner</span>
+     <div style="position:absolute;bottom:8px;right:8px;display:flex;gap:6px">
+       <label class="btn sm" style="cursor:pointer;margin:0;padding:0 10px;height:28px;line-height:28px;font-size:11px;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.3)">
+         Change
+         <input type="file" accept="image/*" style="display:none" onchange="handleTeamBannerUpload(this)">
+       </label>
+       <button type="button" class="btn sm" style="cursor:pointer;margin:0;padding:0 8px;height:28px;line-height:28px;font-size:12px;background:rgba(220,38,38,0.85);color:#fff;border:none" onclick="removeTeamBanner()">✕</button>
+     </div>
+   </div>
+ ` : `
+   <label class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:95px;border:1.5px dashed var(--line);background:var(--surface2);border-radius:14px;cursor:pointer;margin-bottom:14px;text-align:center">
+     <span style="font-size:22px;margin-bottom:4px">🖼️</span>
+     <span class="b small">Upload Team Cover Banner</span>
+     <span class="sub" style="font-size:11px">Widescreen squad photo or stadium background (PNG, JPG)</span>
+     <input type="file" accept="image/*" style="display:none" onchange="handleTeamBannerUpload(this)">
+   </label>
+ `;
+
+ const logoUI=f.tlogo ? `
+   <div class="row" style="align-items:center;gap:14px;margin-bottom:16px;padding:10px 14px;background:var(--surface2);border-radius:14px;border:1px solid var(--line)">
+     <img src="${f.tlogo}" style="width:60px;height:60px;border-radius:16px;object-fit:cover;border:2px solid var(--accent);box-shadow:var(--sh-1);flex-shrink:0">
+     <div class="grow" style="min-width:0">
+       <div class="b small">Team Logo / Crest ✓</div>
+       <div class="sub small">Custom club crest active</div>
+     </div>
+     <div class="row" style="gap:6px;flex-shrink:0">
+       <label class="btn sm ghost" style="cursor:pointer;margin:0;padding:0 10px;height:30px;line-height:30px;font-size:12px">
+         Change
+         <input type="file" accept="image/*" style="display:none" onchange="handleTeamLogoUpload(this)">
+       </label>
+       <button type="button" class="btn sm ghost" style="color:var(--bad);margin:0;padding:0 8px;height:30px;line-height:30px;font-size:13px" onclick="removeTeamLogo()">✕</button>
+     </div>
+   </div>
+ ` : `
+   <label class="card row" style="align-items:center;gap:14px;margin-bottom:16px;cursor:pointer;border:1.5px dashed var(--line);background:var(--surface2);padding:12px 14px;border-radius:14px">
+     <div class="av lg" style="background:var(--subtle);color:var(--accent);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:24px;border:1px solid var(--line);flex-shrink:0">🛡️</div>
+     <div class="grow">
+       <div class="b small">Upload Team Logo / Crest</div>
+       <div class="sub" style="font-size:11px">Square club crest or badge (PNG, JPG)</div>
+     </div>
+     <span class="btn sm ghost" style="margin:0;padding:0 12px;height:32px;line-height:32px;font-size:12px">Choose</span>
+     <input type="file" accept="image/*" style="display:none" onchange="handleTeamLogoUpload(this)">
+   </label>
+ `;
+
+ return `${hdr('Create team')}
+ <div class="note" style="margin-bottom:14px">
+   <b>Build Your Squad:</b> Create your team profile with an official logo and cover banner. You'll be registered as Owner &amp; Captain.
+ </div>
+
+ ${bannerUI}
+ ${logoUI}
+
+ <div class="field">Team name
+   <input value="${f.tname||''}" oninput="S.form.tname=this.value" placeholder="e.g. Lekki Lions, Victoria Island FC">
+ </div>
+ <div class="field">Description &amp; Bio
+   <textarea rows="2" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;line-height:1.4" oninput="S.form.tdesc=this.value" placeholder="e.g. Competitive grassroots football club based in Lekki. Welcoming passionate players.">${f.tdesc||''}</textarea>
+ </div>
+ <div class="field">Home Location / Area
+   <input value="${f.tloc||''}" oninput="S.form.tloc=this.value" placeholder="e.g. Lekki, Surulere, Ikeja, Yaba">
+ </div>
+ <div class="field">Preferred football format
+   <select onchange="S.form.tfmt=this.value">
+     <option ${f.tfmt==='7-a-side'?'selected':''}>7-a-side</option>
+     <option ${f.tfmt==='5-a-side'?'selected':''}>5-a-side</option>
+     <option ${f.tfmt==='9-a-side'?'selected':''}>9-a-side</option>
+     <option ${f.tfmt==='11-a-side'?'selected':''}>11-a-side</option>
+   </select>
+ </div>
+ <div class="opt" style="margin-bottom:16px" onclick="flipTog('tv',true,event)">
+   <div class="grow">
+     <b>Team visibility</b>
+     <div class="sub">Public teams can be discovered by local players &amp; organisers</div>
+   </div>
+   ${tog(true,'tv')}
+ </div>
+ <button type="button" class="btn" onclick="createNewTeam()">Create team</button>`;
+};
+
 function createNewTeam(){
- const f=S.form,newId=teams.length;
- const t={id:newId,name:f.tname||'Victoria Island FC',loc:f.tloc||'Lekki',fmt:f.tfmt||'7-a-side',m:1,role:'Owner'};
+ const f=S.form||{}, newId=makeUUID();
+ const teamName=(f.tname||'').trim()||'Lekki Lions FC';
+ const t={
+   id:newId,
+   name:teamName,
+   loc:f.tloc||'Lekki',
+   fmt:f.tfmt||'7-a-side',
+   desc:f.tdesc||'Grassroots football club in Lagos.',
+   logo:f.tlogo||'',
+   banner:f.tbanner||'',
+   m:1,
+   role:'Owner',
+   isCustom:true
+ };
  teams.unshift(t);
  if(window.FCData){
-   FCData.record('teams',{team_name:t.name,location:t.loc,format:t.fmt,owner_name:S.user.name,owner_contact:currentUserEmail()||S.user.email},'team_created',{team_name:t.name,location:t.loc,format:t.fmt});
+   FCData.persistLocal();
+   FCData.record('teams',{
+     team_name:t.name,
+     location:t.loc,
+     format:t.fmt,
+     owner_name:S.user.name,
+     owner_contact:currentUserEmail()||S.user.email,
+     description:t.desc,
+     has_logo:Boolean(t.logo),
+     has_banner:Boolean(t.banner)
+   },'team_created',{team_name:t.name,location:t.loc,format:t.fmt});
  }
  replaceTop('team',t.id);
- showModal({title:'Team Created!',sub:'You are now the Owner & Captain of '+t.name+'. Invite players to build your squad.',meta:[['Team',t.name],['Location',t.loc],['Format',t.fmt],['Your Role','Owner & Captain']],primary:'Invite Players',primaryFn:()=>openShare('team',t.id),secondary:'View Team Profile'});
+ showModal({
+   title:'Team Created! 🛡️',
+   sub:'You are now the Owner & Captain of '+t.name+'. Invite players to build your squad.',
+   meta:[
+     ['Team',t.name],
+     ['Location',t.loc],
+     ['Format',t.fmt],
+     ['Your Role','Owner & Captain'],
+     ['Badge / Cover',t.logo&&t.banner?'Logo & Banner Added':t.logo?'Custom Logo':t.banner?'Custom Banner':'Default Badge']
+   ],
+   primary:'Invite Players',
+   primaryFn:()=>openShare('team',t.id),
+   secondary:'View Team Profile'
+ });
 }
 
 SC.player=target=>{
@@ -2584,7 +2817,7 @@ SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14
    ${it('ball','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}
  </div>
  ${activeMgmtRows.length?`<h2 class="sec">Your active management views</h2><div class="list">${activeMgmtRows.join('')}</div>`:''}
- <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Create a Competition / League',"startCreateComp()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"go('createTeam')")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
+ <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Create a Competition / League',"startCreateComp()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"startCreateTeam()")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
  <h2 class="sec">Settings</h2><div class="list">${adminOk?it('list','Admin: Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')"):''}${it('star','Watch 30s Animated Video Promo',"window.open('promo.html','_blank')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout',signedIn?'Sign out':'Sign in / Switch account',signedIn?'confirmSignOut()':"S.authErr=null;go('signin')")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
@@ -2857,6 +3090,54 @@ function publishEvent(){
 }
 
 /* ===== Real Competition Creation & Management (Instant Publish + Verified Badge + Team Enrollment) ===== */
+const formatFileSize=bytes=>{
+  if(!bytes)return '0 KB';
+  const k=1024,sizes=['Bytes','KB','MB'];
+  const i=Math.floor(Math.log(bytes)/Math.log(k));
+  return parseFloat((bytes/Math.pow(k,i)).toFixed(1))+' '+(sizes[i]||'KB');
+};
+const handleRulesDocUpload=input=>{
+  const file=input&&input.files&&input.files[0];
+  if(!file)return;
+  if(file.size>5*1024*1024){
+    toast('File too large (max 5MB)');
+    return;
+  }
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    S.form=S.form||{};
+    S.form.rulesDoc={
+      name:file.name,
+      size:formatFileSize(file.size),
+      type:file.type||'application/octet-stream',
+      data:ev.target.result
+    };
+    toast('Rules document attached: '+file.name);
+    render();
+  };
+  reader.readAsDataURL(file);
+};
+const removeRulesDoc=()=>{
+  if(S.form){
+    delete S.form.rulesDoc;
+    toast('Rules document removed');
+    render();
+  }
+};
+const downloadRulesDoc=id=>{
+  const c=comps.find(x=>String(x.id)===String(id));
+  if(!c||!c.rulesDoc||!c.rulesDoc.data){
+    toast('No rules document attached');
+    return;
+  }
+  const a=document.createElement('a');
+  a.href=c.rulesDoc.data;
+  a.download=c.rulesDoc.name||'Tournament_Rules.pdf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  toast('Downloading '+(c.rulesDoc.name||'document'));
+};
 const startCreateComp=()=>{
   S.editingCompId=null;
   S.form={
@@ -2873,6 +3154,7 @@ const startCreateComp=()=>{
     cfee:'',
     cprize:'',
     cdesc:'',
+    rulesDoc:null,
     creqVerify:true
   };
   go('createComp');
@@ -3031,8 +3313,41 @@ SC.createComp=()=>{
       <input value="${f.cprize||''}" oninput="S.form.cprize=this.value" placeholder="e.g. ₦1,000,000 + Gold Trophy + Medals">
     </div>
 
-    <div class="field">Tournament Rules &amp; Details
-      <input value="${f.cdesc||''}" oninput="S.form.cdesc=this.value" placeholder="e.g. 90 mins knockout, 5 substitutions, FIFA rules, medals for top 3">
+    <div class="card" style="margin-bottom:14px;background:var(--surface2)">
+      <div class="b" style="margin-bottom:4px">Tournament Rules &amp; Details</div>
+      <div class="sub small" style="margin-bottom:12px">Upload an official rules document (PDF, Word, or image) or type them out directly below (or both).</div>
+
+      <div class="b small" style="margin-bottom:6px">Option 1: Upload Rules Document</div>
+      ${f.rulesDoc ? `
+        <div class="row sp" style="padding:10px 12px;background:var(--surface);border-radius:12px;border:1px solid var(--line);align-items:center;margin-bottom:12px">
+          <div class="row" style="align-items:center;gap:10px;min-width:0">
+            <span style="font-size:24px">📄</span>
+            <div style="min-width:0">
+              <div class="b" style="font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.rulesDoc.name}</div>
+              <div class="muted small">${f.rulesDoc.size} · Document Attached</div>
+            </div>
+          </div>
+          <div class="row" style="gap:6px;flex-shrink:0">
+            <label class="btn sm ghost" style="cursor:pointer;margin:0;padding:0 10px;height:30px;line-height:30px;font-size:12px">
+              Change
+              <input type="file" accept=".pdf,.doc,.docx,.txt,image/*" style="display:none" onchange="handleRulesDocUpload(this)">
+            </label>
+            <button type="button" class="btn sm ghost" style="color:var(--bad);margin:0;padding:0 8px;height:30px;line-height:30px;font-size:13px" onclick="removeRulesDoc()">✕</button>
+          </div>
+        </div>
+      ` : `
+        <label class="card" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:14px;border:1.5px dashed var(--line);background:var(--surface);border-radius:12px;cursor:pointer;margin-bottom:12px;text-align:center">
+          <span style="font-size:20px">📎</span>
+          <div>
+            <div class="b small">Attach Rules Document</div>
+            <div class="sub" style="font-size:11px">PDF, Word (.doc, .docx), TXT, or Image (max 5MB)</div>
+          </div>
+          <input type="file" accept=".pdf,.doc,.docx,.txt,image/*" style="display:none" onchange="handleRulesDocUpload(this)">
+        </label>
+      `}
+
+      <div class="b small" style="margin-bottom:6px">Option 2: Type Tournament Rules &amp; Details</div>
+      <textarea rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;line-height:1.4" oninput="S.form.cdesc=this.value" placeholder="e.g. 90 mins knockout, 5 substitutions, FIFA rules, extra time penalties, medals for top 3…">${f.cdesc||''}</textarea>
     </div>
 
     <div class="opt" style="margin-bottom:18px" onclick="S.form.creqVerify=!S.form.creqVerify;render()">
@@ -3094,7 +3409,8 @@ function submitCreateComp(){
     prize:f.cprize||'Gold Trophy + Medals',
     verified:false,
     verificationRequested:Boolean(f.creqVerify),
-    desc:f.cdesc||'Community football tournament in Lagos.',
+    desc:f.cdesc||(f.rulesDoc?('Official rules document attached ('+f.rulesDoc.name+').'):'Community football tournament in Lagos.'),
+    rulesDoc:f.rulesDoc||null,
     enrolledTeams:enrolled,
     standings:initialStandings,
     org:S.user.name||'Community Organiser',
@@ -3121,6 +3437,7 @@ function submitCreateComp(){
       ['Format',compItem.format+' · '+compItem.type],
       ['Venue',compItem.venue],
       ['Enrolled Teams',enrolled.length+' teams'],
+      ['Rules & Details',compItem.rulesDoc?('Document ('+compItem.rulesDoc.name+')'):f.cdesc?'Custom Rules Specified':'Standard FIFA Rules'],
       ['Badge Status',compItem.verificationRequested?'Pending Admin Verification':'Community Competition']
     ],
     primary:'Share Competition',
@@ -3484,6 +3801,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=20"></script>
+<script src="fc-data.js?v=21"></script>
 </body>
 </html>

@@ -65,6 +65,20 @@ const FCData = {
           });
         }
       }
+      const savedCustomTeams = localStorage.getItem('fc_custom_teams');
+      if (savedCustomTeams && window.teams) {
+        const parsedTeams = JSON.parse(savedCustomTeams);
+        if (Array.isArray(parsedTeams)) {
+          parsedTeams.forEach((t) => {
+            const exIdx = teams.findIndex((x) => String(x.id) === String(t.id) || x.name.toLowerCase() === t.name.toLowerCase());
+            if (exIdx >= 0) {
+              teams[exIdx] = { ...teams[exIdx], ...t };
+            } else {
+              teams.unshift(t);
+            }
+          });
+        }
+      }
       const savedAttending = localStorage.getItem('fc_attending');
       if (savedAttending) S.attending = { ...S.attending, ...JSON.parse(savedAttending) };
       const savedTickets = localStorage.getItem('fc_tickets');
@@ -582,6 +596,10 @@ const FCData = {
       if (window.comps) {
         const customComps = comps.filter((c) => c.isMine || c.fromCloud);
         localStorage.setItem('fc_custom_comps', JSON.stringify(customComps));
+      }
+      if (window.teams) {
+        const customTeams = teams.filter((t) => t.role || t.logo || t.banner || t.desc || t.isCustom);
+        localStorage.setItem('fc_custom_teams', JSON.stringify(customTeams));
       }
     } catch (e) {}
   },
@@ -1305,7 +1323,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=20', { updateViaCache: 'none' })
+        .register('./sw.js?v=21', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
