@@ -1,7 +1,8 @@
-const CACHE_NAME = 'football-community-v16';
+const CACHE_NAME = 'football-community-v17';
 const CORE_ASSETS = [
   './',
   './index.html',
+  './promo.html',
   './fc-data.js',
   './manifest.json',
   './img/icon-192.png',

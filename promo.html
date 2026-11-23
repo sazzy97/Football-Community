@@ -1,0 +1,2412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Football Community Lagos — 30s Motion Promo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg-dark: #050E0A;
+  --bg-card: #0A1B14;
+  --brand: #175E40;
+  --brand-bright: #228B5E;
+  --accent: #B8F34A;
+  --accent-glow: rgba(184, 243, 74, 0.4);
+  --gold: #FFD86B;
+  --purple: #9D4EDD;
+  --text: #FFFFFF;
+  --text-muted: #8FA89B;
+  --font-display: 'Cabinet Grotesk', 'Inter', -apple-system, sans-serif;
+  --font-body: 'Inter', -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #020704;
+  color: #fff;
+  font-family: var(--font-body);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: hidden;
+  user-select: none;
+}
+
+/* Header bar */
+.top-nav {
+  width: 100%;
+  max-width: 1300px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: rgba(5,14,10,0.85);
+  backdrop-filter: blur(16px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.brand-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #fff;
+}
+
+.brand-badge svg {
+  flex-shrink: 0;
+}
+
+.brand-text b {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+  display: block;
+}
+
+.brand-text span {
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pill-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.pill-btn:hover {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.28);
+}
+
+.pill-btn.active {
+  background: var(--accent);
+  color: #050E0A;
+  border-color: var(--accent);
+  box-shadow: 0 0 16px var(--accent-glow);
+}
+
+.pill-btn.primary {
+  background: linear-gradient(135deg, #B8F34A 0%, #86C926 100%);
+  color: #05140C;
+  font-weight: 800;
+  border: none;
+}
+
+/* Stage viewport container */
+.stage-wrapper {
+  width: 100%;
+  max-width: 1240px;
+  padding: 16px 20px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+.stage-outer {
+  position: relative;
+  width: 100%;
+  max-width: 1080px;
+  aspect-ratio: 16 / 9;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1);
+  background: #000;
+  transition: max-width 0.3s ease, aspect-ratio 0.3s ease;
+}
+
+.stage-outer.reel-mode {
+  max-width: 440px;
+  aspect-ratio: 9 / 16;
+}
+
+/* Master canvas/stage container */
+#stage {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1920px;
+  height: 1080px;
+  transform-origin: top left;
+  background: radial-gradient(ellipse at 50% 30%, #175E40 0%, #092C1D 45%, #05130C 85%, #020704 100%);
+  overflow: hidden;
+  font-family: var(--font-body);
+}
+
+.stage-outer.reel-mode #stage {
+  width: 1080px;
+  height: 1920px;
+}
+
+/* Background layers in stage */
+.bg-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.stage-grid {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(rgba(184,243,74,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184,243,74,0.03) 1px, transparent 1px);
+  background-size: 80px 80px;
+  background-position: center center;
+  pointer-events: none;
+}
+
+.stadium-glow {
+  position: absolute;
+  width: 900px;
+  height: 900px;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  opacity: 0.35;
+  transition: opacity 0.5s ease;
+}
+
+.glow-top-left {
+  top: -200px;
+  left: -200px;
+  background: #175E40;
+}
+
+.glow-top-right {
+  top: -200px;
+  right: -200px;
+  background: #B8F34A;
+  opacity: 0.18;
+}
+
+.glow-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #237F57;
+  opacity: 0.22;
+}
+
+/* Watermark in video stage */
+.stage-watermark {
+  position: absolute;
+  top: 36px;
+  left: 44px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 50;
+  opacity: 0.9;
+}
+
+.stage-watermark .live-pill {
+  background: rgba(184,243,74,0.16);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stage-watermark .live-pill i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  display: inline-block;
+  box-shadow: 0 0 10px var(--accent);
+  animation: pulseDot 1.4s ease infinite;
+}
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+.stage-watermark .wm-city {
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Timestamp watermark in stage */
+.stage-timecode {
+  position: absolute;
+  top: 36px;
+  right: 44px;
+  font-family: monospace;
+  font-size: 16px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.4);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  z-index: 50;
+}
+
+/* Scene container */
+.scene-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ================== SCENE 1: RADAR & HOOK ================== */
+.scene-hook {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 60px;
+}
+
+.radar-sweep-wrap {
+  position: absolute;
+  width: 720px;
+  height: 720px;
+  border-radius: 50%;
+  border: 1px dashed rgba(184,243,74,0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radar-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid rgba(184,243,74,0.18);
+}
+
+.radar-ring.r1 { width: 260px; height: 260px; }
+.radar-ring.r2 { width: 480px; height: 480px; }
+.radar-ring.r3 { width: 700px; height: 700px; }
+
+.radar-sweep-arm {
+  position: absolute;
+  width: 50%;
+  height: 2px;
+  top: 50%;
+  left: 50%;
+  transform-origin: 0% 0%;
+  background: linear-gradient(90deg, rgba(184,243,74,0.8) 0%, transparent 100%);
+  box-shadow: 0 0 20px rgba(184,243,74,0.6);
+}
+
+.radar-pin {
+  position: absolute;
+  background: rgba(6,16,11,0.92);
+  border: 1.5px solid var(--accent);
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 16px var(--accent-glow);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.radar-pin b { color: var(--accent); }
+
+.radar-pin.pin-lekki { top: 28%; left: 62%; }
+.radar-pin.pin-vi { top: 62%; left: 58%; }
+.radar-pin.pin-yaba { top: 38%; left: 24%; }
+.radar-pin.pin-ikeja { top: 72%; left: 32%; }
+
+.hook-text-wrap {
+  position: relative;
+  z-index: 10;
+  max-width: 1100px;
+}
+
+.hook-city-kicker {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 6px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.hook-main-title {
+  font-family: var(--font-display);
+  font-size: 88px;
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #FFFFFF 20%, #C4DDD0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 10px 40px rgba(0,0,0,0.6);
+}
+
+.hook-sub-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin-top: 24px;
+  color: #B8F34A;
+  text-shadow: 0 0 24px var(--accent-glow);
+}
+
+/* ================== PHONE MOCKUP (SCENE 2 & 3) ================== */
+.phone-mockup-wrapper {
+  position: absolute;
+  perspective: 1400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-mockup {
+  width: 410px;
+  height: 840px;
+  border-radius: 56px;
+  background: #0C120F;
+  border: 10px solid #23342A;
+  box-shadow: 
+    0 35px 80px rgba(0,0,0,0.8),
+    0 0 0 2px rgba(255,255,255,0.12),
+    inset 0 0 0 2px rgba(0,0,0,0.8);
+  position: relative;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  background: #081610;
+}
+
+.phone-glare {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 45%);
+  pointer-events: none;
+  z-index: 40;
+}
+
+.phone-notch {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 28px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+}
+
+.notch-camera {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #0D2117;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.phone-inner {
+  width: 100%;
+  height: 100%;
+  padding: 56px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+/* In-phone screens */
+.phone-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.phone-logo {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 900;
+  letter-spacing: -0.3px;
+}
+
+.phone-loc-pill {
+  background: rgba(255,255,255,0.1);
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.app-card {
+  background: #0F231A;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: 0 10px 24px rgba(0,0,0,0.4);
+}
+
+.app-card-img {
+  width: 100%;
+  height: 140px;
+  border-radius: 14px;
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 10px;
+  margin-bottom: 12px;
+}
+
+.app-card-img .tag {
+  background: rgba(6,16,11,0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(184,243,74,0.4);
+  color: var(--accent);
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.app-card h3 {
+  font-size: 17px;
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+.app-card p {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.slot-pills {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0 6px;
+}
+
+.slot-pill {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 7px 11px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #ddd;
+}
+
+.slot-pill.active {
+  background: var(--accent);
+  color: #050E0A;
+  border-color: var(--accent);
+  font-weight: 800;
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.app-btn {
+  width: 100%;
+  background: var(--accent);
+  color: #050E0A;
+  border: none;
+  padding: 13px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+  box-shadow: 0 8px 20px rgba(184,243,74,0.3);
+}
+
+/* Booking confirmation overlay badge in phone */
+.confirm-badge {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 90%;
+  background: linear-gradient(135deg, #175E40 0%, #0E3E2A 100%);
+  border: 2px solid var(--accent);
+  border-radius: 24px;
+  padding: 24px 18px;
+  text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,0.8), 0 0 40px var(--accent-glow);
+  z-index: 60;
+}
+
+.confirm-badge .check-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #050E0A;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  font-size: 26px;
+  font-weight: 900;
+  box-shadow: 0 0 24px var(--accent);
+}
+
+.confirm-badge h4 {
+  font-size: 20px;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.confirm-badge p {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+/* Squad slots row */
+.squad-meter {
+  background: rgba(255,255,255,0.05);
+  border-radius: 14px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.squad-meter-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.squad-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.squad-dot {
+  flex: 1;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.15);
+  transition: all 0.2s ease;
+}
+
+.squad-dot.filled {
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+/* Side title callout in scenes */
+.scene-callout {
+  position: absolute;
+  max-width: 680px;
+  z-index: 20;
+}
+
+.scene-callout.right {
+  right: 100px;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: left;
+}
+
+.scene-callout.left {
+  left: 100px;
+  top: 50%;
+  transform: translateY(-50%);
+  text-align: left;
+}
+
+.callout-kicker {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.callout-title {
+  font-family: var(--font-display);
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #D8E6DF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.callout-sub {
+  font-size: 24px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* ================== SCENE 4: 3D FIFA RATE CARD ================== */
+.fifa-scene-wrapper {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1600px;
+}
+
+/* 3D FUT Card */
+.promo-fifa-card {
+  --fc-bg1: #4B10A6;
+  --fc-bg2: #340978;
+  --fc-bg3: #230452;
+  --fc-glow: #B94BFF;
+  --fc-accent: #EC5EFF;
+  width: 440px;
+  height: 660px;
+  border-radius: 38px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(180deg, var(--fc-bg1) 0%, var(--fc-bg2) 55%, var(--fc-bg3) 100%);
+  box-shadow: 0 40px 90px rgba(32,5,74,0.6), 0 0 80px rgba(185,75,255,0.4), inset 0 1px 2px rgba(255,255,255,0.4);
+  color: #fff;
+  transform-style: preserve-3d;
+  transition: transform 0.1s linear;
+}
+
+.promo-fifa-card.theme-lagos {
+  --fc-bg1: #175E40;
+  --fc-bg2: #10422C;
+  --fc-bg3: #082619;
+  --fc-glow: #B8F34A;
+  --fc-accent: #B8F34A;
+  box-shadow: 0 40px 90px rgba(9,39,26,0.7), 0 0 90px rgba(184,243,74,0.4), inset 0 1px 2px rgba(255,255,255,0.4);
+}
+
+.fifa-card-foil {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.22) 48%, rgba(236,94,255,0.28) 52%, transparent 70%);
+  pointer-events: none;
+  transform: rotate(25deg);
+  mix-blend-mode: overlay;
+  z-index: 30;
+}
+
+.fifa-card-border {
+  position: absolute;
+  inset: 12px;
+  border: 1.5px solid rgba(255,255,255,0.28);
+  border-radius: 28px;
+  pointer-events: none;
+  box-shadow: inset 0 0 18px rgba(184,243,74,0.2);
+  z-index: 25;
+}
+
+.fifa-top-meta {
+  position: absolute;
+  top: 36px;
+  left: 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 20;
+}
+
+.fifa-ovr {
+  font-family: var(--font-display);
+  font-size: 68px;
+  font-weight: 900;
+  line-height: 0.9;
+  letter-spacing: -2px;
+  text-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}
+
+.fifa-pos {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: var(--accent);
+  margin-top: 4px;
+}
+
+.fifa-badge-pill {
+  position: absolute;
+  top: 36px;
+  right: 36px;
+  background: rgba(0,0,0,0.5);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  z-index: 20;
+}
+
+.fifa-portrait {
+  position: absolute;
+  top: 70px;
+  left: 50%;
+  transform: translateX(-40%);
+  width: 290px;
+  height: 290px;
+  background-size: cover;
+  background-position: center top;
+  border-radius: 50%;
+  filter: drop-shadow(0 20px 30px rgba(0,0,0,0.6));
+  z-index: 10;
+}
+
+.fifa-name-banner {
+  position: absolute;
+  top: 350px;
+  width: 100%;
+  text-align: center;
+  padding: 0 20px;
+  z-index: 20;
+}
+
+.fifa-name-banner h2 {
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 4px 18px rgba(0,0,0,0.7);
+  border-bottom: 2px solid rgba(255,255,255,0.2);
+  padding-bottom: 8px;
+}
+
+.fifa-stats-grid {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  width: 100%;
+  padding: 0 44px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 28px;
+  z-index: 20;
+}
+
+.fifa-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.fifa-stat-val {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 900;
+  color: #fff;
+}
+
+.fifa-stat-lbl {
+  font-size: 17px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.75);
+  letter-spacing: 1px;
+}
+
+/* ================== SCENE 5: OUTRO & LOCKUP ================== */
+.scene-outro {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+}
+
+.outro-crest {
+  margin-bottom: 24px;
+  filter: drop-shadow(0 0 35px var(--accent-glow));
+}
+
+.outro-headline {
+  font-family: var(--font-display);
+  font-size: 80px;
+  font-weight: 900;
+  line-height: 1.04;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  max-width: 1000px;
+  margin-bottom: 18px;
+  background: linear-gradient(180deg, #FFFFFF 30%, #B8F34A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.outro-pills-row {
+  display: flex;
+  gap: 14px;
+  margin: 16px 0 32px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.outro-pill {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(184,243,74,0.3);
+  padding: 10px 22px;
+  border-radius: 999px;
+  font-size: 16px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.outro-pill b { color: var(--accent); }
+
+.outro-cta-btn {
+  background: linear-gradient(135deg, #B8F34A 0%, #87CE26 100%);
+  color: #05140C;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  padding: 20px 48px;
+  border-radius: 999px;
+  box-shadow: 0 16px 40px var(--accent-glow);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: none;
+  cursor: pointer;
+  transform: scale(1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.outro-cta-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 20px 50px rgba(184,243,74,0.6);
+}
+
+.outro-url {
+  margin-top: 22px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+
+/* ================== TIMELINE CONTROLS BAR ================== */
+.controls-bar {
+  width: 100%;
+  max-width: 1080px;
+  background: rgba(10,27,20,0.85);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 14px 20px;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+/* Timeline scrubber track */
+.scrubber-track {
+  position: relative;
+  width: 100%;
+  height: 38px;
+  background: rgba(0,0,0,0.45);
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.scrubber-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(23,94,64,0.8) 0%, rgba(184,243,74,0.7) 100%);
+  width: 0%;
+  pointer-events: none;
+  border-right: 2px solid #fff;
+  box-shadow: 0 0 16px var(--accent);
+}
+
+.scrubber-markers {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.scrubber-seg {
+  height: 100%;
+  border-right: 1px solid rgba(255,255,255,0.15);
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+}
+
+.scrubber-seg:last-child { border-right: none; }
+
+/* Control buttons row */
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.playback-btns {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ctrl-btn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  border-radius: 50%;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ctrl-btn:hover {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.ctrl-btn.play-btn {
+  width: 46px;
+  height: 46px;
+  background: var(--accent);
+  color: #05140C;
+  border: none;
+  box-shadow: 0 0 18px var(--accent-glow);
+}
+
+.timecode-display {
+  font-family: monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(0,0,0,0.3);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.scene-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scene-chip {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.scene-chip:hover, .scene-chip.active {
+  background: var(--accent);
+  color: #05140C;
+  border-color: var(--accent);
+}
+
+.extra-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Sound banner notification */
+.audio-banner {
+  position: absolute;
+  top: 16px;
+  background: rgba(6,16,11,0.92);
+  border: 1px solid var(--accent);
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 150;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px var(--accent-glow);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.audio-banner.hidden {
+  opacity: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<!-- Top Navigation -->
+<header class="top-nav">
+  <a href="index.html" class="brand-badge" title="Go back to live app">
+    <svg width="34" height="38" viewBox="0 0 40 44" fill="none">
+      <path d="M3 3h34v20c0 10-8 15-17 18C11 38 3 33 3 23z" fill="#123D2B" stroke="#B8F34A" stroke-width="2.5"/>
+      <text x="20" y="26" text-anchor="middle" fill="#fff" font-size="14" font-weight="900" font-family="'Cabinet Grotesk',sans-serif">FC</text>
+    </svg>
+    <div class="brand-text">
+      <b>FOOTBALL COMMUNITY LAGOS</b>
+      <span>30-Second Motion Promo Video</span>
+    </div>
+  </a>
+
+  <div class="nav-actions">
+    <button class="pill-btn active" id="btnWide" onclick="setAspect('wide')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="3"/></svg>
+      16:9 Landscape
+    </button>
+    <button class="pill-btn" id="btnReel" onclick="setAspect('reel')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/></svg>
+      9:16 Reel
+    </button>
+    <button class="pill-btn" id="btnSound" onclick="toggleAudio()">
+      <span id="soundIcon">🔊</span> <span id="soundTxt">Sound ON</span>
+    </button>
+    <button class="pill-btn primary" id="btnRecord" onclick="startExportRecording()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>
+      Record Video
+    </button>
+    <a href="index.html" class="pill-btn" title="Open the Football Community App">
+      Launch App ↗
+    </a>
+  </div>
+</header>
+
+<!-- Main Stage Presentation Area -->
+<div class="stage-wrapper">
+  <!-- Click to unmute banner -->
+  <div class="audio-banner" id="audioBanner" onclick="enableAudioDirect()">
+    <span>🔊 Tap to enable cinematic audio &amp; sound effects</span>
+  </div>
+
+  <div class="stage-outer" id="stageOuter">
+    <div id="stage">
+      <!-- Background Star Canvas -->
+      <canvas class="bg-canvas" id="bgCanvas"></canvas>
+      <div class="stage-grid"></div>
+      <div class="stadium-glow glow-top-left"></div>
+      <div class="stadium-glow glow-top-right"></div>
+      <div class="stadium-glow glow-center"></div>
+
+      <!-- Watermark & Live City pill -->
+      <div class="stage-watermark">
+        <div class="live-pill"><i></i> LIVE PITCH RADAR</div>
+        <div class="wm-city">LAGOS, NIGERIA</div>
+      </div>
+
+      <!-- Exact Timecode -->
+      <div class="stage-timecode" id="stageTimecode">00:00.0</div>
+
+      <!-- ================= SCENE 1: RADAR & HOOK ================= -->
+      <div class="scene-container" id="scene1" style="opacity: 1;">
+        <div class="scene-hook">
+          <div class="radar-sweep-wrap" id="radarSweep">
+            <div class="radar-ring r1"></div>
+            <div class="radar-ring r2"></div>
+            <div class="radar-ring r3"></div>
+            <div class="radar-sweep-arm" id="radarArm"></div>
+            <div class="radar-pin pin-lekki" id="pinLekki">📍 <b>Lekki</b> · 4 Pitches Free</div>
+            <div class="radar-pin pin-vi" id="pinVI">📍 <b>Victoria Island</b> · 5s Game</div>
+            <div class="radar-pin pin-yaba" id="pinYaba">📍 <b>Yaba</b> · KiDave Cup</div>
+            <div class="radar-pin pin-ikeja" id="pinIkeja">📍 <b>Ikeja</b> · Turf Ready</div>
+          </div>
+
+          <div class="hook-text-wrap" id="hookTextWrap">
+            <div class="hook-city-kicker" id="hookKicker">LAGOS, NIGERIA</div>
+            <h1 class="hook-main-title" id="hookTitle">WHERE'S THE GAME<br>TONIGHT?</h1>
+            <div class="hook-sub-title" id="hookSub">DISCOVER · BOOK · CONNECT · PLAY</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 2: PITCH DISCOVERY & BOOKING ================= -->
+      <div class="scene-container" id="scene2" style="opacity: 0;">
+        <div class="scene-callout left" id="callout2">
+          <div class="callout-kicker">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s7-6 7-12a7 7 0 0 0-14 0c0 6 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></svg>
+            PLAY · BOOK A PITCH
+          </div>
+          <h2 class="callout-title">BOOK PITCHES<br>IN SECONDS</h2>
+          <p class="callout-sub">See real-time turf availability in Lekki, VI, Yaba &amp; Ikeja. Pick your slot and lock it with deposit or full pay.</p>
+        </div>
+
+        <div class="phone-mockup-wrapper" id="phoneWrap2">
+          <div class="phone-mockup">
+            <div class="phone-glare"></div>
+            <div class="phone-notch"><span style="color:#fff;font-size:11px;font-weight:700">9:41</span><div class="notch-camera"></div></div>
+            <div class="phone-inner">
+              <div class="phone-header-row">
+                <div class="phone-logo">FC LAGOS</div>
+                <div class="phone-loc-pill">📍 Lekki Phase 1</div>
+              </div>
+              <div class="app-card">
+                <div class="app-card-img" style="background-image:linear-gradient(180deg,transparent 40%,rgba(6,16,11,.9) 100%),url(img/venue1.jpg)">
+                  <span class="tag">5-A-SIDE · 4 SLOTS LEFT</span>
+                </div>
+                <h3>Lekki Goal Arena</h3>
+                <p>Admiralty Way · Floodlights · AstroTurf</p>
+                <div class="slot-pills">
+                  <div class="slot-pill">18:00</div>
+                  <div class="slot-pill active" id="slot20">20:00 - 21:00</div>
+                  <div class="slot-pill">21:00</div>
+                </div>
+                <button class="app-btn" id="bookBtn">
+                  <span>Pay ₦25,000 &amp; Book Slot</span>
+                </button>
+              </div>
+
+              <!-- Confirmation Badge -->
+              <div class="confirm-badge" id="confirmBadge">
+                <div class="check-circle">✓</div>
+                <h4>SLOT SECURED!</h4>
+                <p>Booking Ref <b>#FC-8921</b><br>Lekki Goal Arena · Thu, 8:00 PM</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 3: OPEN GAMES & SQUADS ================= -->
+      <div class="scene-container" id="scene3" style="opacity: 0;">
+        <div class="phone-mockup-wrapper" id="phoneWrap3">
+          <div class="phone-mockup">
+            <div class="phone-glare"></div>
+            <div class="phone-notch"><span style="color:#fff;font-size:11px;font-weight:700">9:41</span><div class="notch-camera"></div></div>
+            <div class="phone-inner">
+              <div class="phone-header-row">
+                <div class="phone-logo">OPEN GAMES</div>
+                <div class="phone-loc-pill">⚡ 2 slots left</div>
+              </div>
+              <div class="app-card">
+                <div class="app-card-img" style="background-image:linear-gradient(180deg,transparent 40%,rgba(6,16,11,.9) 100%),url(img/game1.jpg)">
+                  <span class="tag">5-A-SIDE · ₦2,500 / PLAYER</span>
+                </div>
+                <h3>Thursday Night 5s</h3>
+                <p>Lekki Goal Arena · Thursday, 8:00 PM</p>
+                
+                <div class="squad-meter">
+                  <div class="squad-meter-header">
+                    <span>Squad Roster</span>
+                    <span id="squadRatio" style="color:var(--accent)">8 / 10 Players</span>
+                  </div>
+                  <div class="squad-dots" id="squadDots">
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot filled"></div>
+                    <div class="squad-dot" id="squadDot9"></div>
+                    <div class="squad-dot" id="squadDot10"></div>
+                  </div>
+                </div>
+
+                <button class="app-btn" id="joinBtn">
+                  <span>Join Match Slot ₦2,500</span>
+                </button>
+              </div>
+
+              <!-- Game Pass Badge -->
+              <div class="confirm-badge" id="gamePassBadge">
+                <div class="check-circle">⚽</div>
+                <h4>MATCH CONFIRMED!</h4>
+                <p>You're in! Squad is ready.<br>Permit <b>#FC-GP88</b></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="scene-callout right" id="callout3">
+          <div class="callout-kicker">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M17 4a4 4 0 0 1 0 8M22 21c0-3-1.5-4.7-4-5.5"/></svg>
+            CONNECT · OPEN GAMES
+          </div>
+          <h2 class="callout-title">NO FULL TEAM?<br>NO PROBLEM.</h2>
+          <p class="callout-sub">Join competitive and casual open matches, split pitch fees automatically, and meet top footballers in your neighborhood.</p>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 4: 3D FIFA RATE CARD ================= -->
+      <div class="scene-container" id="scene4" style="opacity: 0;">
+        <div class="fifa-scene-wrapper">
+          <div class="scene-callout left" id="callout4" style="max-width:540px">
+            <div class="callout-kicker">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/></svg>
+              FOOTBALL IDENTITY
+            </div>
+            <h2 class="callout-title">YOUR FIFA<br>RATE CARD</h2>
+            <p class="callout-sub">Get your personal FUT-style card. Boost your stats with peer endorsements, upload your portrait, and share your flex across Lagos.</p>
+          </div>
+
+          <div class="promo-fifa-card theme-lagos" id="promoFifaCard">
+            <div class="fifa-card-foil" id="cardFoil"></div>
+            <div class="fifa-card-border"></div>
+
+            <div class="fifa-top-meta">
+              <div class="fifa-ovr" id="fifaOvr">91</div>
+              <div class="fifa-pos">CF</div>
+              <svg width="28" height="20" viewBox="0 0 36 24" style="margin-top:6px;border-radius:3px">
+                <rect width="12" height="24" fill="#008751"/>
+                <rect x="12" width="12" height="24" fill="#fff"/>
+                <rect x="24" width="12" height="24" fill="#008751"/>
+              </svg>
+            </div>
+
+            <div class="fifa-badge-pill">EPIC TIER</div>
+
+            <div class="fifa-portrait" style="background-image:url(img/welcome-bg.jpg)"></div>
+
+            <div class="fifa-name-banner">
+              <h2 id="cardPlayerName">TUNDE ADEYEMI</h2>
+            </div>
+
+            <div class="fifa-stats-grid">
+              <div class="fifa-stat-row">
+                <span class="fifa-stat-val" id="stPac">82</span>
+                <span class="fifa-stat-lbl">PAC</span>
+              </div>
+              <div class="fifa-stat-row">
+                <span class="fifa-stat-val" id="stDri">77</span>
+                <span class="fifa-stat-lbl">DRI</span>
+              </div>
+              <div class="fifa-stat-row">
+                <span class="fifa-stat-val" id="stSho">92</span>
+                <span class="fifa-stat-lbl">SHO</span>
+              </div>
+              <div class="fifa-stat-row">
+                <span class="fifa-stat-val" id="stDef">72</span>
+                <span class="fifa-stat-lbl">DEF</span>
+              </div>
+              <div class="fifa-stat-row">
+                <span class="fifa-stat-val" id="stPas">80</span>
+                <span class="fifa-stat-lbl">PAS</span>
+              </div>
+              <div class="fifa-stat-row">
+                <span class="fifa-stat-val" id="stPhy">81</span>
+                <span class="fifa-stat-lbl">PHY</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= SCENE 5: OUTRO & CALL TO ACTION ================= -->
+      <div class="scene-container" id="scene5" style="opacity: 0;">
+        <div class="scene-outro" id="outroBox">
+          <div class="outro-crest">
+            <svg width="90" height="100" viewBox="0 0 40 44" fill="none">
+              <path d="M3 3h34v20c0 10-8 15-17 18C11 38 3 33 3 23z" fill="#123D2B" stroke="#B8F34A" stroke-width="2.5"/>
+              <text x="20" y="26" text-anchor="middle" fill="#fff" font-size="14" font-weight="900" font-family="'Cabinet Grotesk',sans-serif">FC</text>
+            </svg>
+          </div>
+
+          <h2 class="outro-headline">PLAY MORE FOOTBALL.<br>ANYWHERE IN LAGOS.</h2>
+
+          <div class="outro-pills-row">
+            <div class="outro-pill">📍 <b>Lekki</b> · <b>VI</b> · <b>Yaba</b> · <b>Ikeja</b></div>
+            <div class="outro-pill">⚡ <b>Instant Pitch Booking</b></div>
+            <div class="outro-pill">⚽ <b>Open Games</b></div>
+            <div class="outro-pill">🎴 <b>FIFA Rate Cards</b></div>
+          </div>
+
+          <a href="index.html" class="outro-cta-btn" id="outroCta">
+            JOIN AS GUEST OR SIGN UP FREE →
+          </a>
+
+          <div class="outro-url">football-community-two.vercel.app</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Bottom Timeline & Playback Controller -->
+  <div class="controls-bar">
+    <!-- Scrubber with 5 scene segments -->
+    <div class="scrubber-track" id="scrubberTrack">
+      <div class="scrubber-progress" id="scrubberProgress"></div>
+      <div class="scrubber-markers">
+        <div class="scrubber-seg" style="width: 17.33%;">01. HOOK</div>
+        <div class="scrubber-seg" style="width: 20.00%;">02. BOOK PITCH</div>
+        <div class="scrubber-seg" style="width: 23.33%;">03. OPEN GAMES</div>
+        <div class="scrubber-seg" style="width: 23.33%;">04. FIFA CARD</div>
+        <div class="scrubber-seg" style="width: 16.01%;">05. OUTRO</div>
+      </div>
+    </div>
+
+    <!-- Buttons row -->
+    <div class="controls-row">
+      <div class="playback-btns">
+        <button class="ctrl-btn" onclick="seekRelative(-5)" title="Rewind 5s">↺ 5s</button>
+        <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()" title="Play / Pause (Spacebar)">
+          <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+        </button>
+        <button class="ctrl-btn" onclick="seekRelative(5)" title="Forward 5s">5s ↻</button>
+        <button class="ctrl-btn" onclick="resetVideo()" title="Restart from 0:00">⟲</button>
+        <div class="timecode-display" id="timeDisplay">00:00.0 / 00:30.0</div>
+      </div>
+
+      <!-- Quick Scene Jumps -->
+      <div class="scene-chips">
+        <button class="scene-chip active" onclick="seekTo(0)">1. Hook</button>
+        <button class="scene-chip" onclick="seekTo(5.2)">2. Pitches</button>
+        <button class="scene-chip" onclick="seekTo(11.2)">3. Games</button>
+        <button class="scene-chip" onclick="seekTo(18.2)">4. FIFA Card</button>
+        <button class="scene-chip" onclick="seekTo(25.0)">5. Outro</button>
+      </div>
+
+      <!-- Extra options: Speed & Fullscreen -->
+      <div class="extra-tools">
+        <button class="pill-btn" id="btnSpeed" onclick="cycleSpeed()" title="Playback Speed">1x</button>
+        <button class="ctrl-btn" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   FOOTBALL COMMUNITY 30-SECOND MOTION ENGINE
+   Deterministic, frame-accurate animation & audio synthesizer
+   ========================================================================= */
+
+const TOTAL_DURATION = 30.00; // seconds
+let currentTime = 0.00;
+let isPlaying = false;
+let playbackSpeed = 1.0;
+let lastTimestamp = 0;
+let audioEnabled = false;
+let audioCtx = null;
+let currentAspect = 'wide'; // 'wide' (16:9) or 'reel' (9:16)
+
+// Sound cue flags to prevent repeated triggers in one pass
+const sfxCues = {
+  hookDrop: false,
+  pinPop: false,
+  pitchWhoosh: false,
+  slotClick: false,
+  bookSuccess: false,
+  whistleSound: false,
+  squadFill: false,
+  gameSuccess: false,
+  cardRiser: false,
+  cardFoilWhoosh: false,
+  outroCrowd: false
+};
+
+// Canvas Starfield / Particle Background
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeStage() {
+  const outer = document.getElementById('stageOuter');
+  const stage = document.getElementById('stage');
+  const rect = outer.getBoundingClientRect();
+  
+  const targetW = currentAspect === 'wide' ? 1920 : 1080;
+  const targetH = currentAspect === 'wide' ? 1080 : 1920;
+  
+  canvas.width = targetW;
+  canvas.height = targetH;
+  
+  const scale = rect.width / targetW;
+  stage.style.transform = `scale(${scale})`;
+}
+
+window.addEventListener('resize', resizeStage);
+
+// Initialize particles
+function initParticles() {
+  particles = [];
+  const count = currentAspect === 'wide' ? 70 : 50;
+  const w = currentAspect === 'wide' ? 1920 : 1080;
+  const h = currentAspect === 'wide' ? 1080 : 1920;
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      size: Math.random() * 3 + 1,
+      speedX: (Math.random() - 0.5) * 0.4,
+      speedY: (Math.random() - 0.5) * 0.4,
+      alpha: Math.random() * 0.6 + 0.2
+    });
+  }
+}
+
+function drawParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#B8F34A';
+  for (let p of particles) {
+    p.x += p.speedX;
+    p.y += p.speedY;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    ctx.globalAlpha = p.alpha;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+/* =========================================================================
+   SYNTHESIZED WEB AUDIO SOUND DESIGN (No external MP3 dependencies!)
+   ========================================================================= */
+
+function initAudio() {
+  if (!audioCtx) {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AudioContext();
+  }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  audioEnabled = true;
+  document.getElementById('audioBanner').classList.add('hidden');
+  document.getElementById('soundIcon').innerText = '🔊';
+  document.getElementById('soundTxt').innerText = 'Sound ON';
+  document.getElementById('btnSound').classList.add('active');
+}
+
+function enableAudioDirect() {
+  initAudio();
+  playBassDrop();
+}
+
+function toggleAudio() {
+  if (!audioEnabled) {
+    initAudio();
+  } else {
+    audioEnabled = false;
+    document.getElementById('soundIcon').innerText = '🔇';
+    document.getElementById('soundTxt').innerText = 'Sound OFF';
+    document.getElementById('btnSound').classList.remove('active');
+  }
+}
+
+// Sub-bass cinematic impact
+function playBassDrop() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(140, now);
+  osc.frequency.exponentialRampToValueAtTime(32, now + 1.2);
+  
+  gain.gain.setValueAtTime(0.7, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.start(now);
+  osc.stop(now + 1.6);
+}
+
+// High crystal radar ping
+function playRadarPing(freq = 880) {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  gain.gain.setValueAtTime(0.3, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.start(now);
+  osc.stop(now + 0.7);
+}
+
+// Fast filtered whoosh
+function playWhoosh() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const bufferSize = audioCtx.sampleRate * 0.5;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(200, now);
+  filter.frequency.exponentialRampToValueAtTime(2400, now + 0.25);
+  filter.frequency.exponentialRampToValueAtTime(100, now + 0.5);
+  filter.Q.value = 3.0;
+  
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.01, now);
+  gain.gain.linearRampToValueAtTime(0.4, now + 0.2);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+  
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  noise.start(now);
+  noise.stop(now + 0.55);
+}
+
+// Digital click / pop
+function playClick(freq = 600) {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(freq, now);
+  gain.gain.setValueAtTime(0.35, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  osc.start(now);
+  osc.stop(now + 0.09);
+}
+
+// Chime success chord (C - E - G - B)
+function playSuccessChime() {
+  if (!audioEnabled || !audioCtx) return;
+  const notes = [523.25, 659.25, 783.99, 987.77, 1046.50];
+  notes.forEach((freq, idx) => {
+    setTimeout(() => {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, now);
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.85);
+    }, idx * 70);
+  });
+}
+
+// Referee whistle effect (dual modulated oscillators)
+function playWhistle() {
+  if (!audioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  [2300, 2750].forEach(f => {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, now);
+    osc.frequency.linearRampToValueAtTime(f + 120, now + 0.15);
+    osc.frequency.linearRampToValueAtTime(f, now + 0.35);
+    
+    gain.gain.setValueAtTime(0.18, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 0.45);
+  });
+}
+
+// Holographic power-up chord for FIFA card
+function playCardPowerUp() {
+  if (!audioEnabled || !audioCtx) return;
+  const chord = [220, 277.18, 329.63, 440, 554.37];
+  chord.forEach(f => {
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(f * 0.5, now);
+    osc.frequency.exponentialRampToValueAtTime(f, now + 0.8);
+    
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(300, now);
+    filter.frequency.exponentialRampToValueAtTime(4500, now + 0.9);
+    
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.8);
+    
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 1.9);
+  });
+}
+
+// Stadium roar / cheer impact
+function playStadiumRoar() {
+  if (!audioEnabled || !audioCtx) return;
+  playBassDrop();
+  const now = audioCtx.currentTime;
+  const bufferSize = audioCtx.sampleRate * 2.0;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+  
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(400, now);
+  filter.frequency.linearRampToValueAtTime(1400, now + 0.4);
+  filter.frequency.exponentialRampToValueAtTime(200, now + 2.0);
+  
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.01, now);
+  gain.gain.linearRampToValueAtTime(0.35, now + 0.3);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+  
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+  
+  noise.start(now);
+  noise.stop(now + 2.1);
+}
+
+/* =========================================================================
+   FRAME-ACCURATE ANIMATION RENDERER (0.00s -> 30.00s)
+   ========================================================================= */
+
+// Smooth interpolation helpers
+const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+const easeInOut = t => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+const easeOutBack = (x) => {
+  const c1 = 1.70158;
+  const c3 = c1 + 1;
+  return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2);
+};
+
+function renderFrame(t) {
+  // Update time displays
+  const min = Math.floor(t / 60);
+  const sec = (t % 60).toFixed(1);
+  const timeFormatted = `0${min}:${sec.padStart(4, '0')}`;
+  document.getElementById('stageTimecode').innerText = timeFormatted;
+  document.getElementById('timeDisplay').innerText = `${timeFormatted} / 00:30.0`;
+  
+  const progressPct = (t / TOTAL_DURATION) * 100;
+  document.getElementById('scrubberProgress').style.width = `${progressPct}%`;
+  
+  // Update active scene chip
+  const chips = document.querySelectorAll('.scene-chip');
+  chips.forEach(c => c.classList.remove('active'));
+  if (t < 5.2) chips[0].classList.add('active');
+  else if (t < 11.2) chips[1].classList.add('active');
+  else if (t < 18.2) chips[2].classList.add('active');
+  else if (t < 25.0) chips[3].classList.add('active');
+  else chips[4].classList.add('active');
+
+  // DOM scene containers
+  const s1 = document.getElementById('scene1');
+  const s2 = document.getElementById('scene2');
+  const s3 = document.getElementById('scene3');
+  const s4 = document.getElementById('scene4');
+  const s5 = document.getElementById('scene5');
+
+  // -------------------------------------------------------------
+  // SCENE 1: HOOK & RADAR (t: 0.0s -> 5.2s)
+  // -------------------------------------------------------------
+  if (t <= 5.2) {
+    s1.style.opacity = t > 4.6 ? (5.2 - t) / 0.6 : 1;
+    s1.style.display = 'flex';
+    
+    // SFX triggers
+    if (t >= 0.1 && !sfxCues.hookDrop) {
+      sfxCues.hookDrop = true;
+      playBassDrop();
+    }
+    if (t >= 2.2 && !sfxCues.pinPop) {
+      sfxCues.pinPop = true;
+      playRadarPing(980);
+    }
+
+    // Radar rotation
+    const radarArm = document.getElementById('radarArm');
+    radarArm.style.transform = `rotate(${t * 180}deg)`;
+
+    // Pins pop in sequence
+    const pLekki = document.getElementById('pinLekki');
+    const pVI = document.getElementById('pinVI');
+    const pYaba = document.getElementById('pinYaba');
+    const pIkeja = document.getElementById('pinIkeja');
+
+    const pinAnim = (pin, startT) => {
+      if (t < startT) {
+        pin.style.transform = 'scale(0)';
+        pin.style.opacity = '0';
+      } else {
+        const factor = clamp((t - startT) / 0.35, 0, 1);
+        const s = easeOutBack(factor);
+        pin.style.transform = `scale(${s})`;
+        pin.style.opacity = `${factor}`;
+      }
+    };
+
+    pinAnim(pLekki, 1.4);
+    pinAnim(pVI, 1.9);
+    pinAnim(pYaba, 2.4);
+    pinAnim(pIkeja, 2.9);
+
+    // Kinetic Title Animation
+    const hookTitle = document.getElementById('hookTitle');
+    const hookSub = document.getElementById('hookSub');
+    const hookKicker = document.getElementById('hookKicker');
+
+    const zoom = 1 + (t * 0.04);
+    hookTitle.style.transform = `scale(${zoom})`;
+    
+    if (t < 0.8) {
+      const introFactor = clamp(t / 0.8, 0, 1);
+      hookKicker.style.opacity = introFactor;
+      hookTitle.style.opacity = introFactor;
+    } else {
+      hookKicker.style.opacity = 1;
+      hookTitle.style.opacity = 1;
+    }
+
+    if (t > 2.0) {
+      const subFactor = clamp((t - 2.0) / 0.5, 0, 1);
+      hookSub.style.opacity = subFactor;
+      hookSub.style.transform = `translateY(${(1 - subFactor) * 20}px)`;
+    } else {
+      hookSub.style.opacity = 0;
+    }
+  } else {
+    s1.style.opacity = 0;
+    s1.style.display = 'none';
+  }
+
+  // -------------------------------------------------------------
+  // SCENE 2: PITCH DISCOVERY & 1-TAP BOOKING (t: 4.8s -> 11.2s)
+  // -------------------------------------------------------------
+  if (t >= 4.8 && t <= 11.2) {
+    s2.style.display = 'flex';
+    let op = 1;
+    if (t < 5.4) op = (t - 4.8) / 0.6;
+    else if (t > 10.6) op = (11.2 - t) / 0.6;
+    s2.style.opacity = op;
+
+    // SFX triggers
+    if (t >= 5.0 && !sfxCues.pitchWhoosh) {
+      sfxCues.pitchWhoosh = true;
+      playWhoosh();
+    }
+    if (t >= 7.2 && !sfxCues.slotClick) {
+      sfxCues.slotClick = true;
+      playClick(800);
+    }
+    if (t >= 8.8 && !sfxCues.bookSuccess) {
+      sfxCues.bookSuccess = true;
+      playSuccessChime();
+    }
+
+    // Phone 3D perspective rotation & glide
+    const phoneWrap = document.getElementById('phoneWrap2');
+    const callout = document.getElementById('callout2');
+
+    // Phone enters from right, settles at tilt
+    const localT = t - 4.8;
+    const enterFactor = clamp(localT / 0.9, 0, 1);
+    const easedEnter = easeInOut(enterFactor);
+
+    if (currentAspect === 'wide') {
+      phoneWrap.style.left = '64%';
+      phoneWrap.style.top = '50%';
+      const startX = 400;
+      const currentX = (1 - easedEnter) * startX;
+      phoneWrap.style.transform = `translate(-50%, -50%) translateX(${currentX}px) rotateY(-18deg) rotateX(10deg)`;
+      callout.style.opacity = easedEnter;
+      callout.style.transform = `translateY(-50%) translateX(${(1 - easedEnter) * -60}px)`;
+    } else {
+      // Reel portrait mode
+      phoneWrap.style.left = '50%';
+      phoneWrap.style.top = '58%';
+      phoneWrap.style.transform = `translate(-50%, -50%) rotateY(-8deg) scale(0.92)`;
+      callout.style.top = '12%';
+      callout.style.left = '50%';
+      callout.style.transform = `translateX(-50%)`;
+      callout.style.textAlign = 'center';
+    }
+
+    // Slot selection animation (at 7.2s)
+    const slot20 = document.getElementById('slot20');
+    if (t > 7.2) {
+      slot20.classList.add('active');
+    } else {
+      slot20.classList.remove('active');
+    }
+
+    // Book button tap and confirmation pop (at 8.8s)
+    const confirmBadge = document.getElementById('confirmBadge');
+    if (t >= 8.8) {
+      const confirmFactor = clamp((t - 8.8) / 0.4, 0, 1);
+      const s = easeOutBack(confirmFactor);
+      confirmBadge.style.transform = `translate(-50%, -50%) scale(${s})`;
+      confirmBadge.style.opacity = '1';
+    } else {
+      confirmBadge.style.transform = 'translate(-50%, -50%) scale(0)';
+      confirmBadge.style.opacity = '0';
+    }
+  } else {
+    s2.style.opacity = 0;
+    s2.style.display = 'none';
+  }
+
+  // -------------------------------------------------------------
+  // SCENE 3: OPEN GAMES & SQUADS (t: 10.8s -> 18.2s)
+  // -------------------------------------------------------------
+  if (t >= 10.8 && t <= 18.2) {
+    s3.style.display = 'flex';
+    let op = 1;
+    if (t < 11.4) op = (t - 10.8) / 0.6;
+    else if (t > 17.6) op = (18.2 - t) / 0.6;
+    s3.style.opacity = op;
+
+    // SFX triggers
+    if (t >= 11.0 && !sfxCues.whistleSound) {
+      sfxCues.whistleSound = true;
+      playWhistle();
+    }
+    if (t >= 13.5 && !sfxCues.squadFill) {
+      sfxCues.squadFill = true;
+      playClick(1000);
+    }
+    if (t >= 15.2 && !sfxCues.gameSuccess) {
+      sfxCues.gameSuccess = true;
+      playSuccessChime();
+    }
+
+    const phoneWrap = document.getElementById('phoneWrap3');
+    const callout = document.getElementById('callout3');
+    const localT = t - 10.8;
+    const enterFactor = clamp(localT / 0.8, 0, 1);
+    const easedEnter = easeInOut(enterFactor);
+
+    if (currentAspect === 'wide') {
+      phoneWrap.style.left = '32%';
+      phoneWrap.style.top = '50%';
+      const startX = -400;
+      const currentX = (1 - easedEnter) * startX;
+      phoneWrap.style.transform = `translate(-50%, -50%) translateX(${currentX}px) rotateY(18deg) rotateX(8deg)`;
+      callout.style.opacity = easedEnter;
+      callout.style.transform = `translateY(-50%) translateX(${(1 - easedEnter) * 60}px)`;
+    } else {
+      phoneWrap.style.left = '50%';
+      phoneWrap.style.top = '58%';
+      phoneWrap.style.transform = `translate(-50%, -50%) rotateY(8deg) scale(0.92)`;
+      callout.style.top = '12%';
+      callout.style.left = '50%';
+      callout.style.transform = `translateX(-50%)`;
+      callout.style.textAlign = 'center';
+    }
+
+    // Squad meter filling up: 8 -> 9 -> 10
+    const dot9 = document.getElementById('squadDot9');
+    const dot10 = document.getElementById('squadDot10');
+    const ratio = document.getElementById('squadRatio');
+
+    if (t >= 14.5) {
+      dot9.classList.add('filled');
+      dot10.classList.add('filled');
+      ratio.innerText = '10 / 10 FULL SQUAD!';
+      ratio.style.color = '#B8F34A';
+    } else if (t >= 13.2) {
+      dot9.classList.add('filled');
+      dot10.classList.remove('filled');
+      ratio.innerText = '9 / 10 Players (1 spot left)';
+    } else {
+      dot9.classList.remove('filled');
+      dot10.classList.remove('filled');
+      ratio.innerText = '8 / 10 Players';
+    }
+
+    // Match Pass Pop (at 15.2s)
+    const gamePassBadge = document.getElementById('gamePassBadge');
+    if (t >= 15.2) {
+      const passFactor = clamp((t - 15.2) / 0.4, 0, 1);
+      const s = easeOutBack(passFactor);
+      gamePassBadge.style.transform = `translate(-50%, -50%) scale(${s})`;
+      gamePassBadge.style.opacity = '1';
+    } else {
+      gamePassBadge.style.transform = 'translate(-50%, -50%) scale(0)';
+      gamePassBadge.style.opacity = '0';
+    }
+  } else {
+    s3.style.opacity = 0;
+    s3.style.display = 'none';
+  }
+
+  // -------------------------------------------------------------
+  // SCENE 4: 3D FIFA RATE CARD (t: 17.8s -> 25.2s)
+  // -------------------------------------------------------------
+  if (t >= 17.8 && t <= 25.2) {
+    s4.style.display = 'flex';
+    let op = 1;
+    if (t < 18.4) op = (t - 17.8) / 0.6;
+    else if (t > 24.6) op = (25.2 - t) / 0.6;
+    s4.style.opacity = op;
+
+    // SFX triggers
+    if (t >= 18.0 && !sfxCues.cardRiser) {
+      sfxCues.cardRiser = true;
+      playCardPowerUp();
+    }
+    if (t >= 20.5 && !sfxCues.cardFoilWhoosh) {
+      sfxCues.cardFoilWhoosh = true;
+      playWhoosh();
+    }
+
+    const card = document.getElementById('promoFifaCard');
+    const callout = document.getElementById('callout4');
+    const foil = document.getElementById('cardFoil');
+
+    const localT = t - 17.8;
+    const enterFactor = clamp(localT / 1.0, 0, 1);
+    const easedEnter = easeInOut(enterFactor);
+
+    // Parallax 3D Card Wobble
+    const rotY = Math.sin((t - 18) * 1.5) * 16;
+    const rotX = Math.cos((t - 18) * 1.2) * 8;
+    
+    if (currentAspect === 'wide') {
+      callout.style.opacity = easedEnter;
+      callout.style.left = '100px';
+      card.style.transform = `translateX(180px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${0.85 + easedEnter * 0.25})`;
+    } else {
+      callout.style.top = '10%';
+      callout.style.left = '50%';
+      callout.style.transform = 'translateX(-50%)';
+      callout.style.textAlign = 'center';
+      card.style.transform = `translateY(140px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(0.9)`;
+    }
+
+    // Foil sheen sweep
+    foil.style.transform = `rotate(25deg) translateX(${(t - 18) * 160}px)`;
+
+    // Attribute count up
+    const statFactor = clamp((t - 19.0) / 1.5, 0, 1);
+    document.getElementById('stPac').innerText = Math.round(50 + statFactor * 32);
+    document.getElementById('stSho').innerText = Math.round(55 + statFactor * 37);
+    document.getElementById('stPas').innerText = Math.round(48 + statFactor * 32);
+    document.getElementById('stDri').innerText = Math.round(45 + statFactor * 32);
+    document.getElementById('stDef').innerText = Math.round(40 + statFactor * 32);
+    document.getElementById('stPhy').innerText = Math.round(50 + statFactor * 31);
+    document.getElementById('fifaOvr').innerText = Math.round(60 + statFactor * 31);
+  } else {
+    s4.style.opacity = 0;
+    s4.style.display = 'none';
+  }
+
+  // -------------------------------------------------------------
+  // SCENE 5: OUTRO & CALL TO ACTION (t: 24.8s -> 30.0s)
+  // -------------------------------------------------------------
+  if (t >= 24.8) {
+    s5.style.display = 'flex';
+    const localT = t - 24.8;
+    const enterFactor = clamp(localT / 0.8, 0, 1);
+    s5.style.opacity = enterFactor;
+
+    if (t >= 25.0 && !sfxCues.outroCrowd) {
+      sfxCues.outroCrowd = true;
+      playStadiumRoar();
+    }
+
+    const outroBox = document.getElementById('outroBox');
+    const zoom = 0.9 + (enterFactor * 0.1);
+    outroBox.style.transform = `scale(${zoom})`;
+
+    const ctaBtn = document.getElementById('outroCta');
+    const pulse = 1 + Math.sin(t * 5) * 0.03;
+    ctaBtn.style.transform = `scale(${pulse})`;
+  } else {
+    s5.style.opacity = 0;
+    s5.style.display = 'none';
+  }
+
+  // Draw background canvas particles
+  drawParticles();
+}
+
+/* =========================================================================
+   PLAYBACK ENGINE & CONTROLS
+   ========================================================================= */
+
+function animationLoop(timestamp) {
+  if (!lastTimestamp) lastTimestamp = timestamp;
+  const delta = (timestamp - lastTimestamp) / 1000;
+  lastTimestamp = timestamp;
+
+  if (isPlaying) {
+    currentTime += delta * playbackSpeed;
+    if (currentTime >= TOTAL_DURATION) {
+      currentTime = TOTAL_DURATION;
+      pauseVideo();
+    }
+    renderFrame(currentTime);
+  }
+
+  requestAnimationFrame(animationLoop);
+}
+
+requestAnimationFrame(animationLoop);
+
+function playVideo() {
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+  if (currentTime >= TOTAL_DURATION) {
+    resetVideo();
+  }
+  isPlaying = true;
+  document.getElementById('playIcon').innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+}
+
+function pauseVideo() {
+  isPlaying = false;
+  document.getElementById('playIcon').innerHTML = '<path d="M5 3l14 9-14 9V3z"/>';
+}
+
+function togglePlay() {
+  if (isPlaying) pauseVideo();
+  else playVideo();
+}
+
+function resetVideo() {
+  currentTime = 0.00;
+  // Reset sound triggers
+  for (let k in sfxCues) sfxCues[k] = false;
+  renderFrame(0);
+}
+
+function seekTo(targetTime) {
+  currentTime = clamp(targetTime, 0, TOTAL_DURATION);
+  // Reset sfx that are after targetTime
+  if (currentTime < 0.2) sfxCues.hookDrop = false;
+  if (currentTime < 2.2) sfxCues.pinPop = false;
+  if (currentTime < 5.0) sfxCues.pitchWhoosh = false;
+  if (currentTime < 7.2) sfxCues.slotClick = false;
+  if (currentTime < 8.8) sfxCues.bookSuccess = false;
+  if (currentTime < 11.0) sfxCues.whistleSound = false;
+  if (currentTime < 13.5) sfxCues.squadFill = false;
+  if (currentTime < 15.2) sfxCues.gameSuccess = false;
+  if (currentTime < 18.0) sfxCues.cardRiser = false;
+  if (currentTime < 20.5) sfxCues.cardFoilWhoosh = false;
+  if (currentTime < 25.0) sfxCues.outroCrowd = false;
+
+  renderFrame(currentTime);
+}
+
+function seekRelative(offset) {
+  seekTo(currentTime + offset);
+}
+
+// Scrubber Click & Drag
+const scrubber = document.getElementById('scrubberTrack');
+let isScrubbing = false;
+
+function handleScrub(e) {
+  const rect = scrubber.getBoundingClientRect();
+  const pct = clamp((e.clientX - rect.left) / rect.width, 0, 1);
+  seekTo(pct * TOTAL_DURATION);
+}
+
+scrubber.addEventListener('mousedown', (e) => {
+  isScrubbing = true;
+  handleScrub(e);
+});
+
+window.addEventListener('mousemove', (e) => {
+  if (isScrubbing) handleScrub(e);
+});
+
+window.addEventListener('mouseup', () => {
+  isScrubbing = false;
+});
+
+// Speed Cycle
+const speeds = [0.5, 1.0, 1.5, 2.0];
+function cycleSpeed() {
+  const idx = speeds.indexOf(playbackSpeed);
+  playbackSpeed = speeds[(idx + 1) % speeds.length];
+  document.getElementById('btnSpeed').innerText = `${playbackSpeed}x`;
+}
+
+// Keyboard shortcuts (Space = play/pause, Left/Right = seek)
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space') {
+    e.preventDefault();
+    togglePlay();
+  } else if (e.code === 'ArrowLeft') {
+    e.preventDefault();
+    seekRelative(-2);
+  } else if (e.code === 'ArrowRight') {
+    e.preventDefault();
+    seekRelative(2);
+  } else if (e.code === 'KeyF') {
+    toggleFullscreen();
+  }
+});
+
+// Aspect Ratio Switcher (16:9 Landscape vs 9:16 Reel)
+function setAspect(mode) {
+  currentAspect = mode;
+  const outer = document.getElementById('stageOuter');
+  const btnWide = document.getElementById('btnWide');
+  const btnReel = document.getElementById('btnReel');
+
+  if (mode === 'reel') {
+    outer.classList.add('reel-mode');
+    btnReel.classList.add('active');
+    btnWide.classList.remove('active');
+  } else {
+    outer.classList.remove('reel-mode');
+    btnWide.classList.add('active');
+    btnReel.classList.remove('active');
+  }
+
+  initParticles();
+  resizeStage();
+  renderFrame(currentTime);
+}
+
+// Fullscreen
+function toggleFullscreen() {
+  const outer = document.getElementById('stageOuter');
+  if (!document.fullscreenElement) {
+    if (outer.requestFullscreen) outer.requestFullscreen();
+    else if (outer.webkitRequestFullscreen) outer.webkitRequestFullscreen();
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+  }
+}
+
+/* =========================================================================
+   MEDIA RECORDER (Export MP4 / WebM Video)
+   ========================================================================= */
+
+let mediaRecorder = null;
+let recordedChunks = [];
+
+async function startExportRecording() {
+  const btn = document.getElementById('btnRecord');
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
+    mediaRecorder.stop();
+    return;
+  }
+
+  btn.innerHTML = '⏺ Recording...';
+  btn.style.background = '#FF4D4D';
+  btn.style.color = '#fff';
+
+  initAudio();
+  resetVideo();
+
+  // Capture canvas or display stream
+  try {
+    const stream = canvas.captureStream(60);
+    
+    // Add audio track if available
+    if (audioCtx) {
+      const dest = audioCtx.createMediaStreamDestination();
+      // connect master if supported, otherwise capture video
+    }
+
+    recordedChunks = [];
+    const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm';
+    mediaRecorder = new MediaRecorder(stream, { mimeType: mime });
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = () => {
+      btn.innerHTML = 'Download Video';
+      btn.style.background = 'var(--accent)';
+      btn.style.color = '#05140C';
+
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `football-community-lagos-30s-promo-${currentAspect}.webm`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => document.body.removeChild(a), 100);
+    };
+
+    mediaRecorder.start();
+    playVideo();
+
+    // Auto stop when 30 seconds reached
+    const checkStop = setInterval(() => {
+      if (currentTime >= TOTAL_DURATION || !isPlaying) {
+        clearInterval(checkStop);
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }
+    }, 200);
+
+  } catch (err) {
+    alert("To screen record the 30-second promo at maximum 4K quality, you can play in Fullscreen (Key 'F') with your screen recorder (e.g. QuickTime, OBS, or Chrome Tab Capture)!");
+    btn.innerHTML = 'Record Video';
+    btn.style.background = '';
+    btn.style.color = '';
+  }
+}
+
+// Initial setup
+initParticles();
+resizeStage();
+renderFrame(0);
+</script>
+</body>
+</html>
