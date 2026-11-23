@@ -2860,21 +2860,31 @@ function publishEvent(){
 const startCreateComp=()=>{
   S.editingCompId=null;
   S.form={
+    csec:'details',
     cname:'',
-    ctype:'Grassroots competition',
-    cseason:'2026/27 Season',
-    cformat:'11-a-side',
-    carea:(S.user&&S.user.loc?S.user.loc.split(' and ')[0]:'Surulere')||'Surulere',
-    cvenue:'Teslim Balogun Stadium',
-    ccapacity:8,
+    ctype:'',
+    cseason:'',
+    cformat:'',
+    carea:'',
+    cvenue:'',
+    ccapacity:'',
     c_enrolledTeams:['Mainland FC','Surulere United'],
-    cfree:true,
-    cfee:25000,
-    cprize:'₦500,000 + Gold Trophy',
+    cfree:null,
+    cfee:'',
+    cprize:'',
     cdesc:'',
     creqVerify:true
   };
   go('createComp');
+};
+const nextCompSection=()=>{
+  const f=S.form||{};
+  if(!(f.cname||'').trim()){
+    toast('Please enter a competition name first');
+    return;
+  }
+  S.form.csec='teams_rules';
+  render();
 };
 const toggleEnrollTeam=teamName=>{
   S.form=S.form||{};
@@ -2916,131 +2926,151 @@ const removeEnrolledTeam=idx=>{
 };
 SC.createComp=()=>{
   const f=S.form||{};
-  if(!f.ctype)f.ctype='Grassroots competition';
-  if(!f.cformat)f.cformat='11-a-side';
-  if(!f.carea)f.carea=(S.user&&S.user.loc?S.user.loc.split(' and ')[0]:'Surulere')||'Surulere';
-  if(!f.cvenue)f.cvenue='Teslim Balogun Stadium';
-  if(f.ccapacity===undefined)f.ccapacity=8;
-  if(f.cfree===undefined)f.cfree=true;
-  if(!f.cfee)f.cfee=25000;
-  if(!f.cprize)f.cprize='₦500,000 + Gold Trophy';
+  f.csec=f.csec||'details';
   if(f.creqVerify===undefined)f.creqVerify=true;
   if(!Array.isArray(f.c_enrolledTeams))f.c_enrolledTeams=['Mainland FC','Surulere United'];
 
-  const compTypes=['Grassroots competition','League Table','Knockout Cup','Group Stage + Knockout','Friendly Tournament / Series','Campus / University League','Corporate League'];
+  const compTypes=['Grassroots Tournament','League Table','Knockout Cup','Group Stage + Knockout','Friendly Tournament'];
   const formats=['5-a-side','7-a-side','9-a-side','11-a-side'];
   const capacities=[4,6,8,10,12,16,24,32];
   const enrolled=f.c_enrolledTeams;
   const unselectedRegistered=teams.filter(t=>!enrolled.includes(t.name));
+
+  const detailsSection=`
+    <div class="field">Competition / Tournament Name
+      <input value="${f.cname||''}" oninput="S.form.cname=this.value" placeholder="e.g. Lagos Grassroots Cup, Island Champions League">
+    </div>
+
+    <div class="row">
+      <div class="field grow">Tournament Structure
+        <select onchange="S.form.ctype=this.value;render()">
+          <option value="" disabled ${!f.ctype?'selected':''}>Select an option</option>
+          ${compTypes.map(t=>`<option value="${t}" ${f.ctype===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field grow">Match Format
+        <select onchange="S.form.cformat=this.value;render()">
+          <option value="" disabled ${!f.cformat?'selected':''}>Select an option</option>
+          ${formats.map(fmt=>`<option value="${fmt}" ${f.cformat===fmt?'selected':''}>${fmt}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">Season / Edition
+        <input value="${f.cseason||''}" oninput="S.form.cseason=this.value" placeholder="e.g. 2026/27 Season, Harmattan Cup">
+      </div>
+      <div class="field grow">Target Teams
+        <select onchange="S.form.ccapacity=+this.value;render()">
+          <option value="" disabled ${!f.ccapacity?'selected':''}>Select an option</option>
+          ${capacities.map(n=>`<option value="${n}" ${f.ccapacity===n?'selected':''}>${n} Teams</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">Primary Venue / Stadium
+        <input value="${f.cvenue||''}" oninput="S.form.cvenue=this.value" placeholder="e.g. Teslim Balogun Stadium, Campos Mini Stadium">
+      </div>
+      <div class="field grow">Area / City
+        <input value="${f.carea||''}" oninput="S.form.carea=this.value" placeholder="e.g. Surulere, Lagos Island, Lekki, or Ikeja">
+      </div>
+    </div>
+
+    <div class="col" style="margin-top:20px">
+      <button type="button" class="btn" onclick="nextCompSection()">Continue to Teams &amp; Rules →</button>
+    </div>
+  `;
+
+  const teamsRulesSection=`
+    <div class="card" style="margin-bottom:14px;background:var(--surface2)">
+      <div class="b" style="margin-bottom:4px">Team Enrollment / Selection (${enrolled.length}${f.ccapacity?' / '+f.ccapacity:' teams'} selected)</div>
+      <div class="sub small" style="margin-bottom:10px">Pick from registered community clubs or add custom teams.</div>
+
+      <div style="margin-bottom:10px">
+        ${enrolled.length?enrolled.map((t,idx)=>`
+          <span class="tag" style="background:var(--card-sub);padding:6px 10px;font-size:12px;border-radius:8px;margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px">
+            ${crest(t,18)} <b>${t}</b>
+            <button type="button" onclick="removeEnrolledTeam(${idx})" style="background:none;border:none;color:var(--bad);font-weight:bold;cursor:pointer;padding:0 3px">✕</button>
+          </span>
+        `).join(''):'<div class="card small muted">No teams enrolled yet. Select or add below.</div>'}
+      </div>
+
+      ${unselectedRegistered.length?`
+        <div class="sub small" style="margin:8px 0 6px">Quick pick registered clubs:</div>
+        <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+          ${unselectedRegistered.map(t=>`
+            <button type="button" class="chip" onclick="toggleEnrollTeam('${t.name}')">${ic('plus')} ${t.name}</button>
+          `).join('')}
+        </div>
+      `:''}
+
+      <div class="sub small" style="margin:8px 0 6px">Add custom team:</div>
+      <div class="row" style="align-items:center;gap:8px">
+        <input id="custom_team_inp" class="grow" style="height:38px;box-sizing:border-box;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none" placeholder="e.g. Victoria Island United, Bariga Warriors" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomEnrollTeam()}">
+        <button type="button" class="btn sm ghost" style="height:38px;box-sizing:border-box;border-radius:999px;padding:0 16px;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin:0" onclick="addCustomEnrollTeam()">${ic('plus')}Add Team</button>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field grow">Team Entry Fee
+        <select onchange="S.form.cfree=(this.value==='free');render()">
+          <option value="" disabled ${f.cfree===null||f.cfree===undefined?'selected':''}>Select an option</option>
+          <option value="free" ${f.cfree===true?'selected':''}>Free Entry</option>
+          <option value="paid" ${f.cfree===false?'selected':''}>Paid Entry</option>
+        </select>
+      </div>
+      ${f.cfree===false?`
+        <div class="field grow">Fee per team (₦)
+          <input type="number" value="${f.cfee||''}" oninput="S.form.cfee=+this.value" placeholder="e.g. 25,000 / team">
+        </div>
+      `:''}
+    </div>
+
+    <div class="field">Prize Pool / Awards
+      <input value="${f.cprize||''}" oninput="S.form.cprize=this.value" placeholder="e.g. ₦1,000,000 + Gold Trophy + Medals">
+    </div>
+
+    <div class="field">Tournament Rules &amp; Details
+      <input value="${f.cdesc||''}" oninput="S.form.cdesc=this.value" placeholder="e.g. 90 mins knockout, 5 substitutions, FIFA rules, medals for top 3">
+    </div>
+
+    <div class="opt" style="margin-bottom:18px" onclick="S.form.creqVerify=!S.form.creqVerify;render()">
+      <div class="grow">
+        <b>Request "Verified Competition" Badge</b>
+        <div class="sub">Applies for verified badge review by Football Community admins</div>
+      </div>
+      ${tog(Boolean(f.creqVerify),'creq_tog')}
+    </div>
+
+    <div class="col" style="gap:10px;margin-top:20px">
+      <button type="button" class="btn" onclick="submitCreateComp()">Publish Competition Instantly</button>
+      <button type="button" class="btn ghost" onclick="S.form.csec='details';render()">← Back to Competition Details</button>
+    </div>
+  `;
 
   return `${hdr('Create Competition')}
   <div class="note" style="margin-bottom:14px">
     <b>Instant Publish + Verified Admin Badge:</b> Your tournament publishes instantly to the community. You can also request an official <b>"Verified Competition ✓"</b> badge for verified stadiums and sponsor backing.
   </div>
 
-  <div class="field">Competition / Tournament Name
-    <input value="${f.cname||''}" oninput="S.form.cname=this.value" placeholder="e.g. Lagos Grassroots Cup, Island Champions League">
+  <div class="tabs" style="margin-bottom:14px">
+    <button type="button" class="${f.csec==='details'?'on':''}" onclick="S.form.csec='details';render()">1. Competition Details</button>
+    <button type="button" class="${f.csec==='teams_rules'?'on':''}" onclick="S.form.csec='teams_rules';render()">2. Teams &amp; Rules</button>
   </div>
 
-  <div class="row">
-    <div class="field grow">Tournament Structure
-      <select onchange="S.form.ctype=this.value">
-        ${compTypes.map(t=>`<option ${f.ctype===t?'selected':''}>${t}</option>`).join('')}
-      </select>
-    </div>
-    <div class="field grow">Match Format
-      <select onchange="S.form.cformat=this.value">
-        ${formats.map(fmt=>`<option ${f.cformat===fmt?'selected':''}>${fmt}</option>`).join('')}
-      </select>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="field grow">Season / Edition
-      <input value="${f.cseason||'2026/27 Season'}" oninput="S.form.cseason=this.value" placeholder="e.g. 2026/27 or Harmattan Cup">
-    </div>
-    <div class="field grow">Target Teams
-      <select onchange="S.form.ccapacity=+this.value;render()">
-        ${capacities.map(n=>`<option value="${n}" ${f.ccapacity===n?'selected':''}>${n} Teams</option>`).join('')}
-      </select>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="field grow">Primary Venue / Stadium
-      <input value="${f.cvenue||''}" oninput="S.form.cvenue=this.value" placeholder="e.g. Teslim Balogun Stadium">
-    </div>
-    <div class="field grow">Area / City
-      <input value="${f.carea||''}" oninput="S.form.carea=this.value" placeholder="e.g. Surulere, Lagos Island">
-    </div>
-  </div>
-
-  <div class="card" style="margin-bottom:14px;background:var(--surface2)">
-    <div class="b" style="margin-bottom:4px">Team Enrollment / Selection (${enrolled.length} / ${f.ccapacity} selected)</div>
-    <div class="sub small" style="margin-bottom:10px">Pick from registered community clubs or type custom / school team names.</div>
-
-    <div style="margin-bottom:10px">
-      ${enrolled.length?enrolled.map((t,idx)=>`
-        <span class="tag" style="background:var(--card-sub);padding:6px 10px;font-size:12px;border-radius:8px;margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px">
-          ${crest(t,18)} <b>${t}</b>
-          <button type="button" onclick="removeEnrolledTeam(${idx})" style="background:none;border:none;color:var(--bad);font-weight:bold;cursor:pointer;padding:0 3px">✕</button>
-        </span>
-      `).join(''):'<div class="card small muted">No teams enrolled yet. Select or add below.</div>'}
-    </div>
-
-    ${unselectedRegistered.length?`
-      <div class="sub small" style="margin:8px 0 6px">Quick pick registered clubs:</div>
-      <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
-        ${unselectedRegistered.map(t=>`
-          <button type="button" class="chip" onclick="toggleEnrollTeam('${t.name}')">${ic('plus')} ${t.name}</button>
-        `).join('')}
-      </div>
-    `:''}
-
-    <div class="sub small" style="margin:8px 0 6px">Add custom, school, or corporate team:</div>
-    <div class="row" style="gap:8px">
-      <input id="custom_team_inp" class="grow" placeholder="Enter team name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomEnrollTeam()}">
-      <button type="button" class="btn sm ghost" onclick="addCustomEnrollTeam()">${ic('plus')}Add Team</button>
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="field grow">Team Entry Fee
-      <select onchange="S.form.cfree=(this.value==='free');render()">
-        <option value="free" ${f.cfree?'selected':''}>Free Entry</option>
-        <option value="paid" ${!f.cfree?'selected':''}>Paid Entry</option>
-      </select>
-    </div>
-    ${!f.cfree?`
-      <div class="field grow">Fee per team (₦)
-        <input type="number" value="${f.cfee||25000}" oninput="S.form.cfee=+this.value" placeholder="25000">
-      </div>
-    `:''}
-  </div>
-
-  <div class="field">Prize Pool / Awards
-    <input value="${f.cprize||''}" oninput="S.form.cprize=this.value" placeholder="e.g. ₦1,000,000 + Trophy + Medals">
-  </div>
-
-  <div class="field">Tournament Rules &amp; Details
-    <input value="${f.cdesc||''}" oninput="S.form.cdesc=this.value" placeholder="Knockout rules, match duration, subs, awards, contact info…">
-  </div>
-
-  <div class="opt" style="margin-bottom:18px" onclick="S.form.creqVerify=!S.form.creqVerify;render()">
-    <div class="grow">
-      <b>Request "Verified Competition" Badge</b>
-      <div class="sub">Applies for verified badge review by Football Community admins</div>
-    </div>
-    ${tog(Boolean(f.creqVerify),'creq_tog')}
-  </div>
-
-  <button class="btn" onclick="submitCreateComp()">Publish Competition Instantly</button>`;
+  ${f.csec==='details'?detailsSection:teamsRulesSection}`;
 };
 
 function submitCreateComp(){
   const f=S.form||{};
   const name=(f.cname||'').trim();
-  if(!name){toast('Please enter a competition name');return}
+  if(!name){
+    S.form.csec='details';
+    render();
+    toast('Please enter a competition name');
+    return;
+  }
   const venue=(f.cvenue||'').trim()||'Lagos Sports Complex';
   const enrolled=Array.isArray(f.c_enrolledTeams)&&f.c_enrolledTeams.length?f.c_enrolledTeams:['Mainland FC'];
   const cid=makeUUID();
@@ -3048,14 +3078,14 @@ function submitCreateComp(){
   S.myComps[cid]=true;
   const creatorEmail=currentUserEmail()||S.user.email||'';
   const creatorId=currentUserId();
-  const feeLabel=f.cfree?'Free':('₦'+(+f.cfee||25000).toLocaleString()+' / team');
+  const feeLabel=f.cfree===false?('₦'+(+f.cfee||25000).toLocaleString()+' / team'):'Free';
   const initialStandings=enrolled.map(t=>[t,0,0,0,0,0,0]);
 
   const compItem={
     id:cid,
     name:name,
-    type:f.ctype||'Grassroots competition',
-    season:f.cseason||'2026/27',
+    type:f.ctype||'Grassroots Tournament',
+    season:f.cseason||'2026/27 Season',
     teams:enrolled.length,
     format:f.cformat||'11-a-side',
     area:(f.carea||'Lagos').trim(),
@@ -3212,10 +3242,10 @@ SC.manageCompTeams=()=>{
       <button type="button" class="chip" onclick="toggleManageCompTeam('${t.name}')">${ic('plus')} ${t.name}</button>
     `).join('')}
   </div>
-  <div class="field" style="margin-bottom:6px">Add custom or school team</div>
-  <div class="row" style="gap:8px;margin-bottom:20px">
-    <input id="m_custom_team_inp" class="grow" placeholder="Enter custom team name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomManageCompTeam()}">
-    <button type="button" class="btn sm ghost" onclick="addCustomManageCompTeam()">${ic('plus')}Add Team</button>
+  <div class="field" style="margin-bottom:6px">Add custom team</div>
+  <div class="row" style="align-items:center;gap:8px;margin-bottom:20px">
+    <input id="m_custom_team_inp" class="grow" style="height:38px;box-sizing:border-box;padding:0 16px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none" placeholder="e.g. Victoria Island United, Bariga Warriors" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomManageCompTeam()}">
+    <button type="button" class="btn sm ghost" style="height:38px;box-sizing:border-box;border-radius:999px;padding:0 16px;white-space:nowrap;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;margin:0" onclick="addCustomManageCompTeam()">${ic('plus')}Add Team</button>
   </div>
   <button class="btn" onclick="saveManagedCompTeams()">Save Teams Changes</button>`;
 };
@@ -3454,6 +3484,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=19"></script>
+<script src="fc-data.js?v=20"></script>
 </body>
 </html>
