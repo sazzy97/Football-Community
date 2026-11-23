@@ -39,6 +39,7 @@ const FCData = {
     S.myGames = S.myGames || {};
     S.myFixtures = S.myFixtures || {};
     S.myEvents = S.myEvents || {};
+    S.myComps = S.myComps || {};
     S.attending = S.attending || {};
     S.tickets = S.tickets || {};
     S.gpayMethod = S.gpayMethod || 'card';
@@ -53,6 +54,17 @@ const FCData = {
       if (savedMyFix) S.myFixtures = { ...S.myFixtures, ...JSON.parse(savedMyFix) };
       const savedMyEv = localStorage.getItem('fc_my_events');
       if (savedMyEv) S.myEvents = { ...S.myEvents, ...JSON.parse(savedMyEv) };
+      const savedMyComps = localStorage.getItem('fc_my_comps');
+      if (savedMyComps) S.myComps = { ...S.myComps, ...JSON.parse(savedMyComps) };
+      const savedCustomComps = localStorage.getItem('fc_custom_comps');
+      if (savedCustomComps && window.comps) {
+        const parsed = JSON.parse(savedCustomComps);
+        if (Array.isArray(parsed)) {
+          parsed.forEach((c) => {
+            if (!comps.find((x) => String(x.id) === String(c.id))) comps.unshift(c);
+          });
+        }
+      }
       const savedAttending = localStorage.getItem('fc_attending');
       if (savedAttending) S.attending = { ...S.attending, ...JSON.parse(savedAttending) };
       const savedTickets = localStorage.getItem('fc_tickets');
@@ -502,6 +514,42 @@ const FCData = {
     }
   },
 
+  async publishCompetition(item) {
+    const payload = {
+      comp_id: String(item.id),
+      name: item.name,
+      type: item.type,
+      season: item.season,
+      teams: +item.teams || 0,
+      format: item.format || '11-a-side',
+      area: item.area || 'Lagos',
+      venue: item.venue || '',
+      fee: item.fee || 'Free',
+      prize: item.prize || '',
+      verified: Boolean(item.verified),
+      verification_requested: Boolean(item.verificationRequested),
+      desc: item.desc || '',
+      enrolled_teams: item.enrolledTeams || [],
+      org: item.org || (window.S && S.user && S.user.name) || '',
+      creator_id: item.creator_id || '',
+      creator_email: item.creator_email || ''
+    };
+    await this.record(
+      'event_submissions',
+      {
+        event_name: item.name,
+        category: 'Competition',
+        venue: item.venue || item.area || 'Lagos',
+        event_date: item.season,
+        event_time: item.fee || 'Free',
+        submitted_by: item.org || (window.S && S.user && S.user.name) || 'Organiser',
+        status: item.verified ? 'verified_competition' : 'published_competition'
+      },
+      'competition_published',
+      payload
+    );
+  },
+
   isSupabaseConfigured() {
     return Boolean(this.cfg.supabaseUrl && this.cfg.supabaseKey);
   },
@@ -528,8 +576,13 @@ const FCData = {
       if (window.S && S.myGames) localStorage.setItem('fc_my_games', JSON.stringify(S.myGames));
       if (window.S && S.myFixtures) localStorage.setItem('fc_my_fixtures', JSON.stringify(S.myFixtures));
       if (window.S && S.myEvents) localStorage.setItem('fc_my_events', JSON.stringify(S.myEvents));
+      if (window.S && S.myComps) localStorage.setItem('fc_my_comps', JSON.stringify(S.myComps));
       if (window.S && S.attending) localStorage.setItem('fc_attending', JSON.stringify(S.attending));
       if (window.S && S.tickets) localStorage.setItem('fc_tickets', JSON.stringify(S.tickets));
+      if (window.comps) {
+        const customComps = comps.filter((c) => c.isMine || c.fromCloud);
+        localStorage.setItem('fc_custom_comps', JSON.stringify(customComps));
+      }
     } catch (e) {}
   },
 
@@ -1252,7 +1305,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=18', { updateViaCache: 'none' })
+        .register('./sw.js?v=19', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -1268,7 +1321,7 @@ const FCData = {
   handleUrlDeepLinks() {
     try {
       const params = new URLSearchParams(window.location.search);
-      // 1. Instant encoded payloads (?g= game, ?m= match fixture, ?e= event)
+      // 1. Instant encoded payloads (?g= game, ?m= match fixture, ?e= event, ?c= competition)
       if (params.has('g')) {
         try {
           const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('g')))));
@@ -1309,6 +1362,19 @@ const FCData = {
           }
         } catch (err) {}
       }
+      if (params.has('c')) {
+        try {
+          const decoded = JSON.parse(decodeURIComponent(escape(atob(params.get('c')))));
+          if (decoded && decoded.name) {
+            const existingIdx = comps.findIndex((x) => String(x.id) === String(decoded.id));
+            if (existingIdx >= 0) comps[existingIdx] = { ...comps[existingIdx], ...decoded };
+            else comps.unshift(decoded);
+            S.stack = [{ s: 'comp', a: decoded.id }];
+            render();
+            return;
+          }
+        } catch (err) {}
+      }
 
       if (params.has('p')) {
         try {
@@ -1337,6 +1403,10 @@ const FCData = {
       } else if (params.has('player')) {
         const rawName = params.get('player');
         S.stack = [{ s: 'player', a: rawName }];
+        render();
+      } else if (params.has('comp')) {
+        const rawId = params.get('comp');
+        S.stack = [{ s: 'comp', a: rawId }];
         render();
       } else if (params.has('game')) {
         const rawId = params.get('game');

@@ -701,7 +701,10 @@ const events=[
  {im:"event1",id:9,title:"Lagos Street Football Festival",cat:'Festival',trust:'Verified event',venue:'Tafawa Balewa Square',when:'Sat 12 Dec · 11:00',fee:'₦2,000',status:'Upcoming',org:'Lagos Football Culture',tix:true,left:310,comp:-1,b:'',going:85,attended:0},
  {im:"event4",id:10,title:"Open Technical & Fitness Clinic",cat:'Training',trust:'Organiser-published',venue:'Ikeja Sports Ground',when:'Thu 19 Nov · 08:00',fee:'₦3,000',status:'Upcoming',org:'ProTouch Coaching',tix:true,left:24,comp:-1,b:'',going:14,attended:0}
 ];
-const comps=[{id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8},{id:1,name:'Campus 7s League',type:'University competition',season:'2026/27',teams:6}];
+const comps=[
+ {id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8,format:'11-a-side',area:'Surulere',venue:'Teslim Balogun Stadium',fee:'Free',prize:'₦1,000,000 + Gold Trophy',verified:true,desc:'Premier grassroots knockout tournament for local academies.',enrolledTeams:['Mainland FC','Surulere United','Lekki Lions','Yaba Rovers','Ikeja Stars','Akoka Boys FC','Bariga All-Stars','Festac Warriors'],standings:[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]]},
+ {id:1,name:'Campus 7s League',type:'University competition',season:'2026/27',teams:6,format:'7-a-side',area:'Yaba',venue:'Unilag Sports Field',fee:'₦15,000 / team',prize:'₦400,000 + Trophy',verified:true,desc:'Inter-faculty campus league in Lagos.',enrolledTeams:['Mainland FC','Yaba Rovers','Surulere Social','Lekki Lions'],standings:[['Yaba Rovers',4,3,1,0,8,2],['Mainland FC',4,2,1,1,6,4],['Surulere Social',4,1,1,2,4,5],['Lekki Lions',4,0,1,3,2,9]]}
+];
 const standings=[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]];
 const fixtures=[
  {id:0,h:'Mainland FC',a:'Surulere United',t:'Sat 14 Nov · 15:00',s:'Upcoming',v:'Teslim Balogun Stadium',comp:'Lagos Grassroots Cup',going:34,attended:0,fee:'₦1,500',price:1500},
@@ -1206,6 +1209,18 @@ const isEventCreator=e=>{
   if(e.creator_id||e.creator_email)return false;
   return Boolean(e.isMine||(S.myEvents&&S.myEvents[e.id]));
 };
+const findComp=id=>{
+  if(id===undefined||id===null)return comps[0];
+  return comps.find(x=>String(x.id)===String(id))||comps[+id]||comps[0];
+};
+const isCompCreator=c=>{
+  if(!c)return false;
+  const uid=currentUserId(),em=currentUserEmail();
+  if(c.creator_id&&uid&&String(c.creator_id)===String(uid))return true;
+  if(c.creator_email&&em&&String(c.creator_email).toLowerCase()===em)return true;
+  if(c.creator_id||c.creator_email)return false;
+  return Boolean(c.isMine||(S.myComps&&S.myComps[c.id]));
+};
 const isVenueCreator=v=>{
   if(!v)return false;
   const uid=currentUserId(),em=currentUserEmail();
@@ -1224,6 +1239,7 @@ const getUserContext=()=>{
   const myBookings=getUserBookings();
   const myTeams=teams.filter(t=>t.role);
   const myVenues=venues.filter(v=>isVenueCreator(v));
+  const myComps=comps.filter(c=>isCompCreator(c));
   const paidGames=joinedGames.filter(g=>+g.price>0);
   const payRows=[
     ...myBookings.map(b=>{const st=b.status||b.payment_status||'Confirmed';const isP=String(st).toLowerCase().includes('pend');return {title:b.venue_name+' ('+b.pitch_name+')',ref:b.booking_ref||'TX-BOOK',amt:N(+b.amount_ngn||+b.amount_paid_ngn||+b.total_price_ngn||0),st:isP?'Pending':'Successful',cls:isP?'warn':'ok'}}),
@@ -1235,6 +1251,7 @@ const getUserContext=()=>{
   if(myWatching.length>0||myTickets.length>0)roles.push('Match Viewer');
   if(myGames.length>0)roles.push('Game Organiser');
   if(myFixtures.length>0||myEvents.length>0)roles.push('Match/Event Organiser');
+  if(myComps.length>0)roles.push('Competition Organiser');
   if(myTeams.length>0)roles.push('Team '+myTeams[0].role);
   if(myVenues.length>0)roles.push('Pitch Owner');
   if(!roles.length)roles.push('Community Member');
@@ -1244,16 +1261,18 @@ const getUserContext=()=>{
   if(myGames.length>0)activityTabs.push('Games Created');
   if(myWatching.length>0)activityTabs.push('Matches Watching');
   if(myFixtures.length>0||myEvents.length>0)activityTabs.push('Organised Matches');
+  if(myComps.length>0)activityTabs.push('Organised Competitions');
   if(myTickets.length>0)activityTabs.push('Tickets');
   if(myBookings.length>0)activityTabs.push('Bookings');
   if(myVenues.length>0)activityTabs.push('My Pitches');
   if(payRows.length>0)activityTabs.push('Payments');
 
   return {
-    myGames,joinedGames,myFixtures,myEvents,myWatching,myTickets,myBookings,myTeams,myVenues,payRows,roles,activityTabs,
+    myGames,joinedGames,myFixtures,myEvents,myWatching,myTickets,myBookings,myTeams,myVenues,myComps,payRows,roles,activityTabs,
     isGameOrg:myGames.length>0,
     isMatchOrg:myFixtures.length>0||myEvents.length>0,
-    isOrganiser:myGames.length>0||myFixtures.length>0||myEvents.length>0,
+    isCompOrg:myComps.length>0,
+    isOrganiser:myGames.length>0||myFixtures.length>0||myEvents.length>0||myComps.length>0,
     isPitchOwner:myVenues.length>0,
     hasTeam:myTeams.length>0
   };
@@ -1478,7 +1497,12 @@ const openShare=(type,id)=>{
     const shortU=base+'?event='+encodeURIComponent(e.id);
     item={type:'Event',id:e.id,title:e.title,sub:e.venue+' · '+e.when,tag:e.cat+' · '+e.fee,url:shortU,fullUrl:shortU+(enc?'&e='+enc:''),img:e.im||'event1'};
   }
-  else if(type==='comp'){const c=comps[id||0]||comps[0];item={type:'Competition',id:c.id,title:c.name,sub:c.type+' · '+c.season,tag:c.teams+' teams',url:base+'?tab=explore&sub=Competitions',fullUrl:base+'?tab=explore&sub=Competitions',img:'event1'}}
+  else if(type==='comp'){
+    const c=findComp(id);
+    const enc=encodeShareObj({id:c.id,name:c.name,type:c.type,season:c.season,teams:c.teams,format:c.format||'11-a-side',area:c.area||'Lagos',venue:c.venue||'',fee:c.fee||'Free',prize:c.prize||'',verified:Boolean(c.verified),desc:c.desc||'',enrolledTeams:c.enrolledTeams||[],creator_email:c.creator_email||'',creator_id:c.creator_id||''});
+    const shortU=base+'?comp='+encodeURIComponent(c.id);
+    item={type:'Competition',id:c.id,title:c.name,sub:(c.verified?'Verified ✓ · ':'')+c.type+' · '+c.season,tag:(c.format||'11-a-side')+' · '+((c.enrolledTeams||[]).length||c.teams)+' teams',url:shortU,fullUrl:shortU+(enc?'&c='+enc:''),img:'event1'};
+  }
   else if(type==='team'){const t=findTeam(id);item={type:'Team',id:t.id,title:t.name,sub:t.loc+' · '+t.fmt,tag:t.m+' members',url:base+'?team='+encodeURIComponent(t.id),fullUrl:base+'?team='+encodeURIComponent(t.id),img:'event2'}}
   else if(type==='match'){
     const f=findFixture(id);
@@ -1504,12 +1528,14 @@ const togglePref=(group,val)=>{
   render();
 };
 
-const jump=s=>{S.stack=[];S.tab=s==='createGame'||s==='games'||s==='venues'||s==='events'?'explore':'home';
+const jump=s=>{S.stack=[];S.tab=s==='createGame'||s==='games'||s==='venues'||s==='events'||s==='comps'?'explore':'home';
   if(s==='onb'){S.stack=[{s:'onb'}]}
   else if(s==='venues'){tab('explore');S.sub.explore='Pitches'}
   else if(s==='games'){tab('explore');S.sub.explore='Open Games'}
   else if(s==='events'){tab('explore');S.sub.explore='Matches & Events'}
+  else if(s==='comps'){tab('explore');S.sub.explore='Competitions'}
   else if(s==='createGame'){go('createGame')}
+  else if(s==='createComp'){startCreateComp()}
   else if(s==='createTeam'){S.tab='community';S.stack=[{s:'createTeam'}]}
   else if(s==='notifs'){S.stack=[{s:'notifs'}]}
   render()};
@@ -1735,8 +1761,31 @@ SC.explore=()=>{const k=S.sub.explore;let body='';S.q=S.q||{};
   <button class="btn ghost" style="margin-top:14px" onclick="startCreateEvent()">${ic('plus')}Publish an event</button>`}
  if(k==='Competitions'){
   const q=(S.q.comp||'').trim().toLowerCase();
-  const clist=comps.filter(c=>!q||c.name.toLowerCase().includes(q)||c.type.toLowerCase().includes(q));
-  body=`<div class="row"><div class="grow search">${ic('search')}<input id="q_comp" value="${S.q.comp||''}" oninput="setSearch('comp',this.value,'q_comp')" placeholder="Search competitions"></div>${q?`<button class="btn sm ghost" onclick="setSearch('comp','','q_comp')">Clear</button>`:''}</div><div class="list" style="margin-top:12px">${clist.map(c=>`<div class="card" onclick="go('comp',${c.id})"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div><div class="row sp" style="margin-top:10px"><span class="small muted">${c.teams} teams</span><button class="btn sm ${S.followed['c'+c.id]?'ghost':''}" onclick="event.stopPropagation();S.followed['c${c.id}']=!S.followed['c${c.id}'];render()">${S.followed['c'+c.id]?'Following':'Follow'}</button></div></div>`).join('')}</div>`}
+  const clist=comps.filter(c=>!q||c.name.toLowerCase().includes(q)||c.type.toLowerCase().includes(q)||(c.area&&c.area.toLowerCase().includes(q))||(c.venue&&c.venue.toLowerCase().includes(q))||(c.format&&c.format.toLowerCase().includes(q)));
+  body=`<button class="btn" style="margin-bottom:14px" onclick="startCreateComp()">${ic('plus')}Create Competition</button>
+  <div class="row"><div class="grow search">${ic('search')}<input id="q_comp" value="${S.q.comp||''}" oninput="setSearch('comp',this.value,'q_comp')" placeholder="Search competitions, formats or venues"></div>${q?`<button class="btn sm ghost" onclick="setSearch('comp','','q_comp')">Clear</button>`:''}</div>
+  <div class="list" style="margin-top:12px">
+    ${clist.length?clist.map(c=>{
+      const tCount=(c.enrolledTeams&&c.enrolledTeams.length)||c.teams||0;
+      const badge=c.verified?`<span class="tag ok">${ic('shield')}Verified</span>`:c.verificationRequested?`<span class="tag warn">Pending</span>`:`<span class="tag gold">Community</span>`;
+      return `<div class="card" onclick="go('comp','${c.id}')">
+        <div class="row">
+          <div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div>
+          <div class="grow">
+            <div class="row sp" style="align-items:flex-start">
+              <div class="b">${c.name}</div>
+              ${badge}
+            </div>
+            <div class="sub">${c.type} · ${c.season}</div>
+          </div>
+        </div>
+        <div class="row sp" style="margin-top:10px">
+          <span class="small muted">${c.format||'11-a-side'} · ${tCount} team${tCount===1?'':'s'}${c.area?' · '+c.area:''}</span>
+          <button class="btn sm ${S.followed['c'+c.id]?'ghost':''}" onclick="event.stopPropagation();S.followed['c${c.id}']=!S.followed['c${c.id}'];render()">${S.followed['c'+c.id]?'Following':'Follow'}</button>
+        </div>
+      </div>`;
+    }).join(''):`<div class="card small muted" style="text-align:center;padding:24px"><div class="b">No competitions match your search</div><div class="sub small" style="margin-top:4px">Tap "Create Competition" above to start your own!</div></div>`}
+  </div>`}
  return `<h1>Explore</h1>${tabsUI('explore',['Pitches','Open Games','Matches & Events','Competitions'])}${body}`};
 
 SC.venue=arg=>{
@@ -2040,12 +2089,128 @@ SC.ticketPass=arg=>{
   </div>`;
 };
 
-SC.comp=id=>{const c=comps[id]||comps[0],k=S.sub.compTab,ctx=getUserContext();const body={Fixtures:`<div class="list">${fixtures.map(matchRow).join('')}</div>${ctx.isMatchOrg?`<button class="btn" style="margin-top:14px" onclick="startCreateFixture('${c.name}')">${ic('plus')}Add Fixtures to ${c.name}</button>`:''}`,Results:`<div class="list">${fixtures.filter(f=>f.s==='Completed').map(matchRow).join('')}</div>`,
- Standings:`<div class="card"><table><tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>${standings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}</table></div><p class="small muted" style="margin-top:8px">Standings follow the rules configured for the competition.</p>`,
- Teams:`<div class="list">${teams.map(teamCard).join('')}</div>`,Updates:`<div class="card small">Fixtures published for the next round. <span class="muted">· 2 days ago</span></div>`}[k];
- return `${hdr('Competition',`<button class="round" onclick="openShare('comp',${id})">${ic('share')}</button>`)}
- <div class="hero"><div class="row"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div><div style="font-size:19px;font-weight:800">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div></div><button class="btn gold sm" style="margin-top:14px" onclick="S.followed['c${id}']=!S.followed['c${id}'];render()">${S.followed['c'+id]?'Following ✓':'Follow competition'}</button></div>
- ${tabsUI('compTab',['Fixtures','Results','Standings','Teams','Updates'])}${body}`};
+SC.comp=id=>{
+  const c=findComp(id),k=S.sub.compTab||'Fixtures',ctx=getUserContext();
+  const isCreator=isCompCreator(c);
+  const adminOk=isAdminUser();
+  const cFixtures=fixtures.filter(f=>(f.comp||'').toLowerCase()===c.name.toLowerCase());
+  const cResults=cFixtures.filter(f=>f.s==='Completed');
+  const enrolled=c.enrolledTeams||[];
+  const compStandings=(c.standings&&c.standings.length)?c.standings:(enrolled.length?enrolled.map(t=>[t,0,0,0,0,0,0]):standings);
+
+  const orgConsole=isCreator?`
+    <div class="card" style="border:1.5px solid var(--accent);background:var(--surface2);margin-bottom:14px">
+      <div class="row sp">
+        <span class="tag gold">${ic('trophy')} Organiser Console</span>
+        <span class="small muted">You created this</span>
+      </div>
+      <div class="sub small" style="margin:6px 0 12px">Manage fixtures, teams, and verification for ${c.name}.</div>
+      <div class="col" style="gap:8px">
+        <button class="btn sm" onclick="startCreateFixture('${c.name.replace(/'/g,"\\'")}')">${ic('plus')}Add Fixtures to ${c.name}</button>
+        <button class="btn sm ghost" onclick="startManageCompTeams('${c.id}')">${ic('users')}Manage Enrolled Teams (${enrolled.length})</button>
+        ${!c.verified?(!c.verificationRequested?`<button class="btn sm ghost" style="color:var(--brand)" onclick="requestCompVerification('${c.id}')">${ic('shield')}Request "Verified Competition" Badge</button>`:`<div class="card small warn" style="text-align:center;padding:8px">${ic('clock')} Verification Badge Requested · Pending Admin Review</div>`):''}
+      </div>
+    </div>
+  `:'';
+
+  const adminBar=adminOk?`
+    <div class="card row sp" style="border:1px dashed var(--accent);margin-bottom:14px;background:rgba(217,139,22,.08)">
+      <div>
+        <div class="b small">Admin Moderation Hub</div>
+        <div class="muted small">Status: <b>${c.verified?'Verified ✓':c.verificationRequested?'Pending Request':'Community'}</b></div>
+      </div>
+      <button class="btn sm ${c.verified?'ghost':''}" onclick="toggleCompVerification('${c.id}')">${c.verified?'Revoke Badge':'Grant Verified ✓'}</button>
+    </div>
+  `:'';
+
+  const body={
+    Fixtures: `
+      ${orgConsole}
+      ${cFixtures.length?`<div class="list">${cFixtures.map(matchRow).join('')}</div>`:`
+        <div class="card" style="text-align:center;padding:24px">
+          <div style="font-size:32px;margin-bottom:6px">⚽</div>
+          <div class="b">No fixtures published yet</div>
+          <div class="sub small" style="margin:4px 0 14px">Be the first to schedule matches for ${c.name}.</div>
+          ${isCreator?`<button class="btn sm" onclick="startCreateFixture('${c.name.replace(/'/g,"\\'")}')">${ic('plus')}Add First Fixture</button>`:''}
+        </div>
+      `}
+      ${!isCreator&&ctx.isMatchOrg?`<button class="btn ghost" style="margin-top:14px" onclick="startCreateFixture('${c.name.replace(/'/g,"\\'")}')">${ic('plus')}Publish a Fixture for ${c.name}</button>`:''}
+    `,
+    Results: `
+      ${cResults.length?`<div class="list">${cResults.map(matchRow).join('')}</div>`:`
+        <div class="card" style="text-align:center;padding:24px">
+          <div class="b">No completed matches yet</div>
+          <div class="sub small" style="margin-top:4px">Completed fixtures and full-time scores will appear here.</div>
+        </div>
+      `}
+    `,
+    Standings: `
+      <div class="card" style="overflow-x:auto">
+        <table style="width:100%;min-width:320px">
+          <tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>
+          ${compStandings.map((r,i)=>`<tr><td>${i+1}</td><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td><td>${r[5]-r[6]}</td><td><b>${r[2]*3+r[3]}</b></td></tr>`).join('')}
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:8px">Standings automatically update based on match results.</p>
+    `,
+    Teams: `
+      <div class="row sp" style="margin-bottom:10px">
+        <h2 class="sec" style="margin:0">Enrolled Teams (${enrolled.length})</h2>
+        ${isCreator?`<button class="btn sm ghost" onclick="startManageCompTeams('${c.id}')">${ic('plus')}Manage Teams</button>`:''}
+      </div>
+      <div class="list">
+        ${enrolled.map(tName=>{
+          const regTeam=teams.find(x=>x.name.toLowerCase()===tName.toLowerCase());
+          if(regTeam)return teamCard(regTeam);
+          return `<div class="card row">${crest(tName,42)}<div class="grow"><div class="b">${tName}</div><div class="sub small">${c.format||'11-a-side'} · Enrolled Squad</div></div><span class="tag">Enrolled</span></div>`;
+        }).join('')}
+      </div>
+    `,
+    Info: `
+      <div class="card">
+        <h2 class="sec" style="margin-top:0">Tournament Information</h2>
+        <div class="kv"><span class="muted">Status</span><b>${c.verified?`<span class="tag ok">${ic('shield')}Verified Competition</span>`:`<span class="tag gold">Community Competition</span>`}</b></div>
+        <div class="kv"><span class="muted">Structure</span><b>${c.type}</b></div>
+        <div class="kv"><span class="muted">Format</span><b>${c.format||'11-a-side'}</b></div>
+        <div class="kv"><span class="muted">Season / Edition</span><b>${c.season}</b></div>
+        <div class="kv"><span class="muted">Location</span><b>${c.venue}${c.area?', '+c.area:''}</b></div>
+        <div class="kv"><span class="muted">Registration Fee</span><b>${c.fee||'Free'}</b></div>
+        <div class="kv"><span class="muted">Prize Pool</span><b style="color:var(--accent)">${c.prize||'Trophy + Medals'}</b></div>
+        <div class="kv"><span class="muted">Organiser</span><b>${c.org||'Football Community Lagos'}</b></div>
+      </div>
+      ${c.desc?`<div class="card" style="margin-top:12px"><h2 class="sec" style="margin-top:0">Rules &amp; Description</h2><p class="sub" style="margin:0;line-height:1.5">${c.desc}</p></div>`:''}
+      <div class="col" style="margin-top:16px">
+        <button class="btn" onclick="openShare('comp','${c.id}')">${ic('share')}Share Competition</button>
+        ${isCreator?`<button class="btn ghost" onclick="startCreateFixture('${c.name.replace(/'/g,"\\'")}')">${ic('plus')}Add Fixtures</button>`:''}
+      </div>
+    `
+  }[k]||'';
+
+  const badgeHtml=c.verified
+    ?`<span class="tag ok" style="margin-top:4px">${ic('shield')}Verified Competition</span>`
+    :c.verificationRequested
+    ?`<span class="tag warn" style="margin-top:4px">${ic('clock')}Verification Pending Review</span>`
+    :`<span class="tag gold" style="margin-top:4px">Community Competition</span>`;
+
+  return `${hdr('Competition',`<button class="round" onclick="openShare('comp','${c.id}')">${ic('share')}</button>`)}
+  <div class="hero">
+    <div class="row">
+      <div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div>
+      <div class="grow">
+        <div style="font-size:20px;font-weight:800">${c.name}</div>
+        <div class="sub">${c.type} · ${c.season}</div>
+        ${badgeHtml}
+      </div>
+    </div>
+    <div class="row sp" style="margin-top:14px">
+      <span class="small" style="color:rgba(255,255,255,.85)">${ic('pin')} ${c.venue||c.area||'Lagos'} · ${enrolled.length} teams</span>
+      <button class="btn gold sm" onclick="S.followed['c${c.id}']=!S.followed['c${c.id}'];render()">${S.followed['c'+c.id]?'Following ✓':'Follow'}</button>
+    </div>
+  </div>
+  ${adminBar}
+  ${tabsUI('compTab',['Fixtures','Results','Standings','Teams','Info'])}
+  ${body}`;
+};
 
 const orgUpdateMatch=(id,action)=>{
  const f=findFixture(id);
@@ -2307,6 +2472,23 @@ SC.activity=()=>{
 
  const renderTicketsList=list=>list.map(t=>`<div class="card" style="text-align:center"><span class="tag gold">TICKET ENTRY CODE</span><div style="font-size:22px;font-weight:800;letter-spacing:1.5px;margin:8px 0 2px;color:var(--brand)">${t.code}</div><div class="b">${t.title}</div><div class="sub small">${t.venue} · ${t.when}</div><div class="sub small" style="margin-top:2px">${t.qty||1} × General Entry · Paid ${N(t.total||1500)}</div><div style="margin:12px auto;width:116px;height:116px;border-radius:16px;background:var(--surface2);display:grid;place-items:center;color:var(--text)"><svg viewBox="0 0 24 24" style="width:82px;height:82px" fill="none" stroke="currentColor" stroke-width="1.4">${P.qr}</svg></div><div class="col" style="margin-top:10px"><button class="btn sm" onclick="openTicketPass('${t.type||'event'}','${t.id!==undefined?t.id:0}',event)">View Full Ticket</button><button class="btn sm ghost" onclick="navigator.clipboard&&navigator.clipboard.writeText('${t.code}');toast('Ticket code ${t.code} copied!')">Copy Code</button></div></div>`).join('');
 
+ const renderOrganisedComps=list=>list.map(c=>`
+  <div class="card">
+    <div class="row sp">
+      <b>${c.name}</b>
+      <span class="tag ${c.verified?'ok':c.verificationRequested?'warn':'gold'}">${c.verified?'Verified ✓':c.verificationRequested?'Pending':'Community'}</span>
+    </div>
+    <div class="sub small" style="margin:4px 0">${c.type} · ${c.format||'11-a-side'} · ${c.season}</div>
+    <div class="row sp small muted" style="margin-bottom:8px"><span>${ic('pin')} ${c.venue||c.area||'Lagos'}</span><span>${(c.enrolledTeams||[]).length||c.teams||0} enrolled teams</span></div>
+    <div class="col" style="gap:8px">
+      <button class="btn sm" onclick="go('comp','${c.id}')">Open Competition Console</button>
+      <button class="btn sm ghost" onclick="startManageCompTeams('${c.id}')">${ic('users')}Manage Enrolled Teams</button>
+      <button class="btn sm ghost" onclick="startCreateFixture('${c.name.replace(/'/g,"\\'")}')">${ic('plus')}Add Fixtures</button>
+      <button class="btn sm ghost" onclick="openShare('comp','${c.id}')">${ic('share')}Share Competition Link</button>
+    </div>
+  </div>
+ `).join('');
+
  if(k==='Overview'){
    const sections=[];
    if(ctx.joinedGames.length)sections.push(`<h2 class="sec">Games you joined (${ctx.joinedGames.length})</h2><div class="list">${renderJoinedGamesList(ctx.joinedGames)}</div>`);
@@ -2315,6 +2497,7 @@ SC.activity=()=>{
    if(ctx.myBookings.length)sections.push(`<h2 class="sec">Your pitch bookings (${ctx.myBookings.length})</h2><div class="list">${renderBookingsList(ctx.myBookings)}</div>`);
    if(ctx.myGames.length)sections.push(`<h2 class="sec">Open games you created (${ctx.myGames.length})</h2><div class="list">${renderCreatedGamesList(ctx.myGames)}</div>`);
    if(ctx.myFixtures.length||ctx.myEvents.length)sections.push(`<h2 class="sec">Matches &amp; events you organise (${ctx.myFixtures.length+ctx.myEvents.length})</h2><div class="list">${renderOrganisedMatches(ctx.myFixtures,ctx.myEvents)}</div>`);
+   if(ctx.myComps.length)sections.push(`<h2 class="sec">Competitions you organise (${ctx.myComps.length})</h2><div class="list">${renderOrganisedComps(ctx.myComps)}</div>`);
    if(ctx.myVenues.length)sections.push(`<h2 class="sec">Pitches you manage (${ctx.myVenues.length})</h2><div class="list">${ctx.myVenues.map(venueCard).join('')}</div>`);
 
    if(!sections.length){
@@ -2336,6 +2519,9 @@ SC.activity=()=>{
  if(k==='Matches Watching')body=`<div class="list">${renderWatchingList(ctx.myWatching)}</div>`;
  if(k==='Organised Matches'){
    body=`<div class="col" style="margin-bottom:14px"><button class="btn sm" onclick="startCreateFixture()">${ic('plus')}Publish Fixture(s)</button><button class="btn sm ghost" onclick="startCreateEvent()">${ic('plus')}Publish Event</button></div><div class="list">${renderOrganisedMatches(ctx.myFixtures,ctx.myEvents)}</div>`;
+ }
+ if(k==='Organised Competitions'){
+   body=`<button class="btn" style="margin-bottom:14px" onclick="startCreateComp()">${ic('plus')}Create New Competition</button><div class="list">${renderOrganisedComps(ctx.myComps)}</div>`;
  }
  if(k==='Tickets')body=`<div class="list">${renderTicketsList(ctx.myTickets)}</div>`;
  if(k==='Bookings')body=`<div class="list">${renderBookingsList(ctx.myBookings)}</div>`;
@@ -2380,6 +2566,7 @@ SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14
  const activeMgmtRows=[];
  if(ctx.isGameOrg)activeMgmtRows.push(it('ball',`Manage My Created Games (${ctx.myGames.length})`,"S.sub.activity='Games Created';tab('activity')"));
  if(ctx.isMatchOrg)activeMgmtRows.push(it('trophy',`Manage My Fixtures & Events (${ctx.myFixtures.length+ctx.myEvents.length})`,"S.sub.activity='Organised Matches';tab('activity')"));
+ if(ctx.isCompOrg)activeMgmtRows.push(it('trophy',`Manage My Competitions (${ctx.myComps.length})`,"S.sub.activity='Organised Competitions';tab('activity')"));
  if(ctx.hasTeam)activeMgmtRows.push(it('users',`Manage My Teams (${ctx.myTeams.length})`,"S.sub.community='My Teams';tab('community')"));
  if(ctx.isPitchOwner)activeMgmtRows.push(it('pin',`Manage My Listed Pitches (${ctx.myVenues.length})`,"S.sub.activity='My Pitches';tab('activity')"));
  const myCard=getPlayerFifaCard({n:S.user.name||'Player',pos:Object.keys(S.user.pos||{}).find(k=>S.user.pos[k])||'Midfielder',exp:S.user.exp||'Intermediate',card:S.user.card,isMe:true});
@@ -2397,7 +2584,7 @@ SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14
    ${it('ball','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}
  </div>
  ${activeMgmtRows.length?`<h2 class="sec">Your active management views</h2><div class="list">${activeMgmtRows.join('')}</div>`:''}
- <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"go('createTeam')")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
+ <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Create a Competition / League',"startCreateComp()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"go('createTeam')")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
  <h2 class="sec">Settings</h2><div class="list">${adminOk?it('list','Admin: Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')"):''}${it('star','Watch 30s Animated Video Promo',"window.open('promo.html','_blank')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout',signedIn?'Sign out':'Sign in / Switch account',signedIn?'confirmSignOut()':"S.authErr=null;go('signin')")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
@@ -2669,6 +2856,370 @@ function publishEvent(){
  showModal({title:'Event Published Live!',sub:'Your event is now live in Matches & Events across all devices.',meta:[['Event',item.title],['Category',item.cat],['Venue',item.venue],['When',item.when],['Entry',feeLabel]],primary:'Share Event Link',primaryFn:()=>openShare('event',eid),secondary:'View Event'});
 }
 
+/* ===== Real Competition Creation & Management (Instant Publish + Verified Badge + Team Enrollment) ===== */
+const startCreateComp=()=>{
+  S.editingCompId=null;
+  S.form={
+    cname:'',
+    ctype:'Grassroots competition',
+    cseason:'2026/27 Season',
+    cformat:'11-a-side',
+    carea:(S.user&&S.user.loc?S.user.loc.split(' and ')[0]:'Surulere')||'Surulere',
+    cvenue:'Teslim Balogun Stadium',
+    ccapacity:8,
+    c_enrolledTeams:['Mainland FC','Surulere United'],
+    cfree:true,
+    cfee:25000,
+    cprize:'₦500,000 + Gold Trophy',
+    cdesc:'',
+    creqVerify:true
+  };
+  go('createComp');
+};
+const toggleEnrollTeam=teamName=>{
+  S.form=S.form||{};
+  S.form.c_enrolledTeams=S.form.c_enrolledTeams||[];
+  const idx=S.form.c_enrolledTeams.indexOf(teamName);
+  if(idx>=0){
+    S.form.c_enrolledTeams.splice(idx,1);
+  }else{
+    if(S.form.c_enrolledTeams.length>=(+S.form.ccapacity||16)){
+      toast('Maximum team capacity reached ('+S.form.ccapacity+' teams)');
+      return;
+    }
+    S.form.c_enrolledTeams.push(teamName);
+  }
+  render();
+};
+const addCustomEnrollTeam=()=>{
+  const inp=document.getElementById('custom_team_inp');
+  const val=(inp&&inp.value||'').trim();
+  if(!val){toast('Please enter a team name');return}
+  S.form=S.form||{};
+  S.form.c_enrolledTeams=S.form.c_enrolledTeams||[];
+  if(S.form.c_enrolledTeams.some(x=>x.toLowerCase()===val.toLowerCase())){
+    toast('Team already enrolled');
+    return;
+  }
+  if(S.form.c_enrolledTeams.length>=(+S.form.ccapacity||16)){
+    toast('Maximum team capacity reached ('+S.form.ccapacity+' teams)');
+    return;
+  }
+  S.form.c_enrolledTeams.push(val);
+  if(inp)inp.value='';
+  render();
+};
+const removeEnrolledTeam=idx=>{
+  if(!S.form||!Array.isArray(S.form.c_enrolledTeams))return;
+  S.form.c_enrolledTeams.splice(idx,1);
+  render();
+};
+SC.createComp=()=>{
+  const f=S.form||{};
+  if(!f.ctype)f.ctype='Grassroots competition';
+  if(!f.cformat)f.cformat='11-a-side';
+  if(!f.carea)f.carea=(S.user&&S.user.loc?S.user.loc.split(' and ')[0]:'Surulere')||'Surulere';
+  if(!f.cvenue)f.cvenue='Teslim Balogun Stadium';
+  if(f.ccapacity===undefined)f.ccapacity=8;
+  if(f.cfree===undefined)f.cfree=true;
+  if(!f.cfee)f.cfee=25000;
+  if(!f.cprize)f.cprize='₦500,000 + Gold Trophy';
+  if(f.creqVerify===undefined)f.creqVerify=true;
+  if(!Array.isArray(f.c_enrolledTeams))f.c_enrolledTeams=['Mainland FC','Surulere United'];
+
+  const compTypes=['Grassroots competition','League Table','Knockout Cup','Group Stage + Knockout','Friendly Tournament / Series','Campus / University League','Corporate League'];
+  const formats=['5-a-side','7-a-side','9-a-side','11-a-side'];
+  const capacities=[4,6,8,10,12,16,24,32];
+  const enrolled=f.c_enrolledTeams;
+  const unselectedRegistered=teams.filter(t=>!enrolled.includes(t.name));
+
+  return `${hdr('Create Competition')}
+  <div class="note" style="margin-bottom:14px">
+    <b>Instant Publish + Verified Admin Badge:</b> Your tournament publishes instantly to the community. You can also request an official <b>"Verified Competition ✓"</b> badge for verified stadiums and sponsor backing.
+  </div>
+
+  <div class="field">Competition / Tournament Name
+    <input value="${f.cname||''}" oninput="S.form.cname=this.value" placeholder="e.g. Lagos Grassroots Cup, Island Champions League">
+  </div>
+
+  <div class="row">
+    <div class="field grow">Tournament Structure
+      <select onchange="S.form.ctype=this.value">
+        ${compTypes.map(t=>`<option ${f.ctype===t?'selected':''}>${t}</option>`).join('')}
+      </select>
+    </div>
+    <div class="field grow">Match Format
+      <select onchange="S.form.cformat=this.value">
+        ${formats.map(fmt=>`<option ${f.cformat===fmt?'selected':''}>${fmt}</option>`).join('')}
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field grow">Season / Edition
+      <input value="${f.cseason||'2026/27 Season'}" oninput="S.form.cseason=this.value" placeholder="e.g. 2026/27 or Harmattan Cup">
+    </div>
+    <div class="field grow">Target Teams
+      <select onchange="S.form.ccapacity=+this.value;render()">
+        ${capacities.map(n=>`<option value="${n}" ${f.ccapacity===n?'selected':''}>${n} Teams</option>`).join('')}
+      </select>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field grow">Primary Venue / Stadium
+      <input value="${f.cvenue||''}" oninput="S.form.cvenue=this.value" placeholder="e.g. Teslim Balogun Stadium">
+    </div>
+    <div class="field grow">Area / City
+      <input value="${f.carea||''}" oninput="S.form.carea=this.value" placeholder="e.g. Surulere, Lagos Island">
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px;background:var(--surface2)">
+    <div class="b" style="margin-bottom:4px">Team Enrollment / Selection (${enrolled.length} / ${f.ccapacity} selected)</div>
+    <div class="sub small" style="margin-bottom:10px">Pick from registered community clubs or type custom / school team names.</div>
+
+    <div style="margin-bottom:10px">
+      ${enrolled.length?enrolled.map((t,idx)=>`
+        <span class="tag" style="background:var(--card-sub);padding:6px 10px;font-size:12px;border-radius:8px;margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px">
+          ${crest(t,18)} <b>${t}</b>
+          <button type="button" onclick="removeEnrolledTeam(${idx})" style="background:none;border:none;color:var(--bad);font-weight:bold;cursor:pointer;padding:0 3px">✕</button>
+        </span>
+      `).join(''):'<div class="card small muted">No teams enrolled yet. Select or add below.</div>'}
+    </div>
+
+    ${unselectedRegistered.length?`
+      <div class="sub small" style="margin:8px 0 6px">Quick pick registered clubs:</div>
+      <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:10px">
+        ${unselectedRegistered.map(t=>`
+          <button type="button" class="chip" onclick="toggleEnrollTeam('${t.name}')">${ic('plus')} ${t.name}</button>
+        `).join('')}
+      </div>
+    `:''}
+
+    <div class="sub small" style="margin:8px 0 6px">Add custom, school, or corporate team:</div>
+    <div class="row" style="gap:8px">
+      <input id="custom_team_inp" class="grow" placeholder="Enter team name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomEnrollTeam()}">
+      <button type="button" class="btn sm ghost" onclick="addCustomEnrollTeam()">${ic('plus')}Add Team</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="field grow">Team Entry Fee
+      <select onchange="S.form.cfree=(this.value==='free');render()">
+        <option value="free" ${f.cfree?'selected':''}>Free Entry</option>
+        <option value="paid" ${!f.cfree?'selected':''}>Paid Entry</option>
+      </select>
+    </div>
+    ${!f.cfree?`
+      <div class="field grow">Fee per team (₦)
+        <input type="number" value="${f.cfee||25000}" oninput="S.form.cfee=+this.value" placeholder="25000">
+      </div>
+    `:''}
+  </div>
+
+  <div class="field">Prize Pool / Awards
+    <input value="${f.cprize||''}" oninput="S.form.cprize=this.value" placeholder="e.g. ₦1,000,000 + Trophy + Medals">
+  </div>
+
+  <div class="field">Tournament Rules &amp; Details
+    <input value="${f.cdesc||''}" oninput="S.form.cdesc=this.value" placeholder="Knockout rules, match duration, subs, awards, contact info…">
+  </div>
+
+  <div class="opt" style="margin-bottom:18px" onclick="S.form.creqVerify=!S.form.creqVerify;render()">
+    <div class="grow">
+      <b>Request "Verified Competition" Badge</b>
+      <div class="sub">Applies for verified badge review by Football Community admins</div>
+    </div>
+    ${tog(Boolean(f.creqVerify),'creq_tog')}
+  </div>
+
+  <button class="btn" onclick="submitCreateComp()">Publish Competition Instantly</button>`;
+};
+
+function submitCreateComp(){
+  const f=S.form||{};
+  const name=(f.cname||'').trim();
+  if(!name){toast('Please enter a competition name');return}
+  const venue=(f.cvenue||'').trim()||'Lagos Sports Complex';
+  const enrolled=Array.isArray(f.c_enrolledTeams)&&f.c_enrolledTeams.length?f.c_enrolledTeams:['Mainland FC'];
+  const cid=makeUUID();
+  S.myComps=S.myComps||{};
+  S.myComps[cid]=true;
+  const creatorEmail=currentUserEmail()||S.user.email||'';
+  const creatorId=currentUserId();
+  const feeLabel=f.cfree?'Free':('₦'+(+f.cfee||25000).toLocaleString()+' / team');
+  const initialStandings=enrolled.map(t=>[t,0,0,0,0,0,0]);
+
+  const compItem={
+    id:cid,
+    name:name,
+    type:f.ctype||'Grassroots competition',
+    season:f.cseason||'2026/27',
+    teams:enrolled.length,
+    format:f.cformat||'11-a-side',
+    area:(f.carea||'Lagos').trim(),
+    venue:venue,
+    fee:feeLabel,
+    prize:f.cprize||'Gold Trophy + Medals',
+    verified:false,
+    verificationRequested:Boolean(f.creqVerify),
+    desc:f.cdesc||'Community football tournament in Lagos.',
+    enrolledTeams:enrolled,
+    standings:initialStandings,
+    org:S.user.name||'Community Organiser',
+    creator_id:creatorId,
+    creator_email:creatorEmail,
+    isMine:true,
+    fromCloud:true
+  };
+  comps.unshift(compItem);
+  if(window.FCData){
+    FCData.persistLocal();
+    if(typeof FCData.publishCompetition==='function'){
+      FCData.publishCompetition(compItem);
+    }
+  }
+  replaceTop('comp',cid);
+  showModal({
+    title:'Competition Published Instantly! 🏆',
+    sub:f.creqVerify
+      ?'Your competition is live as a Community Competition. Your request for a "Verified Competition ✓" badge has been submitted to admin.'
+      :'Your competition is published and live across all devices.',
+    meta:[
+      ['Competition',compItem.name],
+      ['Format',compItem.format+' · '+compItem.type],
+      ['Venue',compItem.venue],
+      ['Enrolled Teams',enrolled.length+' teams'],
+      ['Badge Status',compItem.verificationRequested?'Pending Admin Verification':'Community Competition']
+    ],
+    primary:'Share Competition',
+    primaryFn:()=>openShare('comp',cid),
+    secondary:'View Competition Console'
+  });
+}
+
+const requestCompVerification=id=>{
+  const c=findComp(id);
+  if(!c)return;
+  c.verificationRequested=true;
+  if(window.FCData){
+    FCData.persistLocal();
+    if(FCData.record){
+      FCData.record('app_events',{event_name:'comp_verification_requested',screen:'comp',properties:{comp_id:String(c.id),name:c.name}});
+    }
+  }
+  render();
+  toast('Verification request submitted for admin review ✓');
+};
+
+const toggleCompVerification=id=>{
+  const c=findComp(id);
+  if(!c)return;
+  c.verified=!c.verified;
+  if(c.verified)c.verificationRequested=false;
+  if(window.FCData){
+    FCData.persistLocal();
+    if(FCData.record){
+      FCData.record('app_events',{event_name:'comp_verification_toggled',screen:'comp',properties:{comp_id:String(c.id),name:c.name,verified:c.verified}});
+    }
+  }
+  render();
+  toast(c.verified?'Verified Badge granted to '+c.name+' ✓':'Verified Badge revoked');
+};
+
+const startManageCompTeams=id=>{
+  const c=findComp(id);
+  if(!c)return;
+  S.managingCompId=c.id;
+  S.form={
+    m_enrolledTeams:[...(c.enrolledTeams||[])],
+    m_capacity:c.teams||8
+  };
+  go('manageCompTeams');
+};
+
+const toggleManageCompTeam=teamName=>{
+  S.form=S.form||{};
+  S.form.m_enrolledTeams=S.form.m_enrolledTeams||[];
+  const idx=S.form.m_enrolledTeams.indexOf(teamName);
+  if(idx>=0){
+    S.form.m_enrolledTeams.splice(idx,1);
+  }else{
+    S.form.m_enrolledTeams.push(teamName);
+  }
+  render();
+};
+
+const addCustomManageCompTeam=()=>{
+  const inp=document.getElementById('m_custom_team_inp');
+  const val=(inp&&inp.value||'').trim();
+  if(!val){toast('Please enter a team name');return}
+  S.form=S.form||{};
+  S.form.m_enrolledTeams=S.form.m_enrolledTeams||[];
+  if(S.form.m_enrolledTeams.some(x=>x.toLowerCase()===val.toLowerCase())){
+    toast('Team already enrolled');
+    return;
+  }
+  S.form.m_enrolledTeams.push(val);
+  if(inp)inp.value='';
+  render();
+};
+
+const removeManageCompTeam=idx=>{
+  if(!S.form||!Array.isArray(S.form.m_enrolledTeams))return;
+  S.form.m_enrolledTeams.splice(idx,1);
+  render();
+};
+
+const saveManagedCompTeams=()=>{
+  const c=findComp(S.managingCompId);
+  if(!c)return;
+  const enrolled=S.form.m_enrolledTeams||[];
+  c.enrolledTeams=[...enrolled];
+  c.teams=enrolled.length;
+  c.standings=c.standings||[];
+  enrolled.forEach(t=>{
+    if(!c.standings.find(row=>row[0]===t)){
+      c.standings.push([t,0,0,0,0,0,0]);
+    }
+  });
+  if(window.FCData)FCData.persistLocal();
+  back();
+  toast('Enrolled teams updated ('+enrolled.length+' teams) ✓');
+};
+
+SC.manageCompTeams=()=>{
+  const c=findComp(S.managingCompId);
+  if(!c)return `${hdr('Manage Teams')}<div class="card">Competition not found</div>`;
+  const f=S.form||{};
+  const enrolled=f.m_enrolledTeams||[];
+  const unselectedRegistered=teams.filter(t=>!enrolled.includes(t.name));
+  return `${hdr('Manage Enrolled Teams')}
+  <div class="note" style="margin-bottom:14px">Manage clubs and squads competing in <b>${c.name}</b> (${c.format||'11-a-side'} · ${c.season}).</div>
+  <div class="field" style="margin-bottom:8px">Currently Enrolled (${enrolled.length})</div>
+  <div style="margin-bottom:14px">
+    ${enrolled.length?enrolled.map((t,idx)=>`
+      <span class="tag" style="background:var(--card-sub);padding:6px 10px;font-size:13px;border-radius:8px;margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px">
+        ${crest(t,20)} <b>${t}</b>
+        <button type="button" onclick="removeManageCompTeam(${idx})" style="background:none;border:none;color:var(--bad);font-weight:bold;cursor:pointer;padding:0 4px">✕</button>
+      </span>
+    `).join(''):'<div class="card small muted">No teams currently enrolled</div>'}
+  </div>
+  <div class="field" style="margin-bottom:6px">Pick from registered teams</div>
+  <div class="row" style="flex-wrap:wrap;gap:6px;margin-bottom:14px">
+    ${unselectedRegistered.map(t=>`
+      <button type="button" class="chip" onclick="toggleManageCompTeam('${t.name}')">${ic('plus')} ${t.name}</button>
+    `).join('')}
+  </div>
+  <div class="field" style="margin-bottom:6px">Add custom or school team</div>
+  <div class="row" style="gap:8px;margin-bottom:20px">
+    <input id="m_custom_team_inp" class="grow" placeholder="Enter custom team name…" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomManageCompTeam()}">
+    <button type="button" class="btn sm ghost" onclick="addCustomManageCompTeam()">${ic('plus')}Add Team</button>
+  </div>
+  <button class="btn" onclick="saveManagedCompTeams()">Save Teams Changes</button>`;
+};
+
 function payNow(){
   S.b.ref='FCP-'+Math.floor(100000+Math.random()*899999);
   const v=venues[S.b.v],p=v.pitches[S.b.p],bdate='Wed '+(11+S.b.d-2)+' Nov';
@@ -2903,6 +3454,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=18"></script>
+<script src="fc-data.js?v=19"></script>
 </body>
 </html>
