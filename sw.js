@@ -1,4 +1,4 @@
-const CACHE_NAME = 'football-community-v17';
+const CACHE_NAME = 'football-community-v18';
 const CORE_ASSETS = [
   './',
   './index.html',
@@ -15,7 +15,12 @@ const CORE_ASSETS = [
   './img/event1.jpg',
   './img/event2.jpg',
   './img/event3.jpg',
-  './img/event4.jpg'
+  './img/event4.jpg',
+  './audio/vo1.m4a',
+  './audio/vo2.m4a',
+  './audio/vo3.m4a',
+  './audio/vo4.m4a',
+  './audio/vo5.m4a'
 ];
 
 self.addEventListener('install', (event) => {

@@ -1252,7 +1252,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=17', { updateViaCache: 'none' })
+        .register('./sw.js?v=18', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();

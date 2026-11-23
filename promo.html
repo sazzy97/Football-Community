@@ -1128,6 +1128,49 @@ body {
   gap: 10px;
 }
 
+/* Stage Subtitles / Closed Captions */
+.stage-captions {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 55;
+  pointer-events: none;
+  width: 90%;
+  max-width: 900px;
+  text-align: center;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.stage-outer.reel-mode .stage-captions {
+  bottom: 120px;
+  max-width: 900px;
+}
+
+.caption-pill {
+  display: inline-block;
+  background: rgba(4, 12, 8, 0.9);
+  border: 1.5px solid rgba(184, 243, 74, 0.45);
+  backdrop-filter: blur(14px);
+  padding: 12px 28px;
+  border-radius: 999px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: #fff;
+  box-shadow: 0 12px 35px rgba(0,0,0,0.7), 0 0 20px var(--accent-glow);
+}
+
+.stage-outer.reel-mode .caption-pill {
+  font-size: 30px;
+  padding: 16px 32px;
+}
+
+.caption-pill b {
+  color: var(--accent);
+}
+
 /* Sound banner notification */
 .audio-banner {
   position: absolute;
@@ -1179,8 +1222,14 @@ body {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="3"/></svg>
       9:16 Reel
     </button>
+    <button class="pill-btn active" id="btnVo" onclick="toggleVoiceover()">
+      <span id="voIcon">🎙️</span> <span id="voTxt">Voiceover ON</span>
+    </button>
+    <button class="pill-btn active" id="btnCc" onclick="toggleCaptions()">
+      <span id="ccIcon">💬</span> <span id="ccTxt">Captions ON</span>
+    </button>
     <button class="pill-btn" id="btnSound" onclick="toggleAudio()">
-      <span id="soundIcon">🔊</span> <span id="soundTxt">Sound ON</span>
+      <span id="soundIcon">🔊</span> <span id="soundTxt">SFX ON</span>
     </button>
     <button class="pill-btn primary" id="btnRecord" onclick="startExportRecording()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="9"/></svg>
@@ -1439,6 +1488,11 @@ body {
         </div>
       </div>
 
+      <!-- Dynamic Spoken Captions Bar -->
+      <div class="stage-captions" id="stageCaptions">
+        <div class="caption-pill" id="captionText">“Friday night in Lagos. <b>Where’s the game tonight?</b>”</div>
+      </div>
+
     </div>
   </div>
 
@@ -1500,6 +1554,66 @@ let lastTimestamp = 0;
 let audioEnabled = false;
 let audioCtx = null;
 let currentAspect = 'wide'; // 'wide' (16:9) or 'reel' (9:16)
+let voiceoverEnabled = true;
+let captionsEnabled = true;
+
+// Spoken voiceover clip definitions
+const voClips = [
+  { id: 1, start: 0.4, end: 4.8, src: 'audio/vo1.m4a', text: '“Friday night in Lagos. <b>Where’s the game tonight?</b> Meet Football Community.”' },
+  { id: 2, start: 5.3, end: 10.3, src: 'audio/vo2.m4a', text: '“Find and book top pitches in seconds. <b>Pick your slot and lock it in.</b>”' },
+  { id: 3, start: 11.3, end: 15.8, src: 'audio/vo3.m4a', text: '“No full team? No problem. <b>Jump into open games</b> and build your squad.”' },
+  { id: 4, start: 18.2, end: 23.3, src: 'audio/vo4.m4a', text: '“Earn your football identity. <b>Unlock your custom FIFA rate card</b> and flex your stats.”' },
+  { id: 5, start: 25.0, end: 29.5, src: 'audio/vo5.m4a', text: '“Play more football, anywhere in Lagos. <b>Join the community free today!</b>”' }
+];
+
+const voAudioElements = voClips.map(clip => {
+  const a = new Audio(clip.src);
+  a.preload = 'auto';
+  return a;
+});
+
+function toggleVoiceover() {
+  voiceoverEnabled = !voiceoverEnabled;
+  const btn = document.getElementById('btnVo');
+  const icon = document.getElementById('voIcon');
+  const txt = document.getElementById('voTxt');
+  if (voiceoverEnabled) {
+    btn.classList.add('active');
+    icon.innerText = '🎙️';
+    txt.innerText = 'Voiceover ON';
+    initAudio();
+  } else {
+    btn.classList.remove('active');
+    icon.innerText = '🔇';
+    txt.innerText = 'Voiceover OFF';
+    stopAllVo();
+  }
+}
+
+function toggleCaptions() {
+  captionsEnabled = !captionsEnabled;
+  const btn = document.getElementById('btnCc');
+  const icon = document.getElementById('ccIcon');
+  const txt = document.getElementById('ccTxt');
+  const box = document.getElementById('stageCaptions');
+  if (captionsEnabled) {
+    btn.classList.add('active');
+    icon.innerText = '💬';
+    txt.innerText = 'Captions ON';
+    box.style.display = 'block';
+  } else {
+    btn.classList.remove('active');
+    icon.innerText = '🚫';
+    txt.innerText = 'Captions OFF';
+    box.style.display = 'none';
+  }
+}
+
+function stopAllVo() {
+  voAudioElements.forEach(a => {
+    if (!a.paused) a.pause();
+  });
+}
 
 // Sound cue flags to prevent repeated triggers in one pass
 const sfxCues = {
@@ -1835,6 +1949,38 @@ function renderFrame(t) {
   const progressPct = (t / TOTAL_DURATION) * 100;
   document.getElementById('scrubberProgress').style.width = `${progressPct}%`;
   
+  // Sync Spoken Voiceover & Dynamic Captions
+  const activeClip = voClips.find(c => t >= c.start && t < c.end);
+  const captionBox = document.getElementById('stageCaptions');
+  const captionText = document.getElementById('captionText');
+
+  if (activeClip && captionsEnabled) {
+    captionBox.style.opacity = '1';
+    captionBox.style.transform = 'translateX(-50%) translateY(0)';
+    captionText.innerHTML = activeClip.text;
+  } else {
+    captionBox.style.opacity = '0';
+    captionBox.style.transform = 'translateX(-50%) translateY(14px)';
+  }
+
+  // Voiceover audio track sync
+  voClips.forEach((clip, idx) => {
+    const audioEl = voAudioElements[idx];
+    if (voiceoverEnabled && audioEnabled && isPlaying && t >= clip.start && t < clip.end) {
+      const desiredTime = t - clip.start;
+      if (audioEl.paused) {
+        audioEl.currentTime = desiredTime;
+        audioEl.play().catch(() => {});
+      } else if (Math.abs(audioEl.currentTime - desiredTime) > 0.3) {
+        audioEl.currentTime = desiredTime;
+      }
+    } else {
+      if (!audioEl.paused) {
+        audioEl.pause();
+      }
+    }
+  });
+
   // Update active scene chip
   const chips = document.querySelectorAll('.scene-chip');
   chips.forEach(c => c.classList.remove('active'));
@@ -2211,6 +2357,7 @@ function playVideo() {
 
 function pauseVideo() {
   isPlaying = false;
+  stopAllVo();
   document.getElementById('playIcon').innerHTML = '<path d="M5 3l14 9-14 9V3z"/>';
 }
 
@@ -2221,6 +2368,7 @@ function togglePlay() {
 
 function resetVideo() {
   currentTime = 0.00;
+  stopAllVo();
   // Reset sound triggers
   for (let k in sfxCues) sfxCues[k] = false;
   renderFrame(0);
@@ -2228,6 +2376,7 @@ function resetVideo() {
 
 function seekTo(targetTime) {
   currentTime = clamp(targetTime, 0, TOTAL_DURATION);
+  stopAllVo();
   // Reset sfx that are after targetTime
   if (currentTime < 0.2) sfxCues.hookDrop = false;
   if (currentTime < 2.2) sfxCues.pinPop = false;
