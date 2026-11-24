@@ -665,6 +665,9 @@ more:'<circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle c
 logout:'<path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>',
 help:'<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01"/>',
 qr:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM20 14v7M14 20h3"/>',
+send:'<path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>',
+chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+draft:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>',
 eye:'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>',
 eyeOff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>'
 };
@@ -685,7 +688,8 @@ const N=n=>'₦'+n.toLocaleString('en-NG');
 const venues=[
  {im:"venue1",id:0,name:"Lekki Goal Arena",area:'Lekki Phase 1',km:2.1,rating:4.7,rev:128,from:25000,verified:true,fmts:['5-a-side','7-a-side'],fac:['Floodlights','Changing rooms','Parking','Refreshments'],hours:'07:00 – 23:00',policy:'Free cancellation up to 24 hours before kickoff. Within 24 hours: 50% refund. Within 6 hours: no refund.',deposit:true,pitches:[{n:'Pitch A',f:'5-a-side',p:25000},{n:'Pitch B',f:'5-a-side',p:25000},{n:'Pitch C',f:'7-a-side',p:40000}]},
  {im:"venue2",id:1,name:"Yaba Turf Club",area:'Yaba',km:4.8,rating:4.4,rev:64,from:18000,verified:true,fmts:['5-a-side'],fac:['Floodlights','Parking'],hours:'08:00 – 22:00',policy:'Free cancellation up to 12 hours before kickoff.',deposit:false,pitches:[{n:'Pitch 1',f:'5-a-side',p:18000},{n:'Pitch 2',f:'5-a-side',p:18000}]},
- {im:"venue3",id:2,name:"Ikeja Sports Ground",area:'Ikeja GRA',km:7.3,rating:4.2,rev:41,from:30000,verified:false,fmts:['7-a-side','9-a-side','11-a-side'],fac:['Changing rooms','Seating'],hours:'07:00 – 21:00',policy:'Cancellation policy set by venue. Contact venue for refunds.',deposit:true,pitches:[{n:'Main Pitch',f:'11-a-side',p:90000},{n:'Mini Pitch',f:'7-a-side',p:30000}]}
+ {im:"venue3",id:2,name:"Ikeja Sports Ground",area:'Ikeja GRA',km:7.3,rating:4.2,rev:41,from:30000,verified:false,fmts:['7-a-side','9-a-side','11-a-side'],fac:['Changing rooms','Seating'],hours:'07:00 – 21:00',policy:'Cancellation policy set by venue. Contact venue for refunds.',deposit:true,pitches:[{n:'Main Pitch',f:'11-a-side',p:90000},{n:'Mini Pitch',f:'7-a-side',p:30000}]},
+ {im:"venue2",id:3,name:"Ipaja Mini Stadium",area:'Iyana Ipaja',km:11.2,rating:4.5,rev:53,from:20000,verified:true,fmts:['5-a-side','7-a-side','11-a-side'],fac:['Floodlights','Seating','Changing rooms','Parking'],hours:'06:30 – 22:00',policy:'Free cancellation up to 24 hours before kickoff.',deposit:true,pitches:[{n:'Main Pitch',f:'11-a-side',p:60000},{n:'5-a-side Turf',f:'5-a-side',p:20000},{n:'7-a-side Arena',f:'7-a-side',p:32000}]}
 ];
 const games=[
  {id:0,title:'Thursday Night 5s',v:0,pitch:'Pitch A',when:'Thu 12 Nov · 20:00–21:00',fmt:'5-a-side',need:10,left:2,price:2500,org:'Tunde A.',level:'Intermediate',approval:false},
@@ -718,19 +722,88 @@ const fixtures=[
  {id:2,h:'Akoka Boys FC',a:'Bariga All-Stars',t:'Sun 15 Nov · 16:30',s:'Upcoming',v:'St. Finbarr\'s Field, Akoka',comp:'Lagos Grassroots Cup',going:29,attended:0,fee:'Free',price:0},
  {id:3,h:'Ikeja Stars',a:'Mainland FC',t:'Sat 7 Nov',s:'Completed',sc:'0 : 3',v:'Ikeja Sports Ground',comp:'Lagos Grassroots Cup',going:41,attended:32,fee:'Free',price:0}
 ];
-const teams=[{id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:null},{id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},{id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null}];
+const teams=[
+ {id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:null},
+ {id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},
+ {id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null},
+ {id:3,name:'Ipaja Warriors',loc:'Iyana Ipaja',fmt:'7-a-side',m:16,role:null,desc:'Grassroots football club based in Ipaja/Alimosho, Lagos.'}
+];
 const players=[
  {n:'Emeka Obi',pos:'Midfielder',fmt:'5-a-side',area:'Lekki',av:'Weekday evenings'},
  {n:'Ayo Bello',pos:'Goalkeeper',fmt:'7-a-side',area:'Yaba',av:'Weekends'},
  {n:'Sadiq Musa',pos:'Forward',fmt:'5-a-side',area:'Ikeja',av:'Flexible'},
  {n:'Chidi Okonkwo',pos:'Defender',fmt:'7-a-side',area:'Surulere',av:'Weekends'},
  {n:'Femi Kuti-Ade',pos:'Midfielder',fmt:'11-a-side',area:'Victoria Island',av:'Weekday evenings'},
- {n:'Kunle Afolabi',pos:'Defender',fmt:'5-a-side',area:'Lekki',av:'Weekday mornings'}
+ {n:'Kunle Afolabi',pos:'Defender',fmt:'5-a-side',area:'Lekki',av:'Weekday mornings'},
+ {n:'Babatunde Fashola',pos:'Midfielder',fmt:'7-a-side',area:'Iyana Ipaja',av:'Weekends'}
 ];
 
 /* ===== state & routing ===== */
-const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Overview',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline'},
- b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All'},q:{pitch:'',game:'',event:'',comp:'',player:''},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},myVenues:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,isAdmin:false,adminTap:0,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Overview',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline',teamTab:'Squad & Matches',gameTab:'Game Details'},
+ b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All',tfilt:'All'},q:{pitch:'',game:'',event:'',comp:'',player:'',team:''},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},myVenues:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,isAdmin:false,adminTap:0,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+
+/* ===== Save Drafts System (Comp, Team, Game, Event, Fixture) ===== */
+const DraftManager={
+  save(type,data){
+    try{
+      const payload={data,savedAt:Date.now(),timeStr:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
+      localStorage.setItem('fc_draft_'+type,JSON.stringify(payload));
+    }catch(e){}
+  },
+  get(type){
+    try{
+      const raw=localStorage.getItem('fc_draft_'+type);
+      return raw?JSON.parse(raw):null;
+    }catch(e){return null;}
+  },
+  clear(type){
+    try{localStorage.removeItem('fc_draft_'+type)}catch(e){}
+  },
+  has(type){
+    return Boolean(this.get(type));
+  },
+  banner(type){
+    const draft=this.get(type);
+    if(!draft)return '';
+    return `<div class="card row sp" style="background:var(--surface2);border-left:4px solid var(--accent);margin:0 0 12px;padding:10px 14px">
+      <div class="row" style="gap:8px">
+        <span style="color:var(--brand)">${ic('draft')}</span>
+        <div class="small"><b>Draft Restored</b><div class="muted">Saved at ${draft.timeStr||'earlier'}</div></div>
+      </div>
+      <button type="button" class="btn sm ghost" style="padding:4px 8px;font-size:11px" onclick="discardDraft('${type}')">Discard Draft</button>
+    </div>`;
+  }
+};
+
+const discardDraft=type=>{
+  DraftManager.clear(type);
+  toast('Draft discarded');
+  if(type==='comp'){
+    startCreateComp(true);
+  }else if(type==='team'){
+    startCreateTeam(true);
+  }else if(type==='game'){
+    startCreateGame(true);
+  }else if(type==='event'){
+    startCreateEvent(true);
+  }else if(type==='fixture'){
+    startCreateFixture(null,true);
+  }
+};
+
+const saveDraftManual=type=>{
+  let data=null;
+  if(type==='comp')data=S.form;
+  else if(type==='team')data=S.form;
+  else if(type==='game')data={form:S.form,appr:S.p&&S.p.appr};
+  else if(type==='event')data=S.form;
+  else if(type==='fixture')data=S.form;
+  if(data){
+    DraftManager.save(type,data);
+    toast('Draft saved! You can resume anytime.');
+    render();
+  }
+};
 const $=id=>document.getElementById(id);
 const setSearch=(k,val,inputId)=>{
   S.q=S.q||{};
@@ -909,26 +982,78 @@ const renderFlagSvg=code=>{
   // Default NG (Nigeria Green-White-Green)
   return `<svg viewBox="0 0 36 36" width="100%" height="100%"><rect width="12" height="36" fill="#008751"/><rect x="12" width="12" height="36" fill="#FFFFFF"/><rect x="24" width="12" height="36" fill="#008751"/></svg>`;
 };
+const avatarSkinPalettes=[
+  ['#8D5524','#6B3E17','#4A290D'], // 0 Rich Amber
+  ['#6F4124','#512D16','#381D0C'], // 1 Deep Espresso
+  ['#563319','#3C210E','#261408'], // 2 Dark Ebony
+  ['#A56943','#7C4929','#593118'], // 3 Warm Chestnut
+  ['#C68642','#99622B','#6E441B'], // 4 Golden Caramel
+  ['#D89B65','#B37845','#824F25']  // 5 Warm Bronze
+];
+
 const renderFootballerPortrait=(p,card)=>{
   if(card.photo){
     return `<img src="${card.photo}" alt="${card.name}">`;
   }
   const h=hashStr(card.name.toLowerCase());
-  const skinTones=[
-    ['#A56943','#7C4929','#593118'],
-    ['#8D5524','#6B3E17','#4A290D'],
-    ['#C68642','#99622B','#6E441B'],
-    ['#6F4124','#512D16','#381D0C']
-  ][h%4];
+  const skinTones=(card.skinIndex!==undefined&&avatarSkinPalettes[card.skinIndex%6])?avatarSkinPalettes[card.skinIndex%6]:avatarSkinPalettes[h%6];
   const shirtTones=[
     ['#E8F4F8','#B8D8E8','#123D2B'],
     ['#E9F8EC','#B8E6C4','#123D2B'],
     ['#FFF6D6','#E6C875','#3B2804'],
     ['#F3E8FF','#D0B2F5','#340978']
   ][h%4];
+
+  const phy=card.physique||'athletic';
+  let shoulderPath='M14 200 C18 156, 48 144, 90 144 C132 144, 162 156, 166 200 Z';
+  let collarPath='M62 144 Q90 168 118 144 L112 138 Q90 156 68 138 Z';
+  let neckPath='M72 114 L72 145 Q90 156 108 145 L108 114 Z';
+  let neckShadow='M72 118 Q90 132 108 118 L108 128 Q90 140 72 128 Z';
+
+  if(phy==='muscular'){
+    shoulderPath='M6 200 C10 146, 42 136, 90 136 C138 136, 170 146, 174 200 Z';
+    collarPath='M56 136 Q90 164 124 136 L118 130 Q90 152 62 130 Z';
+    neckPath='M66 110 L66 142 Q90 154 114 142 L114 110 Z';
+    neckShadow='M66 114 Q90 130 114 114 L114 125 Q90 138 66 125 Z';
+  }else if(phy==='slim'){
+    shoulderPath='M24 200 C28 160, 52 148, 90 148 C128 148, 152 160, 156 200 Z';
+    collarPath='M68 148 Q90 168 112 148 L108 142 Q90 158 72 142 Z';
+    neckPath='M76 116 L76 148 Q90 158 104 148 L104 116 Z';
+    neckShadow='M76 120 Q90 134 104 120 L104 130 Q90 142 76 130 Z';
+  }else if(phy==='heavy'){
+    shoulderPath='M2 200 C6 142, 38 132, 90 132 C142 132, 174 142, 178 200 Z';
+    collarPath='M52 132 Q90 162 128 132 L122 126 Q90 150 58 126 Z';
+    neckPath='M64 108 L64 138 Q90 150 116 138 L116 108 Z';
+    neckShadow='M64 112 Q90 128 116 112 L116 124 Q90 136 64 124 Z';
+  }
+
+  const hStyle=card.hairStyle||'afro';
+  const hColor=card.hairColor||'#181210';
+  let hairSvg='';
+  if(hStyle==='afro'){
+    hairSvg=`<path d="M53 64 C50 38, 66 22, 90 22 C114 22, 130 38, 127 64 C124 47, 112 39, 90 39 C68 39, 56 47, 53 64 Z" fill="${hColor}"/>
+      <path d="M56 48 C62 24, 118 24, 124 48 C117 34, 63 34, 56 48 Z" fill="#fff" opacity=".18"/>`;
+  }else if(hStyle==='braids'){
+    hairSvg=`<path d="M54 62 C52 36, 68 24, 90 24 C112 24, 128 36, 126 62 C123 48, 112 40, 90 40 C68 40, 57 48, 54 62 Z" fill="${hColor}"/>
+      <path d="M64 34 Q90 44 116 34 M68 42 Q90 52 112 42 M72 50 Q90 58 108 50" stroke="${hColor}" stroke-width="2.6" stroke-linecap="round" fill="none" opacity=".85"/>
+      <path d="M65 35 Q90 45 115 35" stroke="#fff" stroke-width="1" fill="none" opacity=".3"/>`;
+  }else if(hStyle==='buzz'){
+    hairSvg=`<path d="M54 60 C53 40, 68 32, 90 32 C112 32, 127 40, 126 60 C124 48, 114 42, 90 42 C66 42, 56 48, 54 60 Z" fill="${hColor}"/>
+      <path d="M60 48 Q90 43 120 48" stroke="${hColor}" stroke-width="2" fill="none" opacity=".5"/>`;
+  }else if(hStyle==='locs'){
+    hairSvg=`<path d="M52 42 C48 56, 44 76, 48 84 C51 78, 52 60, 55 48 Z M128 42 C132 56, 136 76, 132 84 C129 78, 128 60, 125 48 Z M54 36 C48 20, 68 14, 90 14 C112 14, 132 20, 126 36 C122 24, 110 22, 90 22 C70 22, 58 24, 54 36 Z" fill="${hColor}"/>
+      <path d="M74 20 L70 44 M90 18 L89 46 M106 20 L110 44 M62 26 L56 52 M118 26 L124 52" stroke="${hColor}" stroke-width="4.2" stroke-linecap="round" fill="none"/>`;
+  }else if(hStyle==='high_fade'){
+    hairSvg=`<path d="M52 62 C50 18, 60 12, 90 12 C120 12, 130 18, 128 62 C124 44, 112 38, 90 38 C68 38, 56 44, 52 62 Z" fill="${hColor}"/>
+      <path d="M56 22 L124 22" stroke="#fff" stroke-width="2" opacity=".22"/>`;
+  }else if(hStyle==='bald'){
+    hairSvg=`<path d="M72 38 Q90 30 108 38 Q90 34 72 38 Z" fill="#fff" opacity=".22"/>`;
+  }
+
+  const gradId='sk_'+(card.skinIndex!==undefined?card.skinIndex:h%99);
   return `<svg viewBox="0 0 180 200" width="156" height="176" style="filter:drop-shadow(0 10px 18px rgba(0,0,0,.48))">
     <defs>
-      <linearGradient id="sk_${h%99}" x1="0" y1="0" x2="1" y2="1">
+      <linearGradient id="${gradId}" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="${skinTones[0]}"/>
         <stop offset="65%" stop-color="${skinTones[1]}"/>
         <stop offset="100%" stop-color="${skinTones[2]}"/>
@@ -939,21 +1064,20 @@ const renderFootballerPortrait=(p,card)=>{
       </linearGradient>
     </defs>
     <!-- Jersey Shoulders -->
-    <path d="M14 200 C18 156, 48 144, 90 144 C132 144, 162 156, 166 200 Z" fill="url(#sh_${h%99})"/>
+    <path d="${shoulderPath}" fill="url(#sh_${h%99})"/>
     <path d="M35 154 L58 200 M145 154 L122 200" stroke="${shirtTones[2]}" stroke-width="3" opacity=".32"/>
     <!-- Collar -->
-    <path d="M62 144 Q90 168 118 144 L112 138 Q90 156 68 138 Z" fill="#fff"/>
+    <path d="${collarPath}" fill="#fff"/>
     <!-- Neck -->
-    <path d="M72 114 L72 145 Q90 156 108 145 L108 114 Z" fill="url(#sk_${h%99})"/>
-    <path d="M72 118 Q90 132 108 118 L108 128 Q90 140 72 128 Z" fill="${skinTones[2]}" opacity=".45"/>
+    <path d="${neckPath}" fill="url(#${gradId})"/>
+    <path d="${neckShadow}" fill="${skinTones[2]}" opacity=".45"/>
     <!-- Ears -->
     <ellipse cx="53" cy="82" rx="6" ry="11" fill="${skinTones[1]}"/>
     <ellipse cx="127" cy="82" rx="6" ry="11" fill="${skinTones[2]}"/>
     <!-- Head -->
-    <path d="M55 62 C55 34, 125 34, 125 62 C125 94, 116 122, 90 124 C64 122, 55 94, 55 62 Z" fill="url(#sk_${h%99})"/>
-    <!-- Hair (Textured Afro / Curly Fade like reference image) -->
-    <path d="M53 64 C50 38, 66 22, 90 22 C114 22, 130 38, 127 64 C124 47, 112 39, 90 39 C68 39, 56 47, 53 64 Z" fill="#1F1815"/>
-    <path d="M56 48 C62 24, 118 24, 124 48 C117 34, 63 34, 56 48 Z" fill="#C9A86A" opacity="${h%2===0?'.85':'.25'}"/>
+    <path d="M55 62 C55 34, 125 34, 125 62 C125 94, 116 122, 90 124 C64 122, 55 94, 55 62 Z" fill="url(#${gradId})"/>
+    <!-- Hair -->
+    ${hairSvg}
     <!-- Brows & Eyes -->
     <path d="M67 71 Q76 68 83 72 M97 72 Q104 68 113 71" stroke="#181210" stroke-width="3.2" stroke-linecap="round" fill="none"/>
     <ellipse cx="75" cy="78" rx="4.2" ry="2.6" fill="#181210"/>
@@ -1026,6 +1150,10 @@ const openEditCard=()=>{
     theme:c.theme||'epic',
     tier:c.tier||'Epic',
     flag:c.flag||'NG',
+    physique:c.physique||'athletic',
+    skinIndex:c.skinIndex!==undefined?c.skinIndex:0,
+    hairStyle:c.hairStyle||'afro',
+    hairColor:c.hairColor||'#181210',
     pac:c.pac,sho:c.sho,pas:c.pas,dri:c.dri,def:c.def,phy:c.phy,
     photo:c.photo||''
   };
@@ -1067,6 +1195,10 @@ const saveMyCard=()=>{
     theme:f.theme||'epic',
     tier:ovr>=86?'Epic':ovr>=82?'Elite':ovr>=78?'Pro':'Common',
     flag:f.flag||'NG',
+    physique:f.physique||'athletic',
+    skinIndex:f.skinIndex!==undefined?f.skinIndex:0,
+    hairStyle:f.hairStyle||'afro',
+    hairColor:f.hairColor||'#181210',
     ovr,
     photo:f.photo||'',
     ...stats
@@ -1099,18 +1231,32 @@ const endorsePlayerStat=(playerName,statKey,statLabel)=>{
     endMap[key].stats[statKey]=(endMap[key].stats[statKey]||0)+1;
     endMap[key].count=(endMap[key].count||0)+1;
     localStorage.setItem('fc_player_endorsements',JSON.stringify(endMap));
+
+    // Store rating notification for user
+    const rNotifs=JSON.parse(localStorage.getItem('fc_rating_notifs')||'[]');
+    rNotifs.unshift({
+      id:makeUUID(),
+      ratedPlayer:playerName,
+      rater:S.user.name||'Community Player',
+      statKey,
+      statLabel,
+      time:'Just now',
+      timestamp:new Date().toISOString()
+    });
+    localStorage.setItem('fc_rating_notifs',JSON.stringify(rNotifs.slice(0,30)));
   }catch(e){}
   if(window.FCData){
     FCData.record('app_events',{},'player_endorsed',{
       player_key:key,
       player_name:playerName,
       stat:statKey,
+      stat_label:statLabel,
       endorsed_by:S.user.name||'Community Player'
     });
   }
   showModal({
     title:`Endorsed ${playerName}! ⭐`,
-    sub:`You boosted ${playerName}'s ${statLabel} (${statKey.toUpperCase()}) attribute on their official FIFA Rate Card.`,
+    sub:`You boosted ${playerName}'s ${statLabel} (${statKey.toUpperCase()}) attribute on their official FIFA Rate Card. A notification has been sent to their account.`,
     meta:[
       ['Player',playerName],
       ['Attribute Boosted','+1 '+statKey.toUpperCase()+' ('+statLabel+')'],
@@ -1618,7 +1764,7 @@ const becomeGuest=()=>{
 };
 const SC={};
 SC.onb=()=>{
- const locs=['Lekki and Ajah','Yaba and Surulere','Ikeja','Victoria Island and Ikoyi','Festac and Amuwo-Odofin','Ikorodu'];
+ const locs=['Lekki and Ajah','Yaba and Surulere','Ikeja','Victoria Island and Ikoyi','Festac and Amuwo-Odofin','Ikorodu','Iyana Ipaja and Alimosho'];
  const fmts=['5-a-side','7-a-side','9-a-side','11-a-side'];
  const positions=['Goalkeeper','Defender','Midfielder','Forward'];
  const avails=['Weekday mornings','Weekday evenings','Weekends','Flexible'];
@@ -1700,7 +1846,7 @@ async function finishOnb(){
       S.stack=[{s:'signin'}];
       showModal({
         title:'Confirm Your Email ✉️',
-        sub:`We created your account and sent a confirmation link to ${(S.user.email||'').trim()}. Open your email and tap the link, then sign in below.`,
+        sub:`We created your account and dispatched a welcome & confirmation email to ${(S.user.email||'').trim()}. Open your Gmail inbox to confirm and sign in below.`,
         meta:[['Player',profileMeta.full_name],['Email',(S.user.email||'').trim()],['Location',S.user.loc]],
         primary:'Go to Sign In'
       });
@@ -1708,7 +1854,7 @@ async function finishOnb(){
     }
     S.stack=[];S.tab='home';
     const myC=getPlayerFifaCard({n:profileMeta.full_name,pos:pos[0]||'Midfielder',exp:S.user.exp||'Intermediate',isMe:true});
-    showModal({title:'Welcome to Football Community!',sub:'Your real account and official FIFA Player Rate Card are live across web and mobile.',meta:[['Player',profileMeta.full_name],['FIFA Rate Card',`${myC.ovr} OVR · ${myC.posCode} (${myC.tier})`],['Location',S.user.loc],['Formats',fmts.join(', ')]],primary:'View My FIFA Rate Card',primaryFn:()=>go('player'),secondary:'Start Exploring'});
+    showModal({title:'Welcome to Football Community!',sub:`Your real account is live! A confirmation email has been dispatched to your Gmail account (${(S.user.email||'').trim()}).`,meta:[['Player',profileMeta.full_name],['FIFA Rate Card',`${myC.ovr} OVR · ${myC.posCode} (${myC.tier})`],['Location',S.user.loc],['Formats',fmts.join(', ')]],primary:'View My FIFA Rate Card',primaryFn:()=>go('player'),secondary:'Start Exploring'});
     return;
   }
   S.onb=0;S.stack=[];S.tab='home';
@@ -1845,17 +1991,117 @@ const startCreateGameFromBooking=()=>{
  go('createGame');
 };
 
-SC.game=id=>{const g=games[id],v=venues[g.v],j=S.joined[id];return `${hdr('Open game',`<button class="round" onclick="toast('Link copied')">${ic('share')}</button>`)}
- <div class="hero"><span class="tag gold">${g.fmt}</span><div style="font-size:22px;font-weight:800;margin:8px 0">${g.title}</div><div class="sub">${v.name} · ${g.pitch}<br>${g.when}</div></div>
+/* ===== Game Matchday Chat Helpers ===== */
+const getGameChatMessages=gameId=>{
+  try{
+    const all=JSON.parse(localStorage.getItem('fc_game_chats')||'{}');
+    return Array.isArray(all[gameId])?all[gameId]:[];
+  }catch(e){return [];}
+};
+const sendGameChatMessage=(gameId,gameTitle)=>{
+  const inp=document.getElementById('game_chat_inp');
+  const text=(inp&&inp.value||'').trim();
+  if(!text)return;
+  const gameKey=String(gameId);
+  let allChats={};
+  try{allChats=JSON.parse(localStorage.getItem('fc_game_chats')||'{}');}catch(e){}
+  allChats[gameKey]=allChats[gameKey]||[];
+  const msg={
+    id:makeUUID(),
+    sender:S.user.name||'Player',
+    text,
+    time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    created_at:new Date().toISOString(),
+    isMe:true
+  };
+  allChats[gameKey].push(msg);
+  localStorage.setItem('fc_game_chats',JSON.stringify(allChats));
+  if(window.FCData){
+    FCData.record('app_events',{},'game_chat_message',{
+      game_id:gameKey,
+      game_title:gameTitle||'Open Game',
+      sender_name:S.user.name||'Player',
+      text,
+      created_at:msg.created_at
+    });
+  }
+  if(inp)inp.value='';
+  render();
+};
+const sendGameChatQuick=(gameId,gameTitle,text)=>{
+  const inp=document.getElementById('game_chat_inp');
+  if(inp)inp.value=text;
+  sendGameChatMessage(gameId,gameTitle);
+};
+
+SC.game=id=>{
+ const g=games[id]||findGame(id)||games[0];
+ const v=(venues[g.v]||venues[0]);
+ const vName=g.venueName||v.name;
+ const j=S.joined&&S.joined[g.id];
+ const gTabs=['Game Details','Matchday Chat'];
+ if(!S.sub.gameTab)S.sub.gameTab='Game Details';
+ const curTab=S.sub.gameTab;
+
+ if(curTab==='Matchday Chat'){
+   const msgs=getGameChatMessages(g.id);
+   return `${hdr('Matchday Chat',`<button class="round" onclick="openShare('game','${g.id}')">${ic('share')}</button>`)}
+   ${tabsUI('gameTab',gTabs)}
+   <div class="card row sp" style="margin-bottom:12px;background:var(--surface2)">
+     <div>
+       <b>${g.title}</b>
+       <div class="sub small">${vName} · ${g.when}</div>
+     </div>
+     <span class="tag gold">${g.fmt}</span>
+   </div>
+   <div class="card" style="min-height:220px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;margin-bottom:12px">
+     <!-- Organiser announcement -->
+     <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.4">
+       <div class="row sp" style="margin-bottom:3px">
+         <span style="font-weight:700;color:var(--brand)">${g.org||'Organiser'} <span class="tag sm gold" style="font-size:9.5px;padding:1px 5px">Host</span></span>
+         <span class="muted" style="font-size:10px">Announcement</span>
+       </div>
+       <div>Welcome to ${g.title}! Please bring a white shirt and a dark shirt for team bibs. Let's start promptly on time! ⚽</div>
+     </div>
+     ${msgs.length===0?`<div class="sub small" style="text-align:center;margin:auto;padding:16px">No messages yet. Say hello or coordinate matchday meetup!</div>`:msgs.map(m=>`
+       <div style="align-self:${m.isMe?'flex-end':'flex-start'};max-width:82%;background:${m.isMe?'var(--brand)':'var(--surface)'};color:${m.isMe?'#fff':'var(--text)'};border:${m.isMe?'none':'1px solid var(--line)'};border-radius:14px;padding:8px 12px;font-size:13px;line-height:1.4;box-shadow:var(--sh-1)">
+         ${m.isMe?'':`<div class="b small" style="color:var(--accent);font-size:11px;margin-bottom:2px">${m.sender}</div>`}
+         <div>${m.text}</div>
+         <div style="text-align:right;font-size:9.5px;opacity:.7;margin-top:3px">${m.time||''}</div>
+       </div>
+     `).join('')}
+   </div>
+   <div class="hscroll" style="margin-bottom:10px;gap:6px">
+     <button class="chip" style="font-size:11px" onclick="sendGameChatQuick('${g.id}','${(g.title||'').replace(/'/g,"\\'")}','I will be there 15m early ⏰')">⏰ I'll be there 15m early</button>
+     <button class="chip" style="font-size:11px" onclick="sendGameChatQuick('${g.id}','${(g.title||'').replace(/'/g,"\\'")}','Who is bringing bibs & ball? ⚽')">⚽ Who has bibs & ball?</button>
+     <button class="chip" style="font-size:11px" onclick="sendGameChatQuick('${g.id}','${(g.title||'').replace(/'/g,"\\'")}','I can play in goal first half 🧤')">🧤 I can play in goal</button>
+     <button class="chip" style="font-size:11px" onclick="sendGameChatQuick('${g.id}','${(g.title||'').replace(/'/g,"\\'")}','Is parking available? 🚗')">🚗 Parking available?</button>
+   </div>
+   <div class="row" style="gap:8px">
+     <input id="game_chat_inp" class="grow" style="padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none" placeholder="Message matchday players..." onkeydown="if(event.key==='Enter')sendGameChatMessage('${g.id}','${(g.title||'').replace(/'/g,"\\'")}')">
+     <button class="btn sm" style="width:44px;height:42px;padding:0;display:grid;place-items:center" onclick="sendGameChatMessage('${g.id}','${(g.title||'').replace(/'/g,"\\'")}')">${ic('send')}</button>
+   </div>`;
+ }
+
+ return `${hdr('Open game',`<button class="round" onclick="toast('Link copied')">${ic('share')}</button>`)}
+ ${tabsUI('gameTab',gTabs)}
+ <div class="hero"><span class="tag gold">${g.fmt}</span><div style="font-size:22px;font-weight:800;margin:8px 0">${g.title}</div><div class="sub">${vName} · ${g.pitch}<br>${g.when}</div></div>
  <div class="card" style="margin-top:12px"><div class="row sp"><b>${g.need-g.left} of ${g.need} players</b><span class="tag ${g.left<=2?'warn':'ok'}">${g.left} slots left</span></div><div class="bar" style="margin:10px 0"><i style="width:${(g.need-g.left)/g.need*100}%"></i></div>
  <div class="kv"><span class="muted">Price per player</span><b>${N(g.price)}</b></div><div class="kv"><span class="muted">Organiser</span><b>${g.org}</b></div><div class="kv"><span class="muted">Experience</span><b>${g.level}</b></div><div class="kv"><span class="muted">Joining</span><b>${g.approval?'Organiser approval':'Join directly'}</b></div></div>
  <div class="note" style="margin-top:12px">An open game is a user-created activity, not a venue booking. Withdrawal is subject to the game policy.</div>
- <div style="margin-top:18px"><button class="btn" onclick="S.joined[${id}]=true;toast('${g.approval?'Request sent to organiser':'You joined this game'}');render()">${j?(g.approval?'Request pending':'Joined · view in My Activity'):(g.approval?'Request to join':'Join · '+N(g.price))}</button></div>`};
+ <div style="margin-top:18px"><button class="btn" onclick="S.joined[${g.id}]=true;toast('${g.approval?'Request sent to organiser':'You joined this game'}');render()">${j?(g.approval?'Request pending':'Joined · view in My Activity'):(g.approval?'Request to join':'Join · '+N(g.price))}</button></div>`;
+};
 
 const makeUUID=()=>typeof crypto!=='undefined'&&crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&0x3|0x8)).toString(16)});
-const startCreateGame=()=>{
+const startCreateGame=resetDraft=>{
  S.editingGameId=null;
- S.form={gtitle:'Friday Floodlit 5s',gv:0,gcustomVenue:'',gpitch:venues[0].pitches[0].n,gdate:'Fri 13 Nov',gtime:'19:00–20:00',gneed:10,gleft:3,gfree:false,gprice:2500,gfmt:'5-a-side',glevel:'All levels',gnotes:''};
+ if(!resetDraft&&DraftManager.has('game')){
+   const d=DraftManager.get('game').data;
+   S.form=d.form||d;
+   if(d.appr!==undefined){S.p=S.p||{};S.p.appr=d.appr;}
+ }else{
+   S.form={gtitle:'Friday Floodlit 5s',gv:0,gcustomVenue:'',gpitch:venues[0].pitches[0].n,gdate:'Fri 13 Nov',gtime:'19:00–20:00',gneed:10,gleft:3,gfree:false,gprice:2500,gfmt:'5-a-side',glevel:'All levels',gnotes:''};
+ }
  go('createGame');
 };
 const openEditGame=id=>{
@@ -1898,30 +2144,34 @@ SC.createGame=()=>{
  if(f.gprice===undefined)f.gprice=2500;
  if(!f.gfmt)f.gfmt='5-a-side';if(!f.glevel)f.glevel='All levels';
  return `${hdr(isEdit?'Edit open game':'Create open game')}
- <div class="field">Game title<input value="${f.gtitle}" oninput="S.form.gtitle=this.value" placeholder="e.g. Thursday Night 5s"></div>
- <div class="field">Venue or field<select onchange="S.form.gv=+this.value;if(+this.value===-1){S.form.gpitch=S.form.gpitch||'Main Pitch'}else{S.form.gpitch=(venues[+this.value]||venues[0]).pitches[0].n};render()">${venues.map((v,i)=>`<option value="${i}" ${+f.gv===i?'selected':''}>${v.name} (${v.area})</option>`).join('')}<option value="-1" ${isCust?'selected':''}>Other / Custom Venue or Local Field</option>${S.b&&S.b.ref?`<option value="${S.b.v||0}">My booking · ${S.b.ref}</option>`:''}</select></div>
+ ${DraftManager.banner('game')}
+ <div class="field">Game title<input value="${f.gtitle}" oninput="S.form.gtitle=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})" placeholder="e.g. Thursday Night 5s"></div>
+ <div class="field">Venue or field<select onchange="S.form.gv=+this.value;if(+this.value===-1){S.form.gpitch=S.form.gpitch||'Main Pitch'}else{S.form.gpitch=(venues[+this.value]||venues[0]).pitches[0].n};DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr});render()">${venues.map((v,i)=>`<option value="${i}" ${+f.gv===i?'selected':''}>${v.name} (${v.area})</option>`).join('')}<option value="-1" ${isCust?'selected':''}>Other / Custom Venue or Local Field</option>${S.b&&S.b.ref?`<option value="${S.b.v||0}">My booking · ${S.b.ref}</option>`:''}</select></div>
  ${isCust
-   ? `<div class="field">Custom venue or field name<input value="${f.gcustomVenue||''}" oninput="S.form.gcustomVenue=this.value" placeholder="e.g. Meadow Hall Pitch, Astroturf 2000, Campos Mini Stadium"></div>
-      <div class="field">Pitch or area<input value="${f.gpitch||''}" oninput="S.form.gpitch=this.value" placeholder="e.g. Main Pitch · Lekki Phase 1"></div>`
-   : `<div class="field">Pitch<select onchange="S.form.gpitch=this.value.split(' · ')[0];S.form.gfmt=this.value.split(' · ')[1]||S.form.gfmt;render()">${vObj.pitches.map(p=>`<option value="${p.n} · ${p.f}" ${f.gpitch===p.n?'selected':''}>${p.n} · ${p.f}</option>`).join('')}</select></div>`}
+   ? `<div class="field">Custom venue or field name<input value="${f.gcustomVenue||''}" oninput="S.form.gcustomVenue=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})" placeholder="e.g. Meadow Hall Pitch, Astroturf 2000, Campos Mini Stadium"></div>
+      <div class="field">Pitch or area<input value="${f.gpitch||''}" oninput="S.form.gpitch=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})" placeholder="e.g. Main Pitch · Lekki Phase 1"></div>`
+   : `<div class="field">Pitch<select onchange="S.form.gpitch=this.value.split(' · ')[0];S.form.gfmt=this.value.split(' · ')[1]||S.form.gfmt;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr});render()">${vObj.pitches.map(p=>`<option value="${p.n} · ${p.f}" ${f.gpitch===p.n?'selected':''}>${p.n} · ${p.f}</option>`).join('')}</select></div>`}
  <div class="row">
    <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('gdate','${f.gdate}')"><span>${f.gdate}</span>${ic('cal')}</button></div>
    <div class="field grow">Start – end<button type="button" class="picker-field" onclick="openTimePicker('gtime','${f.gtime}')"><span>${f.gtime}</span>${ic('clock')}</button></div>
  </div>
  <div class="row">
-   <div class="field grow">Players required<input type="number" value="${f.gneed}" oninput="S.form.gneed=+this.value"></div>
-   <div class="field grow">Available slots<input type="number" value="${f.gleft}" oninput="S.form.gleft=+this.value"></div>
+   <div class="field grow">Players required<input type="number" value="${f.gneed}" oninput="S.form.gneed=+this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})"></div>
+   <div class="field grow">Available slots<input type="number" value="${f.gleft}" oninput="S.form.gleft=+this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})"></div>
  </div>
  <div class="row">
-   <div class="field grow">Game entry<select onchange="S.form.gfree=(this.value==='free');if(!S.form.gfree&&!S.form.gprice)S.form.gprice=2500;render()"><option value="paid" ${!f.gfree?'selected':''}>Paid</option><option value="free" ${f.gfree?'selected':''}>Free</option></select></div>
-   <div class="field grow">Football format<select onchange="S.form.gfmt=this.value"><option ${f.gfmt==='5-a-side'?'selected':''}>5-a-side</option><option ${f.gfmt==='7-a-side'?'selected':''}>7-a-side</option><option ${f.gfmt==='9-a-side'?'selected':''}>9-a-side</option><option ${f.gfmt==='11-a-side'?'selected':''}>11-a-side</option></select></div>
+   <div class="field grow">Game entry<select onchange="S.form.gfree=(this.value==='free');if(!S.form.gfree&&!S.form.gprice)S.form.gprice=2500;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr});render()"><option value="paid" ${!f.gfree?'selected':''}>Paid</option><option value="free" ${f.gfree?'selected':''}>Free</option></select></div>
+   <div class="field grow">Football format<select onchange="S.form.gfmt=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})"><option ${f.gfmt==='5-a-side'?'selected':''}>5-a-side</option><option ${f.gfmt==='7-a-side'?'selected':''}>7-a-side</option><option ${f.gfmt==='9-a-side'?'selected':''}>9-a-side</option><option ${f.gfmt==='11-a-side'?'selected':''}>11-a-side</option></select></div>
  </div>
- ${f.gfree?'':`<div class="field">Price per player (₦)<input type="number" value="${f.gprice}" oninput="S.form.gprice=+this.value" placeholder="e.g. 2500"></div>`}
- <div class="field">Skill or experience preference (optional)<select onchange="S.form.glevel=this.value"><option ${f.glevel==='All levels'?'selected':''}>All levels</option><option ${f.glevel==='Beginner friendly'?'selected':''}>Beginner friendly</option><option ${f.glevel==='Intermediate'?'selected':''}>Intermediate</option><option ${f.glevel==='Competitive'?'selected':''}>Competitive</option></select></div>
- <div class="field">Additional instructions<input value="${f.gnotes||''}" oninput="S.form.gnotes=this.value" placeholder="Bring bibs, white and dark shirts…"></div>
- <div class="opt" style="margin-bottom:10px" onclick="flipTog('appr',false,event)"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(false,'appr')}</div>
+ ${f.gfree?'':`<div class="field">Price per player (₦)<input type="number" value="${f.gprice}" oninput="S.form.gprice=+this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})" placeholder="e.g. 2500"></div>`}
+ <div class="field">Skill or experience preference (optional)<select onchange="S.form.glevel=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})"><option ${f.glevel==='All levels'?'selected':''}>All levels</option><option ${f.glevel==='Beginner friendly'?'selected':''}>Beginner friendly</option><option ${f.glevel==='Intermediate'?'selected':''}>Intermediate</option><option ${f.glevel==='Competitive'?'selected':''}>Competitive</option></select></div>
+ <div class="field">Additional instructions<input value="${f.gnotes||''}" oninput="S.form.gnotes=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})" placeholder="Bring bibs, white and dark shirts…"></div>
+ <div class="opt" style="margin-bottom:10px" onclick="flipTog('appr',false,event);DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(false,'appr')}</div>
  <div class="opt" onclick="flipTog('pub',true,event)"><div class="grow"><b>Public game</b><div class="sub">Visible in Open Games discovery</div></div>${tog(true,'pub')}</div>
- <div style="margin-top:20px"><button class="btn" onclick="publishGame()">${isEdit?'Save changes':'Publish game'}</button></div>`};
+ <div class="row" style="gap:10px;margin-top:20px">
+   <button class="btn grow" onclick="publishGame()">${isEdit?'Save changes':'Publish game'}</button>
+   <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('game')">${ic('draft')} Save Draft</button>
+ </div>`};
 function publishGame(){
  const f=S.form,isEdit=!!S.editingGameId;
  const isCust=+f.gv===-1;
@@ -1955,6 +2205,7 @@ function publishGame(){
      if(window.FCData){
        FCData.updateOpenGame(g);
      }
+     DraftManager.clear('game');
      S.editingGameId=null;
      replaceTop('game',g.id);
      const pLabel=g.price===0?'Free':N(g.price)+'/player';
@@ -1973,6 +2224,7 @@ function publishGame(){
    FCData.persistLocal();
    FCData.record('open_games',{id:gid,title:g.title,organiser_name:S.user.name,organiser_contact:creatorEmail,venue_name:venueName,pitch_name:g.pitch,match_when:g.when,format:g.fmt,players_needed:+g.need,slots_left:+g.left,price_ngn:+g.price,skill_level:g.level,requires_approval:g.approval},'open_game_created',{game_id:gid,title:g.title,venue:venueName,format:g.fmt,price_ngn:g.price,creator_id:creatorId,creator_email:creatorEmail},g);
  }
+ DraftManager.clear('game');
  replaceTop('game',g.id);
  const pLabel=g.price===0?'Free':N(g.price)+'/player';
  showModal({title:'Open Game Published!',sub:'Your game is now live in Open Games discovery across web and mobile.',meta:[['Game',g.title],['Venue',venueName+' · '+g.pitch],['When',g.when],['Open Slots',g.left+' of '+g.need+' ('+pLabel+')']],primary:'Invite & Share Game',primaryFn:()=>openShare('game',g.id),secondary:'Edit Game',secFn:()=>openEditGame(g.id)});
@@ -2358,15 +2610,65 @@ const handleTeamBannerUpload=input=>{
 const removeTeamBanner=()=>{
   if(S.form){delete S.form.tbanner;toast('Banner removed');render()}
 };
-const startCreateTeam=()=>{
-  S.form={
-    tname:'',
-    tdesc:'',
-    tloc:(S.user&&S.user.loc?S.user.loc.split(' ')[0]:'')||'Lekki',
-    tfmt:'7-a-side',
-    tlogo:'',
-    tbanner:''
+/* ===== Team Squad Chat Helpers ===== */
+const getTeamChatMessages=teamId=>{
+  try{
+    const all=JSON.parse(localStorage.getItem('fc_team_chats')||'{}');
+    return Array.isArray(all[teamId])?all[teamId]:[];
+  }catch(e){return [];}
+};
+const sendTeamChatMessage=(teamId,teamName)=>{
+  const inp=document.getElementById('team_chat_inp');
+  const text=(inp&&inp.value||'').trim();
+  if(!text)return;
+  const teamKey=String(teamId);
+  let allChats={};
+  try{allChats=JSON.parse(localStorage.getItem('fc_team_chats')||'{}');}catch(e){}
+  allChats[teamKey]=allChats[teamKey]||[];
+  const myRole=(teams.find(t=>String(t.id)===teamKey)||{}).role||'Member';
+  const msg={
+    id:makeUUID(),
+    sender:S.user.name||'Player',
+    role:myRole,
+    text,
+    time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),
+    created_at:new Date().toISOString(),
+    isMe:true
   };
+  allChats[teamKey].push(msg);
+  localStorage.setItem('fc_team_chats',JSON.stringify(allChats));
+  if(window.FCData){
+    FCData.record('app_events',{},'team_chat_message',{
+      team_id:teamKey,
+      team_name:teamName||'Squad',
+      sender_name:S.user.name||'Player',
+      sender_role:myRole,
+      text,
+      created_at:msg.created_at
+    });
+  }
+  if(inp)inp.value='';
+  render();
+};
+const sendTeamChatQuick=(teamId,teamName,text)=>{
+  const inp=document.getElementById('team_chat_inp');
+  if(inp)inp.value=text;
+  sendTeamChatMessage(teamId,teamName);
+};
+
+const startCreateTeam=resetDraft=>{
+  if(!resetDraft&&DraftManager.has('team')){
+    S.form=DraftManager.get('team').data;
+  }else{
+    S.form={
+      tname:'',
+      tdesc:'',
+      tloc:(S.user&&S.user.loc?S.user.loc.split(' ')[0]:'')||'Lekki',
+      tfmt:'7-a-side',
+      tlogo:'',
+      tbanner:''
+    };
+  }
   go('createTeam');
 };
 
@@ -2379,9 +2681,18 @@ SC.community=()=>{
   const feed=getLiveFeedItems();
   body=`<div class="list">${feed.map(item=>`<div class="card row" style="cursor:pointer" onclick="${item.act||''}"><div class="av sm">${ic(item.ico||'ball')}</div><div class="grow small"><b>${item.text}</b><div class="muted">${item.when}</div></div>${ic('chev')}</div>`).join('')}</div>`;
  }
- if(k==='Teams')body=`<div class="list">${teams.map(teamCard).join('')}</div><button class="btn ghost" style="margin-top:14px" onclick="startCreateTeam()">${ic('plus')}Create Team</button>`;
+ if(k==='Teams'){
+  const ttabs=['All','5-a-side','7-a-side','11-a-side','Lekki','Yaba','Ikeja','Iyana Ipaja'];
+  const tf=S.fil.tfilt||'All';
+  const q=(S.q.team||'').trim().toLowerCase();
+  const tlist=teams.filter(t=>(tf==='All'||t.fmt===tf||t.loc.toLowerCase().includes(tf.toLowerCase()))&&(!q||t.name.toLowerCase().includes(q)||t.loc.toLowerCase().includes(q)||t.fmt.toLowerCase().includes(q)||(t.desc||'').toLowerCase().includes(q)));
+  body=`<div class="row"><div class="grow search">${ic('search')}<input id="q_team" value="${S.q.team||''}" oninput="setSearch('team',this.value,'q_team')" placeholder="Search teams by name, area or format"></div>${q?`<button class="btn sm ghost" onclick="setSearch('team','','q_team')">Clear</button>`:''}</div>
+  <div class="hscroll" style="margin-top:10px">${ttabs.map(f=>`<button class="chip ${tf===f?'on':''}" onclick="S.fil.tfilt='${f}';render()">${f}</button>`).join('')}</div>
+  ${tlist.length?`<div class="list" style="margin-top:10px">${tlist.map(teamCard).join('')}</div>`:`<div class="card" style="text-align:center;padding:22px;margin-top:10px"><div class="b">No teams match "${S.q.team}"</div><div class="sub small" style="margin-top:4px">Try another search or create a new team below.</div></div>`}
+  <button class="btn" style="margin-top:14px" onclick="startCreateTeam()">${ic('plus')}Create Team</button>`;
+ }
  if(k==='Discover Players'){
-  const ptabs=['All','Midfielder','Forward','Defender','Goalkeeper','5-a-side','7-a-side','11-a-side','Lekki','Yaba','Ikeja'];
+  const ptabs=['All','Midfielder','Forward','Defender','Goalkeeper','5-a-side','7-a-side','11-a-side','Lekki','Yaba','Ikeja','Iyana Ipaja'];
   const pf=S.fil.pfilt||'All';
   const q=(S.q.player||'').trim().toLowerCase();
   const allP=getAllPlayers();
@@ -2396,6 +2707,10 @@ SC.community=()=>{
 
 SC.team=id=>{
  const t=findTeam(id);
+ const tTabs=['Squad & Matches','Team Chat'];
+ if(!S.sub.teamTab)S.sub.teamTab='Squad & Matches';
+ const curTab=S.sub.teamTab;
+
  const heroStyle=t.banner
    ? `background:linear-gradient(180deg,rgba(0,0,0,0.35) 0%,rgba(0,0,0,0.88) 100%),url('${t.banner}') center/cover no-repeat;min-height:160px;text-align:center;position:relative;border-radius:18px`
    : `text-align:center`;
@@ -2403,7 +2718,51 @@ SC.team=id=>{
    ? `<img src="${t.logo}" style="margin:0 auto 10px;width:68px;height:68px;border-radius:20px;object-fit:cover;border:2.5px solid var(--accent);box-shadow:var(--sh-2);display:block">`
    : `<div style="margin:0 auto 8px;width:64px">${crest(t.name,64)}</div>`;
 
+ if(curTab==='Team Chat'){
+   const msgs=getTeamChatMessages(t.id);
+   return `${hdr('Team Chat',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}
+   ${tabsUI('teamTab',tTabs)}
+   <div class="card row sp" style="margin-bottom:12px;background:var(--surface2)">
+     <div class="row" style="gap:10px">
+       ${t.logo?`<img src="${t.logo}" style="width:36px;height:36px;border-radius:10px;object-fit:cover;border:1px solid var(--accent)">`:crest(t.name,36)}
+       <div>
+         <b>${t.name}</b>
+         <div class="sub small">${t.loc} · ${t.fmt} · 🔒 Squad Room</div>
+       </div>
+     </div>
+     ${t.role?`<span class="tag gold">${t.role}</span>`:''}
+   </div>
+   <div class="card" style="min-height:220px;max-height:360px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding:12px;margin-bottom:12px">
+     <!-- Squad notice -->
+     <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.4">
+       <div class="row sp" style="margin-bottom:3px">
+         <span style="font-weight:700;color:var(--brand)">Emeka Obi <span class="tag sm gold" style="font-size:9.5px;padding:1px 5px">Captain</span></span>
+         <span class="muted" style="font-size:10px">Squad Notice</span>
+       </div>
+       <div>Welcome to ${t.name}! Check upcoming match schedules in the Squad tab. Keep active and let us know your availability. ⚽</div>
+     </div>
+     ${msgs.length===0?`<div class="sub small" style="text-align:center;margin:auto;padding:16px">No squad messages yet. Say hello to your teammates!</div>`:msgs.map(m=>`
+       <div style="align-self:${m.isMe?'flex-end':'flex-start'};max-width:82%;background:${m.isMe?'var(--brand)':'var(--surface)'};color:${m.isMe?'#fff':'var(--text)'};border:${m.isMe?'none':'1px solid var(--line)'};border-radius:14px;padding:8px 12px;font-size:13px;line-height:1.4;box-shadow:var(--sh-1)">
+         ${m.isMe?'':`<div class="row sp" style="gap:8px;margin-bottom:2px"><span class="b small" style="color:var(--accent);font-size:11px">${m.sender}</span><span class="muted" style="font-size:9.5px">${m.role||'Player'}</span></div>`}
+         <div>${m.text}</div>
+         <div style="text-align:right;font-size:9.5px;opacity:.7;margin-top:3px">${m.time||''}</div>
+       </div>
+     `).join('')}
+   </div>
+   <div class="hscroll" style="margin-bottom:10px;gap:6px">
+     <button class="chip" style="font-size:11px" onclick="sendTeamChatQuick('${t.id}','${t.name.replace(/'/g,"\\'")}','Who is available this Saturday? ⚽')">⚽ Who is available this Saturday?</button>
+     <button class="chip" style="font-size:11px" onclick="sendTeamChatQuick('${t.id}','${t.name.replace(/'/g,"\\'")}','Pitch is booked! Arrive 15m early ⏰')">⏰ Pitch is booked! Arrive early</button>
+     <button class="chip" style="font-size:11px" onclick="sendTeamChatQuick('${t.id}','${t.name.replace(/'/g,"\\'")}','Need 1 more defender for Sunday 🛡️')">🛡️ Need 1 more defender</button>
+     <button class="chip" style="font-size:11px" onclick="sendTeamChatQuick('${t.id}','${t.name.replace(/'/g,"\\'")}','Great match yesterday team! 🔥')">🔥 Great match yesterday team!</button>
+   </div>
+   <div class="row" style="gap:8px">
+     <input id="team_chat_inp" class="grow" style="padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none" placeholder="Message your squad..." onkeydown="if(event.key==='Enter')sendTeamChatMessage('${t.id}','${t.name.replace(/'/g,"\\'")}')">
+     <button class="btn sm" style="width:44px;height:42px;padding:0;display:grid;place-items:center" onclick="sendTeamChatMessage('${t.id}','${t.name.replace(/'/g,"\\'")}')">${ic('send')}</button>
+   </div>`;
+ }
+
  return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}
+ ${tabsUI('teamTab',tTabs)}
  <div class="hero" style="${heroStyle}">
    ${logoDisplay}
    <div style="font-size:21px;font-weight:800">${t.name}</div>
@@ -2475,6 +2834,7 @@ SC.createTeam=()=>{
  `;
 
  return `${hdr('Create team')}
+ ${DraftManager.banner('team')}
  <div class="note" style="margin-bottom:14px">
    <b>Build Your Squad:</b> Create your team profile with an official logo and cover banner. You'll be registered as Owner &amp; Captain.
  </div>
@@ -2483,30 +2843,33 @@ SC.createTeam=()=>{
  ${logoUI}
 
  <div class="field">Team name
-   <input value="${f.tname||''}" oninput="S.form.tname=this.value" placeholder="e.g. Lekki Lions, Victoria Island FC">
+   <input value="${f.tname||''}" oninput="S.form.tname=this.value;DraftManager.save('team',S.form)" placeholder="e.g. Lekki Lions, Victoria Island FC, Ipaja Warriors">
  </div>
  <div class="field">Description &amp; Bio
-   <textarea rows="2" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;line-height:1.4" oninput="S.form.tdesc=this.value" placeholder="e.g. Competitive grassroots football club based in Lekki. Welcoming passionate players.">${f.tdesc||''}</textarea>
+   <textarea rows="2" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;line-height:1.4" oninput="S.form.tdesc=this.value;DraftManager.save('team',S.form)" placeholder="e.g. Competitive grassroots football club based in Lekki. Welcoming passionate players.">${f.tdesc||''}</textarea>
  </div>
  <div class="field">Home Location / Area
-   <input value="${f.tloc||''}" oninput="S.form.tloc=this.value" placeholder="e.g. Lekki, Surulere, Ikeja, Yaba">
+   <input value="${f.tloc||''}" oninput="S.form.tloc=this.value;DraftManager.save('team',S.form)" placeholder="e.g. Lekki, Surulere, Ikeja, Yaba, Iyana Ipaja">
  </div>
  <div class="field">Preferred football format
-   <select onchange="S.form.tfmt=this.value">
+   <select onchange="S.form.tfmt=this.value;DraftManager.save('team',S.form)">
      <option ${f.tfmt==='7-a-side'?'selected':''}>7-a-side</option>
      <option ${f.tfmt==='5-a-side'?'selected':''}>5-a-side</option>
      <option ${f.tfmt==='9-a-side'?'selected':''}>9-a-side</option>
      <option ${f.tfmt==='11-a-side'?'selected':''}>11-a-side</option>
    </select>
  </div>
- <div class="opt" style="margin-bottom:16px" onclick="flipTog('tv',true,event)">
+ <div class="opt" style="margin-bottom:16px" onclick="flipTog('tv',true,event);DraftManager.save('team',S.form)">
    <div class="grow">
      <b>Team visibility</b>
      <div class="sub">Public teams can be discovered by local players &amp; organisers</div>
    </div>
    ${tog(true,'tv')}
  </div>
- <button type="button" class="btn" onclick="createNewTeam()">Create team</button>`;
+ <div class="row" style="gap:10px;margin-top:16px">
+   <button type="button" class="btn grow" onclick="createNewTeam()">Create team</button>
+   <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('team')">${ic('draft')} Save Draft</button>
+ </div>`;
 };
 
 function createNewTeam(){
@@ -2525,19 +2888,36 @@ function createNewTeam(){
    isCustom:true
  };
  teams.unshift(t);
+
+ // Save to persistent local custom teams
+ try {
+   const customTeams = JSON.parse(localStorage.getItem('fc_custom_teams') || '[]');
+   customTeams.unshift(t);
+   localStorage.setItem('fc_custom_teams', JSON.stringify(customTeams));
+ } catch (e) {}
+
  if(window.FCData){
    FCData.persistLocal();
+   // Insert clean row into teams table to prevent schema 400 rejection
    FCData.record('teams',{
      team_name:t.name,
      location:t.loc,
      format:t.fmt,
-     owner_name:S.user.name,
-     owner_contact:currentUserEmail()||S.user.email,
+     owner_name:S.user.name||'Player',
+     owner_contact:currentUserEmail()||S.user.email||''
+   },'team_created',{
+     team_id:t.id,
+     team_name:t.name,
+     location:t.loc,
+     format:t.fmt,
+     owner_name:S.user.name||'Player',
+     owner_contact:currentUserEmail()||S.user.email||'',
      description:t.desc,
-     has_logo:Boolean(t.logo),
-     has_banner:Boolean(t.banner)
-   },'team_created',{team_name:t.name,location:t.loc,format:t.fmt});
+     logo:t.logo,
+     banner:t.banner
+   });
  }
+ DraftManager.clear('team');
  replaceTop('team',t.id);
  showModal({
    title:'Team Created! 🛡️',
@@ -2626,7 +3006,11 @@ SC.player=target=>{
 };
 
 SC.editCard=()=>{
- const f=S.cardForm||{posCode:'CF',theme:'epic',flag:'NG',pac:82,sho:92,pas:80,dri:77,def:72,phy:81,photo:''};
+ const f=S.cardForm||{posCode:'CF',theme:'epic',flag:'NG',physique:'athletic',skinIndex:0,hairStyle:'afro',hairColor:'#181210',pac:82,sho:92,pas:80,dri:77,def:72,phy:81,photo:''};
+ if(f.physique===undefined)f.physique='athletic';
+ if(f.skinIndex===undefined)f.skinIndex=0;
+ if(f.hairStyle===undefined)f.hairStyle='afro';
+ if(f.hairColor===undefined)f.hairColor='#181210';
  S.cardForm=f;
  const clamp=v=>Math.max(55,Math.min(99,Math.round(+v||80)));
  const sorted=[clamp(f.pac),clamp(f.sho),clamp(f.pas),clamp(f.dri),clamp(f.def),clamp(f.phy)].sort((a,b)=>b-a);
@@ -2645,18 +3029,96 @@ SC.editCard=()=>{
  const themes=[['epic','Epic Purple'],['lagos','Lagos Emerald'],['gold','Icon Gold'],['common','Obsidian Dark']];
  const flags=[['NG','🇳🇬 Nigeria'],['BR','🇧🇷 Brazil'],['GH','🇬🇭 Ghana'],['GB','🇬🇧 UK'],['FR','🇫🇷 France'],['AR','🇦🇷 Argentina'],['PT','🇵🇹 Portugal']];
  const sliders=[['pac','PAC · Pace'],['sho','SHO · Shooting'],['pas','PAS · Passing'],['dri','DRI · Dribbling'],['def','DEF · Defending'],['phy','PHY · Physical']];
+
+ const physiques=[['athletic','Athletic'],['muscular','Muscular'],['slim','Slim / Agile'],['heavy','Heavy / Power']];
+ const skinColors=[
+   {idx:0,color:'#8D5524',name:'Rich Amber'},
+   {idx:1,color:'#6F4124',name:'Deep Espresso'},
+   {idx:2,color:'#563319',name:'Dark Ebony'},
+   {idx:3,color:'#A56943',name:'Warm Chestnut'},
+   {idx:4,color:'#C68642',name:'Golden Caramel'},
+   {idx:5,color:'#D89B65',name:'Warm Bronze'}
+ ];
+ const hairStyles=[
+   ['afro','Afro Fade'],
+   ['braids','Cornrows / Braids'],
+   ['buzz','Buzz Fade'],
+   ['locs','Dreadlocks'],
+   ['high_fade','High Top Fade'],
+   ['bald','Clean Shaved']
+ ];
+ const hairColors=[
+   {c:'#181210',name:'Natural Black'},
+   {c:'#3D2314',name:'Dark Brown'},
+   {c:'#D4AF37',name:'Blonde Tips'},
+   {c:'#8B3A1A',name:'Auburn'},
+   {c:'#A8A8B2',name:'Silver Fade'},
+   {c:'#008751',name:'Lagos Green'}
+ ];
+
  return `${hdr('Customize FIFA Rate Card')}
  ${renderFifaCard(previewPlayer)}
- <div class="card" style="margin-top:8px">
-   <div class="b small" style="margin-bottom:8px">Player Portrait Photo</div>
+
+ <div class="card" style="margin-top:12px">
+   <div class="row sp" style="margin-bottom:10px">
+     <b class="small">Avatar Studio (Physique, Hair &amp; Body)</b>
+     <span class="tag gold" style="font-size:10px">Live Customizer</span>
+   </div>
+
+   <!-- Physique Build -->
+   <div class="field" style="margin-bottom:12px">
+     <span class="small muted" style="display:block;margin-bottom:6px">Body Physique &amp; Build</span>
+     <div class="row" style="flex-wrap:wrap;gap:6px">
+       ${physiques.map(p=>`<button type="button" class="chip ${f.physique===p[0]?'on':''}" onclick="S.cardForm.photo='';S.cardForm.physique='${p[0]}';render()">${f.physique===p[0]?ic('check'):''}${p[1]}</button>`).join('')}
+     </div>
+   </div>
+
+   <!-- Skin Tone (Body Color) -->
+   <div class="field" style="margin-bottom:12px">
+     <span class="small muted" style="display:block;margin-bottom:6px">Body Skin Tone (${skinColors.find(s=>s.idx===f.skinIndex)?.name||'Selected'})</span>
+     <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+       ${skinColors.map(s=>`
+         <div onclick="S.cardForm.photo='';S.cardForm.skinIndex=${s.idx};render()" style="width:34px;height:34px;border-radius:50%;background:${s.color};cursor:pointer;border:${f.skinIndex===s.idx?'3px solid var(--accent)':'2px solid rgba(255,255,255,0.2)'};box-shadow:${f.skinIndex===s.idx?'0 0 10px rgba(184,243,74,0.6)':'none'};display:grid;place-items:center;transition:transform .15s" title="${s.name}">
+           ${f.skinIndex===s.idx?'<span style="color:#fff;font-size:13px;font-weight:900">✓</span>':''}
+         </div>
+       `).join('')}
+     </div>
+   </div>
+
+   <!-- Hair Style -->
+   <div class="field" style="margin-bottom:12px">
+     <span class="small muted" style="display:block;margin-bottom:6px">Hairstyle</span>
+     <div class="row" style="flex-wrap:wrap;gap:6px">
+       ${hairStyles.map(h=>`<button type="button" class="chip ${f.hairStyle===h[0]?'on':''}" onclick="S.cardForm.photo='';S.cardForm.hairStyle='${h[0]}';render()">${f.hairStyle===h[0]?ic('check'):''}${h[1]}</button>`).join('')}
+     </div>
+   </div>
+
+   <!-- Hair Color -->
+   ${f.hairStyle!=='bald'?`
+   <div class="field" style="margin-bottom:6px">
+     <span class="small muted" style="display:block;margin-bottom:6px">Hair Color (${hairColors.find(h=>h.c===f.hairColor)?.name||'Selected'})</span>
+     <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap">
+       ${hairColors.map(h=>`
+         <div onclick="S.cardForm.photo='';S.cardForm.hairColor='${h.c}';render()" style="width:32px;height:32px;border-radius:50%;background:${h.c};cursor:pointer;border:${f.hairColor===h.c?'3px solid var(--accent)':'2px solid rgba(255,255,255,0.2)'};box-shadow:${f.hairColor===h.c?'0 0 10px rgba(184,243,74,0.6)':'none'};display:grid;place-items:center" title="${h.name}">
+           ${f.hairColor===h.c?'<span style="color:#fff;font-size:12px;font-weight:900">✓</span>':''}
+         </div>
+       `).join('')}
+     </div>
+   </div>
+   `:''}
+ </div>
+
+ <div class="card" style="margin-top:12px">
+   <div class="b small" style="margin-bottom:8px">Or Upload Real Photo</div>
    <div class="col">
-     <label class="btn sm" style="cursor:pointer;text-align:center">
-       📷 Upload My Portrait Photo
+     <label class="btn sm ghost" style="cursor:pointer;text-align:center">
+       📷 Upload Portrait Photo Instead
        <input type="file" accept="image/*" style="display:none" onchange="handleCardPhotoUpload(this)">
      </label>
-     ${f.photo?`<button type="button" class="btn sm ghost" onclick="S.cardForm.photo='';render()">Use Illustrated Footballer Avatar</button>`:''}
+     ${f.photo?`<button type="button" class="btn sm" onclick="S.cardForm.photo='';render()">Switch Back to Custom Illustrated Avatar</button>`:''}
    </div>
  </div>
+
  <div class="card" style="margin-top:12px">
    <div class="field">Card Design Theme<select onchange="S.cardForm.theme=this.value;render()">${themes.map(t=>`<option value="${t[0]}" ${f.theme===t[0]?'selected':''}>${t[1]}</option>`).join('')}</select></div>
    <div class="row">
@@ -2825,6 +3287,12 @@ SC.privacy=()=>`${hdr('Privacy')}<div class="list">${[['Public profile','Others 
 
 SC.notifs=()=>{
  const notes=[];
+ try{
+   const rNotifs=JSON.parse(localStorage.getItem('fc_rating_notifs')||'[]');
+   for(const rn of rNotifs){
+     notes.push([`Player Skill Rated ⭐`,`${rn.rater} rated your ${rn.statLabel} (${rn.statKey.toUpperCase()}) on your FIFA Rate Card! · ${rn.time||'Recent'}`,'gold',`go('player')`]);
+   }
+ }catch(e){}
  const myB=getUserBookings();
  for(const b of myB){
    notes.push(['Booking '+(b.status||b.payment_status||'confirmed'),`${b.venue_name} · ${b.booking_date} ${b.booking_time||b.time_slot||''} (Ref ${b.booking_ref})`,'ok',`S.sub.activity='Bookings';tab('activity')`]);
@@ -2849,14 +3317,18 @@ SC.notifs=()=>{
 const makeFixtureDraftRow=(defVenue,defDate,defTime)=>({
  h:'',a:'',v:defVenue||"St. Finbarr's Field, Akoka",date:defDate||'Sat 21 Nov',time:defTime||'16:00–17:30',status:'Upcoming',score:''
 });
-const startCreateFixture=(compName)=>{
+const startCreateFixture=(compName,resetDraft)=>{
  S.editingFixtureId=null;
- S.form={
-   fcomp:compName||'Lagos Grassroots Cup',
-   ffree:true,
-   fprice:1500,
-   frows:[{h:'Lekki Lions',a:'Ajah Warriors',v:"St. Finbarr's Field, Akoka",date:'Sat 21 Nov',time:'16:00–17:30',status:'Upcoming',score:''}]
- };
+ if(!resetDraft&&DraftManager.has('fixture')){
+   S.form=DraftManager.get('fixture').data;
+ }else{
+   S.form={
+     fcomp:compName||'Lagos Grassroots Cup',
+     ffree:true,
+     fprice:1500,
+     frows:[{h:'Lekki Lions',a:'Ajah Warriors',v:"St. Finbarr's Field, Akoka",date:'Sat 21 Nov',time:'16:00–17:30',status:'Upcoming',score:''}]
+   };
+ }
  go('createFixture');
 };
 const addFixtureDraftRow=()=>{
@@ -2864,11 +3336,13 @@ const addFixtureDraftRow=()=>{
  S.form.frows=S.form.frows||[];
  const last=S.form.frows[S.form.frows.length-1]||{};
  S.form.frows.push(makeFixtureDraftRow(last.v,last.date,last.time));
+ DraftManager.save('fixture',S.form);
  render();
 };
 const removeFixtureDraftRow=idx=>{
  if(!S.form||!Array.isArray(S.form.frows)||S.form.frows.length<=1)return;
  S.form.frows.splice(idx,1);
+ DraftManager.save('fixture',S.form);
  render();
 };
 const openEditFixture=id=>{
@@ -2912,11 +3386,12 @@ SC.createFixture=()=>{
    f.frows=[makeFixtureDraftRow()];
  }
  return `${hdr('Publish match fixtures')}
+ ${DraftManager.banner('fixture')}
  <div class="note" style="margin-bottom:14px">Publish one or multiple match fixtures at once. Fans can tap <b>"I will be there"</b> (free) or <b>"Get Ticket"</b> (paid), and you can update scores live!</div>
- <div class="field">Competition / Tournament<input value="${f.fcomp}" oninput="S.form.fcomp=this.value" placeholder="e.g. Lagos Grassroots Cup or Friendly"></div>
+ <div class="field">Competition / Tournament<input value="${f.fcomp}" oninput="S.form.fcomp=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Lagos Grassroots Cup or Friendly"></div>
  <div class="row">
-   <div class="field grow">Spectator entry<select onchange="S.form.ffree=(this.value==='free');if(!S.form.ffree&&!S.form.fprice)S.form.fprice=1500;render()"><option value="free" ${f.ffree?'selected':''}>Free</option><option value="paid" ${!f.ffree?'selected':''}>Paid (Ticketed)</option></select></div>
-   ${f.ffree?'':`<div class="field grow">Ticket price (₦)<input type="number" value="${f.fprice}" oninput="S.form.fprice=+this.value" placeholder="1500"></div>`}
+   <div class="field grow">Spectator entry<select onchange="S.form.ffree=(this.value==='free');if(!S.form.ffree&&!S.form.fprice)S.form.fprice=1500;DraftManager.save('fixture',S.form);render()"><option value="free" ${f.ffree?'selected':''}>Free</option><option value="paid" ${!f.ffree?'selected':''}>Paid (Ticketed)</option></select></div>
+   ${f.ffree?'':`<div class="field grow">Ticket price (₦)<input type="number" value="${f.fprice}" oninput="S.form.fprice=+this.value;DraftManager.save('fixture',S.form)" placeholder="1500"></div>`}
  </div>
  ${f.frows.map((r,idx)=>`
    <div class="fix-batch-card">
@@ -2925,21 +3400,24 @@ SC.createFixture=()=>{
        ${f.frows.length>1?`<button type="button" class="small b" style="color:var(--bad)" onclick="removeFixtureDraftRow(${idx})">Remove</button>`:''}
      </div>
      <div class="row">
-       <div class="field grow">Home team<input value="${r.h||''}" oninput="S.form.frows[${idx}].h=this.value" placeholder="e.g. Lekki Lions"></div>
-       <div class="field grow">Away team<input value="${r.a||''}" oninput="S.form.frows[${idx}].a=this.value" placeholder="e.g. Ajah Warriors"></div>
+       <div class="field grow">Home team<input value="${r.h||''}" oninput="S.form.frows[${idx}].h=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Lekki Lions"></div>
+       <div class="field grow">Away team<input value="${r.a||''}" oninput="S.form.frows[${idx}].a=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Ajah Warriors"></div>
      </div>
-     <div class="field">Field / Venue<input value="${r.v||''}" oninput="S.form.frows[${idx}].v=this.value" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
+     <div class="field">Field / Venue<input value="${r.v||''}" oninput="S.form.frows[${idx}].v=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
      <div class="row">
        <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('fdate_${idx}','${r.date||'Sat 21 Nov'}')"><span>${r.date||'Sat 21 Nov'}</span>${ic('cal')}</button></div>
        <div class="field grow">Kickoff time<button type="button" class="picker-field" onclick="openTimePicker('ftime_${idx}','${r.time||'16:00–17:30'}')"><span>${r.time||'16:00–17:30'}</span>${ic('clock')}</button></div>
      </div>
-     <div class="field" style="margin-bottom:${r.status&&r.status!=='Upcoming'?'12px':'0'}">Match status<select onchange="S.form.frows[${idx}].status=this.value;render()"><option ${(r.status||'Upcoming')==='Upcoming'?'selected':''}>Upcoming</option><option ${r.status==='Live'?'selected':''}>Live</option><option ${r.status==='Completed'?'selected':''}>Completed</option></select></div>
-     ${r.status&&r.status!=='Upcoming'?`<div class="field" style="margin-bottom:0">Current / Final Score<input value="${r.score||''}" oninput="S.form.frows[${idx}].score=this.value" placeholder="e.g. 2 : 1"></div>`:''}
+     <div class="field" style="margin-bottom:${r.status&&r.status!=='Upcoming'?'12px':'0'}">Match status<select onchange="S.form.frows[${idx}].status=this.value;DraftManager.save('fixture',S.form);render()"><option ${(r.status||'Upcoming')==='Upcoming'?'selected':''}>Upcoming</option><option ${r.status==='Live'?'selected':''}>Live</option><option ${r.status==='Completed'?'selected':''}>Completed</option></select></div>
+     ${r.status&&r.status!=='Upcoming'?`<div class="field" style="margin-bottom:0">Current / Final Score<input value="${r.score||''}" oninput="S.form.frows[${idx}].score=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. 2 : 1"></div>`:''}
    </div>
  `).join('')}
  <div class="col" style="margin-top:16px">
    <button type="button" class="btn ghost" onclick="addFixtureDraftRow()">${ic('plus')}Add Another Fixture</button>
-   <button type="button" class="btn" onclick="publishFixture()">Publish ${f.frows.length>1?f.frows.length+' Fixtures Live':'Fixture Live'}</button>
+   <div class="row" style="gap:10px">
+     <button type="button" class="btn grow" onclick="publishFixture()">Publish ${f.frows.length>1?f.frows.length+' Fixtures Live':'Fixture Live'}</button>
+     <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('fixture')">${ic('draft')} Save Draft</button>
+   </div>
  </div>`;
 };
 function publishFixture(){
@@ -3011,9 +3489,13 @@ function publishFixture(){
  }
 }
 
-const startCreateEvent=()=>{
+const startCreateEvent=resetDraft=>{
  S.editingEventId=null;
- S.form={ename:'',ecat:'Grassroots',evenue:'Campos Mini Stadium',edate:'Sat 28 Nov',etime:'15:00–17:00',efree:true,eprice:1500,eleft:150,eabout:''};
+ if(!resetDraft&&DraftManager.has('event')){
+   S.form=DraftManager.get('event').data;
+ }else{
+   S.form={ename:'',ecat:'Grassroots',evenue:'Campos Mini Stadium',edate:'Sat 28 Nov',etime:'15:00–17:00',efree:true,eprice:1500,eleft:150,eabout:''};
+ }
  go('createEvent');
 };
 const openEditEvent=id=>{
@@ -3032,21 +3514,25 @@ SC.createEvent=()=>{
  if(f.efree===undefined)f.efree=true;if(f.eprice===undefined)f.eprice=1500;if(!f.eleft)f.eleft=150;
  const cats=['Grassroots','Local tournaments','Friendly','Charity','Trials','Academy','School','University','Festival','Training','Professional matches'];
  return `${hdr(isEdit?'Edit football event':'Publish football event')}
+ ${DraftManager.banner('event')}
  <div class="note" style="margin-bottom:14px">Published events appear live in <b>Matches &amp; Events</b> across web and mobile with spectator tracking and ticketing.</div>
- <div class="field">Event title<input value="${f.ename||''}" oninput="S.form.ename=this.value" placeholder="e.g. Surulere Community Cup"></div>
- <div class="field">Category<select onchange="S.form.ecat=this.value">${cats.map(c=>`<option ${f.ecat===c?'selected':''}>${c}</option>`).join('')}</select></div>
- <div class="field">Venue or local field<input value="${f.evenue||''}" oninput="S.form.evenue=this.value" placeholder="e.g. Campos Mini Stadium, Lagos Island"></div>
+ <div class="field">Event title<input value="${f.ename||''}" oninput="S.form.ename=this.value;DraftManager.save('event',S.form)" placeholder="e.g. Surulere Community Cup"></div>
+ <div class="field">Category<select onchange="S.form.ecat=this.value;DraftManager.save('event',S.form)">${cats.map(c=>`<option ${f.ecat===c?'selected':''}>${c}</option>`).join('')}</select></div>
+ <div class="field">Venue or local field<input value="${f.evenue||''}" oninput="S.form.evenue=this.value;DraftManager.save('event',S.form)" placeholder="e.g. Campos Mini Stadium, Lagos Island"></div>
  <div class="row">
    <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('edate','${f.edate}')"><span>${f.edate}</span>${ic('cal')}</button></div>
    <div class="field grow">Time<button type="button" class="picker-field" onclick="openTimePicker('etime','${f.etime}')"><span>${f.etime}</span>${ic('clock')}</button></div>
  </div>
  <div class="row">
-   <div class="field grow">Entry type<select onchange="S.form.efree=(this.value==='free');if(!S.form.efree&&!S.form.eprice)S.form.eprice=1500;render()"><option value="free" ${f.efree?'selected':''}>Free</option><option value="paid" ${!f.efree?'selected':''}>Paid (Ticketed)</option></select></div>
-   ${f.efree?'':`<div class="field grow">Tickets available<input type="number" value="${f.eleft}" oninput="S.form.eleft=+this.value"></div>`}
+   <div class="field grow">Entry type<select onchange="S.form.efree=(this.value==='free');if(!S.form.efree&&!S.form.eprice)S.form.eprice=1500;DraftManager.save('event',S.form);render()"><option value="free" ${f.efree?'selected':''}>Free</option><option value="paid" ${!f.efree?'selected':''}>Paid (Ticketed)</option></select></div>
+   ${f.efree?'':`<div class="field grow">Tickets available<input type="number" value="${f.eleft}" oninput="S.form.eleft=+this.value;DraftManager.save('event',S.form)"></div>`}
  </div>
- ${f.efree?'':`<div class="field">Ticket price (₦)<input type="number" value="${f.eprice}" oninput="S.form.eprice=+this.value" placeholder="e.g. 1500"></div>`}
- <div class="field">About / Entry details<input value="${f.eabout||''}" oninput="S.form.eabout=this.value" placeholder="Rules, dress code, prizes, contact info…"></div>
- <div style="margin-top:18px"><button class="btn" onclick="publishEvent()">${isEdit?'Save Event Changes':'Publish Event Live'}</button></div>`;
+ ${f.efree?'':`<div class="field">Ticket price (₦)<input type="number" value="${f.eprice}" oninput="S.form.eprice=+this.value;DraftManager.save('event',S.form)" placeholder="e.g. 1500"></div>`}
+ <div class="field">About / Entry details<input value="${f.eabout||''}" oninput="S.form.eabout=this.value;DraftManager.save('event',S.form)" placeholder="Rules, dress code, prizes, contact info…"></div>
+ <div class="row" style="gap:10px;margin-top:18px">
+   <button class="btn grow" onclick="publishEvent()">${isEdit?'Save Event Changes':'Publish Event Live'}</button>
+   <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('event')">${ic('draft')} Save Draft</button>
+ </div>`;
 };
 SC.submitEvent=()=>SC.createEvent();
 function publishEvent(){
@@ -3063,6 +3549,7 @@ function publishEvent(){
      item.title=ename;item.cat=ecat;item.venue=evenue;item.when=whenStr;
      item.fee=feeLabel;item.tix=priceVal>0;item.left=priceVal>0?(+f.eleft||150):0;item.about=f.eabout||'';
      if(window.FCData)FCData.updateEvent(item);
+     DraftManager.clear('event');
      S.editingEventId=null;
      replaceTop('event',item.id);
      showModal({title:'Event Changes Saved!',sub:'Your updated event is live across web and mobile.',meta:[['Event',item.title],['Venue',item.venue],['When',item.when],['Entry',feeLabel]],primary:'Share Event',primaryFn:()=>openShare('event',item.id),secondary:'View Event'});
@@ -3085,6 +3572,7 @@ function publishEvent(){
    FCData.persistLocal();
    FCData.publishEvent(item);
  }
+ DraftManager.clear('event');
  replaceTop('event',eid);
  showModal({title:'Event Published Live!',sub:'Your event is now live in Matches & Events across all devices.',meta:[['Event',item.title],['Category',item.cat],['Venue',item.venue],['When',item.when],['Entry',feeLabel]],primary:'Share Event Link',primaryFn:()=>openShare('event',eid),secondary:'View Event'});
 }
@@ -3138,25 +3626,29 @@ const downloadRulesDoc=id=>{
   document.body.removeChild(a);
   toast('Downloading '+(c.rulesDoc.name||'document'));
 };
-const startCreateComp=()=>{
+const startCreateComp=resetDraft=>{
   S.editingCompId=null;
-  S.form={
-    csec:'details',
-    cname:'',
-    ctype:'',
-    cseason:'',
-    cformat:'',
-    carea:'',
-    cvenue:'',
-    ccapacity:'',
-    c_enrolledTeams:['Mainland FC','Surulere United'],
-    cfree:null,
-    cfee:'',
-    cprize:'',
-    cdesc:'',
-    rulesDoc:null,
-    creqVerify:true
-  };
+  if(!resetDraft&&DraftManager.has('comp')){
+    S.form=DraftManager.get('comp').data;
+  }else{
+    S.form={
+      csec:'details',
+      cname:'',
+      ctype:'',
+      cseason:'',
+      cformat:'',
+      carea:'',
+      cvenue:'',
+      ccapacity:'',
+      c_enrolledTeams:['Mainland FC','Surulere United'],
+      cfree:null,
+      cfee:'',
+      cprize:'',
+      cdesc:'',
+      rulesDoc:null,
+      creqVerify:true
+    };
+  }
   go('createComp');
 };
 const nextCompSection=()=>{
@@ -3166,6 +3658,7 @@ const nextCompSection=()=>{
     return;
   }
   S.form.csec='teams_rules';
+  DraftManager.save('comp',S.form);
   render();
 };
 const toggleEnrollTeam=teamName=>{
@@ -3181,6 +3674,7 @@ const toggleEnrollTeam=teamName=>{
     }
     S.form.c_enrolledTeams.push(teamName);
   }
+  DraftManager.save('comp',S.form);
   render();
 };
 const addCustomEnrollTeam=()=>{
@@ -3198,12 +3692,14 @@ const addCustomEnrollTeam=()=>{
     return;
   }
   S.form.c_enrolledTeams.push(val);
+  DraftManager.save('comp',S.form);
   if(inp)inp.value='';
   render();
 };
 const removeEnrolledTeam=idx=>{
   if(!S.form||!Array.isArray(S.form.c_enrolledTeams))return;
   S.form.c_enrolledTeams.splice(idx,1);
+  DraftManager.save('comp',S.form);
   render();
 };
 SC.createComp=()=>{
@@ -3220,18 +3716,18 @@ SC.createComp=()=>{
 
   const detailsSection=`
     <div class="field">Competition / Tournament Name
-      <input value="${f.cname||''}" oninput="S.form.cname=this.value" placeholder="e.g. Lagos Grassroots Cup, Island Champions League">
+      <input value="${f.cname||''}" oninput="S.form.cname=this.value;DraftManager.save('comp',S.form)" placeholder="e.g. Lagos Grassroots Cup, Island Champions League">
     </div>
 
     <div class="row">
       <div class="field grow">Tournament Structure
-        <select onchange="S.form.ctype=this.value;render()">
+        <select onchange="S.form.ctype=this.value;DraftManager.save('comp',S.form);render()">
           <option value="" disabled ${!f.ctype?'selected':''}>Select an option</option>
           ${compTypes.map(t=>`<option value="${t}" ${f.ctype===t?'selected':''}>${t}</option>`).join('')}
         </select>
       </div>
       <div class="field grow">Match Format
-        <select onchange="S.form.cformat=this.value;render()">
+        <select onchange="S.form.cformat=this.value;DraftManager.save('comp',S.form);render()">
           <option value="" disabled ${!f.cformat?'selected':''}>Select an option</option>
           ${formats.map(fmt=>`<option value="${fmt}" ${f.cformat===fmt?'selected':''}>${fmt}</option>`).join('')}
         </select>
@@ -3240,10 +3736,10 @@ SC.createComp=()=>{
 
     <div class="row">
       <div class="field grow">Season / Edition
-        <input value="${f.cseason||''}" oninput="S.form.cseason=this.value" placeholder="e.g. 2026/27 Season, Harmattan Cup">
+        <input value="${f.cseason||''}" oninput="S.form.cseason=this.value;DraftManager.save('comp',S.form)" placeholder="e.g. 2026/27 Season, Harmattan Cup">
       </div>
       <div class="field grow">Target Teams
-        <select onchange="S.form.ccapacity=+this.value;render()">
+        <select onchange="S.form.ccapacity=+this.value;DraftManager.save('comp',S.form);render()">
           <option value="" disabled ${!f.ccapacity?'selected':''}>Select an option</option>
           ${capacities.map(n=>`<option value="${n}" ${f.ccapacity===n?'selected':''}>${n} Teams</option>`).join('')}
         </select>
@@ -3252,15 +3748,16 @@ SC.createComp=()=>{
 
     <div class="row">
       <div class="field grow">Primary Venue / Stadium
-        <input value="${f.cvenue||''}" oninput="S.form.cvenue=this.value" placeholder="e.g. Teslim Balogun Stadium, Campos Mini Stadium">
+        <input value="${f.cvenue||''}" oninput="S.form.cvenue=this.value;DraftManager.save('comp',S.form)" placeholder="e.g. Teslim Balogun Stadium, Campos Mini Stadium">
       </div>
       <div class="field grow">Area / City
-        <input value="${f.carea||''}" oninput="S.form.carea=this.value" placeholder="e.g. Surulere, Lagos Island, Lekki, or Ikeja">
+        <input value="${f.carea||''}" oninput="S.form.carea=this.value;DraftManager.save('comp',S.form)" placeholder="e.g. Surulere, Lagos Island, Lekki, or Ikeja">
       </div>
     </div>
 
-    <div class="col" style="margin-top:20px">
-      <button type="button" class="btn" onclick="nextCompSection()">Continue to Teams &amp; Rules →</button>
+    <div class="row" style="gap:10px;margin-top:20px">
+      <button type="button" class="btn grow" onclick="nextCompSection()">Continue to Teams &amp; Rules →</button>
+      <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('comp')">${ic('draft')} Save Draft</button>
     </div>
   `;
 
@@ -3296,7 +3793,7 @@ SC.createComp=()=>{
 
     <div class="row">
       <div class="field grow">Team Entry Fee
-        <select onchange="S.form.cfree=(this.value==='free');render()">
+        <select onchange="S.form.cfree=(this.value==='free');DraftManager.save('comp',S.form);render()">
           <option value="" disabled ${f.cfree===null||f.cfree===undefined?'selected':''}>Select an option</option>
           <option value="free" ${f.cfree===true?'selected':''}>Free Entry</option>
           <option value="paid" ${f.cfree===false?'selected':''}>Paid Entry</option>
@@ -3304,13 +3801,13 @@ SC.createComp=()=>{
       </div>
       ${f.cfree===false?`
         <div class="field grow">Fee per team (₦)
-          <input type="number" value="${f.cfee||''}" oninput="S.form.cfee=+this.value" placeholder="e.g. 25,000 / team">
+          <input type="number" value="${f.cfee||''}" oninput="S.form.cfee=+this.value;DraftManager.save('comp',S.form)" placeholder="e.g. 25,000 / team">
         </div>
       `:''}
     </div>
 
     <div class="field">Prize Pool / Awards
-      <input value="${f.cprize||''}" oninput="S.form.cprize=this.value" placeholder="e.g. ₦1,000,000 + Gold Trophy + Medals">
+      <input value="${f.cprize||''}" oninput="S.form.cprize=this.value;DraftManager.save('comp',S.form)" placeholder="e.g. ₦1,000,000 + Gold Trophy + Medals">
     </div>
 
     <div class="card" style="margin-bottom:14px;background:var(--surface2)">
@@ -3347,10 +3844,10 @@ SC.createComp=()=>{
       `}
 
       <div class="b small" style="margin-bottom:6px">Option 2: Type Tournament Rules &amp; Details</div>
-      <textarea rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;line-height:1.4" oninput="S.form.cdesc=this.value" placeholder="e.g. 90 mins knockout, 5 substitutions, FIFA rules, extra time penalties, medals for top 3…">${f.cdesc||''}</textarea>
+      <textarea rows="3" style="width:100%;box-sizing:border-box;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;line-height:1.4" oninput="S.form.cdesc=this.value;DraftManager.save('comp',S.form)" placeholder="e.g. 90 mins knockout, 5 substitutions, FIFA rules, extra time penalties, medals for top 3…">${f.cdesc||''}</textarea>
     </div>
 
-    <div class="opt" style="margin-bottom:18px" onclick="S.form.creqVerify=!S.form.creqVerify;render()">
+    <div class="opt" style="margin-bottom:18px" onclick="S.form.creqVerify=!S.form.creqVerify;DraftManager.save('comp',S.form);render()">
       <div class="grow">
         <b>Request "Verified Competition" Badge</b>
         <div class="sub">Applies for verified badge review by Football Community admins</div>
@@ -3359,12 +3856,16 @@ SC.createComp=()=>{
     </div>
 
     <div class="col" style="gap:10px;margin-top:20px">
-      <button type="button" class="btn" onclick="submitCreateComp()">Publish Competition Instantly</button>
+      <div class="row" style="gap:10px">
+        <button type="button" class="btn grow" onclick="submitCreateComp()">Publish Competition Instantly</button>
+        <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('comp')">${ic('draft')} Save Draft</button>
+      </div>
       <button type="button" class="btn ghost" onclick="S.form.csec='details';render()">← Back to Competition Details</button>
     </div>
   `;
 
   return `${hdr('Create Competition')}
+  ${DraftManager.banner('comp')}
   <div class="note" style="margin-bottom:14px">
     <b>Instant Publish + Verified Admin Badge:</b> Your tournament publishes instantly to the community. You can also request an official <b>"Verified Competition ✓"</b> badge for verified stadiums and sponsor backing.
   </div>
@@ -3420,6 +3921,7 @@ function submitCreateComp(){
     fromCloud:true
   };
   comps.unshift(compItem);
+  DraftManager.clear('comp');
   if(window.FCData){
     FCData.persistLocal();
     if(typeof FCData.publishCompetition==='function'){
@@ -3801,6 +4303,6 @@ const confirmSignOut=()=>showModal({title:'Sign out?',sub:'You will sign out of 
 setTheme('light');
 render();
 </script>
-<script src="fc-data.js?v=21"></script>
+<script src="fc-data.js?v=22"></script>
 </body>
 </html>

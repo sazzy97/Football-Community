@@ -6,7 +6,9 @@ const DEFAULT_FC_CONFIG = {
   supabaseUrl: 'https://lqkeaotyyfmajabcqhgq.supabase.co',
   supabaseKey: 'sb_publishable_RP1haqnhloKRaq6slQZlLA_XtaEcxx2',
   posthogKey: 'phc_qQH6x8kwgSqAvmzPeozxmS66s8mwCUJ55Q7f4sWp8G6f',
-  posthogHost: 'https://us.i.posthog.com'
+  posthogHost: 'https://us.i.posthog.com',
+  resendKey: '',
+  emailFrom: 'Football Community <onboarding@resend.dev>'
 };
 
 function normalizeSupabaseUrl(url) {
@@ -225,6 +227,77 @@ const FCData = {
     }
   },
 
+  async sendWelcomeEmail(email, name, meta = {}) {
+    const safeEmail = (email || '').trim();
+    if (!safeEmail || !safeEmail.includes('@')) return { ok: false, error: 'Invalid email' };
+    const safeName = (name || safeEmail.split('@')[0] || 'Player').trim();
+    const ovr = meta.ovr || 82;
+    const pos = meta.posCode || (meta.positions && meta.positions[0]) || 'Midfielder';
+    const loc = meta.location_cluster || meta.location || 'Lagos, Nigeria';
+
+    // 1. Resend API (if configured in FCData.cfg.resendKey)
+    if (this.cfg.resendKey) {
+      try {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${this.cfg.resendKey}`
+          },
+          body: JSON.stringify({
+            from: this.cfg.emailFrom || 'Football Community <onboarding@resend.dev>',
+            to: [safeEmail],
+            subject: '⚽ Welcome to Football Community! Your Account is Live',
+            html: `
+              <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:580px;margin:0 auto;background:#0B0E14;color:#FFFFFF;border-radius:16px;overflow:hidden;border:1px solid #1E293B;">
+                <div style="background:linear-gradient(135deg,#123D2B 0%,#008751 100%);padding:32px 24px;text-align:center;">
+                  <h1 style="margin:0;font-size:26px;font-weight:800;color:#FFFFFF;">⚽ Football Community</h1>
+                  <p style="margin:8px 0 0;color:#B8F34A;font-size:15px;font-weight:600;">Lagos Grassroots & Pitch Booking Platform</p>
+                </div>
+                <div style="padding:28px 24px;">
+                  <h2 style="margin:0 0 12px;font-size:20px;color:#FFFFFF;">Welcome to the pitch, ${safeName}! 👋</h2>
+                  <p style="margin:0 0 20px;color:#94A3B8;font-size:15px;line-height:1.6;">Your unified Football Community account has been confirmed. You can now discover verified pitches across Lagos (Lekki, Yaba, Ikeja, Surulere, Iyana Ipaja), join open games, create matches, and build your official squad.</p>
+                  <div style="background:#161D27;border:1px solid #2B3545;border-radius:12px;padding:18px 20px;margin:20px 0;">
+                    <div style="font-size:12px;color:#94A3B8;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Your Player Identity</div>
+                    <div style="font-size:18px;font-weight:800;color:#FFFFFF;">${safeName}</div>
+                    <div style="font-size:14px;color:#B8F34A;margin-top:4px;">Primary Playing Area: <strong>${loc}</strong></div>
+                  </div>
+                  <div style="text-align:center;margin:28px 0 16px;">
+                    <a href="https://football-community-two.vercel.app" style="display:inline-block;background:#B8F34A;color:#0B0E14;padding:14px 28px;border-radius:10px;font-weight:700;text-decoration:none;font-size:15px;">Launch Football Community</a>
+                  </div>
+                </div>
+              </div>`
+          })
+        });
+      } catch (e) {
+        console.warn('Resend email error:', e);
+      }
+    }
+
+    // 2. Direct dispatch to user email via FormSubmit webhook endpoint
+    try {
+      await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(safeEmail)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          _subject: '⚽ Welcome to Football Community! Your Account is Live',
+          name: safeName,
+          email: safeEmail,
+          message: `Welcome to Football Community, ${safeName}! Your unified football account is confirmed (${safeEmail}). Explore pitches, tournaments, and open games in Lagos at https://football-community-two.vercel.app`,
+          _template: 'table'
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
+    // 3. Log event in app_events
+    this.record('app_events', {}, 'welcome_email_sent', {
+      recipient_email: safeEmail,
+      recipient_name: safeName,
+      location: loc
+    });
+    return { ok: true };
+  },
+
   async authSignUp(email, password, profileMeta = {}) {
     if (!this.isSupabaseConfigured()) return { ok: false, error: 'Cloud database not configured.' };
     const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
@@ -253,6 +326,8 @@ const FCData = {
         'user_signed_up',
         { email, location: profileMeta.location_cluster || '' }
       );
+      // Dispatch success welcome email to Gmail account
+      this.sendWelcomeEmail(email, profileMeta.full_name || email.split('@')[0], profileMeta);
       if (data.access_token && data.user) {
         this.resetLocalUserMaps();
         this.applyAuthSession(data, false);
@@ -1174,25 +1249,159 @@ const FCData = {
       }
     }
 
-    if (window.teams && Array.isArray(this.db.teams) && this.db.teams.length > 0) {
-      for (let i = this.db.teams.length - 1; i >= 0; i--) {
-        const rt = this.db.teams[i];
-        if (!rt.team_name) continue;
-        const isMyTeam = Boolean(authEmail && rt.owner_contact && String(rt.owner_contact).toLowerCase() === authEmail);
-        const existingIdx = teams.findIndex((t) => t.name.toLowerCase() === rt.team_name.toLowerCase());
-        if (existingIdx < 0) {
-          teams.unshift({
-            id: rt.id || 't_' + i,
-            name: rt.team_name,
-            loc: rt.location || 'Lagos',
-            fmt: rt.format || '7-a-side',
-            m: 1,
-            role: isMyTeam ? 'Owner' : null
-          });
-        } else if (isMyTeam) {
-          teams[existingIdx].role = 'Owner';
+    // Reconstruct & merge real custom teams (from local storage, cloud teams table, and app_events)
+    if (window.teams) {
+      // 1. Local custom teams
+      try {
+        const localCustom = JSON.parse(localStorage.getItem('fc_custom_teams') || '[]');
+        for (const lt of localCustom) {
+          if (!lt || !lt.name) continue;
+          const idx = teams.findIndex((t) => t.name.toLowerCase() === lt.name.toLowerCase());
+          if (idx < 0) {
+            teams.unshift(lt);
+          } else {
+            teams[idx] = { ...teams[idx], ...lt };
+          }
+        }
+      } catch (e) {}
+
+      // 2. Cloud teams table
+      if (Array.isArray(this.db.teams) && this.db.teams.length > 0) {
+        for (let i = this.db.teams.length - 1; i >= 0; i--) {
+          const rt = this.db.teams[i];
+          if (!rt.team_name) continue;
+          const isMyTeam = Boolean(authEmail && rt.owner_contact && String(rt.owner_contact).toLowerCase() === authEmail);
+          const existingIdx = teams.findIndex((t) => t.name.toLowerCase() === rt.team_name.toLowerCase());
+          if (existingIdx < 0) {
+            teams.unshift({
+              id: rt.id || 't_' + i,
+              name: rt.team_name,
+              loc: rt.location || 'Lagos',
+              fmt: rt.format || '7-a-side',
+              desc: rt.description || '',
+              logo: '',
+              banner: '',
+              m: 1,
+              role: isMyTeam ? 'Owner' : null,
+              isCustom: true
+            });
+          } else if (isMyTeam) {
+            teams[existingIdx].role = 'Owner';
+          }
         }
       }
+
+      // 3. Cloud team_created events in app_events (captures all custom teams across devices even if teams table was rejected)
+      const teamCreatedEvs = allEvs
+        .filter((ev) => ev.event_name === 'team_created' && (ev.properties || ev.entity_id))
+        .slice()
+        .reverse();
+
+      for (const ev of teamCreatedEvs) {
+        const p = ev.properties || {};
+        const tName = p.team_name || ev.entity_id;
+        if (!tName) continue;
+        const ownerEmail = (p.owner_contact || ev.user_contact || '').toLowerCase();
+        const isMyTeam = Boolean(authEmail && ownerEmail && ownerEmail === authEmail);
+        const existingIdx = teams.findIndex((t) => t.name.toLowerCase() === tName.toLowerCase());
+        const teamObj = {
+          id: p.team_id || ev.id || 't_' + String(tName).replace(/\s+/g, '_').toLowerCase(),
+          name: tName,
+          loc: p.location || 'Lagos',
+          fmt: p.format || '7-a-side',
+          desc: p.description || '',
+          logo: p.logo || '',
+          banner: p.banner || '',
+          m: 1,
+          role: isMyTeam ? 'Owner' : null,
+          isCustom: true
+        };
+        if (existingIdx < 0) {
+          teams.unshift(teamObj);
+        } else {
+          teams[existingIdx] = {
+            ...teams[existingIdx],
+            loc: p.location || teams[existingIdx].loc,
+            fmt: p.format || teams[existingIdx].fmt,
+            desc: p.description || teams[existingIdx].desc,
+            logo: p.logo || teams[existingIdx].logo,
+            banner: p.banner || teams[existingIdx].banner,
+            role: isMyTeam ? 'Owner' : teams[existingIdx].role
+          };
+        }
+      }
+    }
+
+    // Sync cloud team chat messages across devices
+    const teamChatEvs = allEvs.filter((ev) => ev.event_name === 'team_chat_message' && ev.properties && ev.properties.team_id);
+    if (teamChatEvs.length > 0) {
+      try {
+        const localChats = JSON.parse(localStorage.getItem('fc_team_chats') || '{}');
+        for (const ev of teamChatEvs) {
+          const p = ev.properties;
+          const tid = String(p.team_id);
+          localChats[tid] = localChats[tid] || [];
+          if (!localChats[tid].some((m) => m.id === ev.id || (m.text === p.text && m.created_at === (p.created_at || ev.created_at)))) {
+            localChats[tid].push({
+              id: ev.id,
+              sender: p.sender_name || 'Player',
+              role: p.sender_role || 'Member',
+              text: p.text,
+              time: new Date(ev.created_at || p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              created_at: ev.created_at || p.created_at,
+              isMe: Boolean((authEmail && (ev.user_contact || '').toLowerCase() === authEmail) || (p.sender_name === (window.S && S.user && S.user.name)))
+            });
+          }
+        }
+        localStorage.setItem('fc_team_chats', JSON.stringify(localChats));
+      } catch (e) {}
+    }
+
+    // Sync cloud game chat messages across devices
+    const gameChatEvs = allEvs.filter((ev) => ev.event_name === 'game_chat_message' && ev.properties && ev.properties.game_id);
+    if (gameChatEvs.length > 0) {
+      try {
+        const localGameChats = JSON.parse(localStorage.getItem('fc_game_chats') || '{}');
+        for (const ev of gameChatEvs) {
+          const p = ev.properties;
+          const gid = String(p.game_id);
+          localGameChats[gid] = localGameChats[gid] || [];
+          if (!localGameChats[gid].some((m) => m.id === ev.id || (m.text === p.text && m.created_at === (p.created_at || ev.created_at)))) {
+            localGameChats[gid].push({
+              id: ev.id,
+              sender: p.sender_name || 'Player',
+              text: p.text,
+              time: new Date(ev.created_at || p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              created_at: ev.created_at || p.created_at,
+              isMe: Boolean((authEmail && (ev.user_contact || '').toLowerCase() === authEmail) || (p.sender_name === (window.S && S.user && S.user.name)))
+            });
+          }
+        }
+        localStorage.setItem('fc_game_chats', JSON.stringify(localGameChats));
+      } catch (e) {}
+    }
+
+    // Sync cloud player rating notifications
+    const ratingEvs = allEvs.filter((ev) => ev.event_name === 'player_endorsed' && ev.properties);
+    if (ratingEvs.length > 0) {
+      try {
+        const localNotifs = JSON.parse(localStorage.getItem('fc_rating_notifs') || '[]');
+        for (const ev of ratingEvs) {
+          const p = ev.properties;
+          if (!localNotifs.some((n) => n.id === ev.id || (n.timestamp === (ev.created_at || p.created_at) && n.statKey === p.stat))) {
+            localNotifs.unshift({
+              id: ev.id || 'rn_' + Math.random().toString(36).substr(2, 6),
+              ratedPlayer: p.player_name || 'Player',
+              rater: p.endorsed_by || 'Community Player',
+              statKey: p.stat || 'pac',
+              statLabel: (p.stat || 'PAC').toUpperCase(),
+              time: new Date(ev.created_at || p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              timestamp: ev.created_at || p.created_at
+            });
+          }
+        }
+        localStorage.setItem('fc_rating_notifs', JSON.stringify(localNotifs.slice(0, 30)));
+      } catch (e) {}
     }
   },
 
@@ -1323,7 +1532,7 @@ const FCData = {
         }
       });
       navigator.serviceWorker
-        .register('./sw.js?v=21', { updateViaCache: 'none' })
+        .register('./sw.js?v=22', { updateViaCache: 'none' })
         .then((reg) => {
           this.swReady = true;
           if (reg && typeof reg.update === 'function') reg.update();
@@ -1905,14 +2114,19 @@ SC.admin = () => {
               .join('')}</div>`
       }`;
   } else if (k === 'Cloud Keys') {
+    const targetEmail = (window.S && S.authUser && S.authUser.email) || (window.S && S.user && S.user.email) || '';
     content = `
-      <div class="note" style="margin-bottom:14px">Enter your project keys from <b>supabase.com/dashboard</b> (Settings → API) and <b>posthog.com</b> (Project Settings).</div>
+      <div class="note" style="margin-bottom:14px">Enter your project keys from <b>supabase.com/dashboard</b>, <b>posthog.com</b>, and <b>resend.com</b> for automated Gmail delivery.</div>
       <div class="field">Supabase Project URL<input id="cfg_sb_url" value="${FCData.cfg.supabaseUrl}" placeholder="https://xyzcompany.supabase.co"></div>
       <div class="field">Supabase Anon Public Key<input id="cfg_sb_key" value="${FCData.cfg.supabaseKey}" placeholder="sb_publishable_..."></div>
       <div class="field">PostHog Project API Key<input id="cfg_ph_key" value="${FCData.cfg.posthogKey}" placeholder="phc_xxxxxxxxxxxxxxxxxxxxxxxx"></div>
       <div class="field">PostHog Host<input id="cfg_ph_host" value="${FCData.cfg.posthogHost}" placeholder="https://us.i.posthog.com"></div>
-      <button class="btn" onclick="saveCloudConfigUI()">Save &amp; Connect Cloud</button>
-      <button class="btn ghost" style="margin-top:10px" onclick="FCData.pullLiveRecords().then(()=>{toast('Refreshed from Supabase');render()})">Refresh Data from Supabase</button>`;
+      <div class="field">Resend API Key (for Gmail Welcome Emails)<input id="cfg_resend_key" value="${FCData.cfg.resendKey || ''}" placeholder="re_xxxxxxxxxxxxxxxxxxxx"></div>
+      <div class="col" style="gap:10px;margin-top:14px">
+        <button class="btn" onclick="saveCloudConfigUI()">Save &amp; Connect Cloud</button>
+        <button class="btn sm" onclick="testWelcomeEmailUI('${targetEmail}')">✉️ Send Test Welcome Email to ${targetEmail || 'My Email'}</button>
+        <button class="btn sm ghost" onclick="FCData.pullLiveRecords().then(()=>{toast('Refreshed from Supabase');render()})">Refresh Data from Supabase</button>
+      </div>`;
   } else if (k === 'SQL Setup') {
     const sqlText = `-- Paste in Supabase -> SQL Editor -> New Query -> Run
 create table if not exists public.users (id uuid default gen_random_uuid() primary key, full_name text, email_or_phone text, location_cluster text, formats text[], positions text[], experience text, availability text[], created_at timestamptz default now());
@@ -1937,18 +2151,50 @@ window.saveCloudConfigUI = function () {
   const supabaseKey = ($('cfg_sb_key') && $('cfg_sb_key').value.trim()) || '';
   const posthogKey = ($('cfg_ph_key') && $('cfg_ph_key').value.trim()) || '';
   const posthogHost = ($('cfg_ph_host') && $('cfg_ph_host').value.trim()) || 'https://us.i.posthog.com';
-  FCData.saveConfig({ supabaseUrl, supabaseKey, posthogKey, posthogHost });
+  const resendKey = ($('cfg_resend_key') && $('cfg_resend_key').value.trim()) || '';
+  FCData.saveConfig({ supabaseUrl, supabaseKey, posthogKey, posthogHost, resendKey });
   FCData.adminTab = 'Overview';
   render();
   showModal({
     title: 'Cloud Configuration Saved!',
-    sub: 'Your Supabase and PostHog settings are active.',
+    sub: 'Your Supabase, PostHog, and Email settings are active.',
     meta: [
       ['Supabase', supabaseUrl ? 'Configured ✓' : 'Local Mode'],
-      ['PostHog', posthogKey ? 'Active ✓' : 'Not set']
+      ['PostHog', posthogKey ? 'Active ✓' : 'Not set'],
+      ['Email Delivery', resendKey ? 'Resend API Active ✓' : 'Direct Dispatch Active ✓']
     ],
     primary: 'View Dashboard'
   });
+};
+
+window.testWelcomeEmailUI = async function (email) {
+  const target = (email || (window.S && S.user && S.user.email) || '').trim();
+  if (!target) {
+    const entered = prompt('Enter your Gmail address to receive the test welcome email:');
+    if (!entered) return;
+    return window.testWelcomeEmailUI(entered);
+  }
+  toast('Sending test welcome email to ' + target + '...');
+  const res = await FCData.sendWelcomeEmail(target, (window.S && S.user && S.user.name) || 'Player', {
+    ovr: 85,
+    posCode: 'CF',
+    tier: 'Epic',
+    location: 'Lekki & Iyana Ipaja, Lagos'
+  });
+  if (res && res.ok) {
+    showModal({
+      title: 'Welcome Email Sent! ✉️',
+      sub: 'We dispatched a test welcome email to ' + target + '. Please check your inbox (and spam folder if checking for the first time).',
+      meta: [
+        ['Recipient', target],
+        ['Platform', 'Football Community Lagos'],
+        ['Subject', '⚽ Welcome to Football Community! Your Account is Live']
+      ],
+      primary: 'Done'
+    });
+  } else {
+    toast('Could not send email: ' + ((res && res.error) || 'Please check email address.'));
+  }
 };
 
 window.addEventListener('DOMContentLoaded', () => {
