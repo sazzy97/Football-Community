@@ -684,63 +684,33 @@ const crest=(n,z=44)=>{
 const ini=s=>((s||'FC').trim().split(/\s+/).map(w=>w[0]||'').slice(0,2).join('').toUpperCase()||'FC');
 const N=n=>'₦'+n.toLocaleString('en-NG');
 
-/* ===== sample data (illustrative only) ===== */
-const venues=[
+/* ===== Live Data Collections (Real user data only) ===== */
+var venues=[
  {im:"venue1",id:0,name:"Lekki Goal Arena",area:'Lekki Phase 1',km:2.1,rating:4.7,rev:128,from:25000,verified:true,fmts:['5-a-side','7-a-side'],fac:['Floodlights','Changing rooms','Parking','Refreshments'],hours:'07:00 – 23:00',policy:'Free cancellation up to 24 hours before kickoff. Within 24 hours: 50% refund. Within 6 hours: no refund.',deposit:true,pitches:[{n:'Pitch A',f:'5-a-side',p:25000},{n:'Pitch B',f:'5-a-side',p:25000},{n:'Pitch C',f:'7-a-side',p:40000}]},
  {im:"venue2",id:1,name:"Yaba Turf Club",area:'Yaba',km:4.8,rating:4.4,rev:64,from:18000,verified:true,fmts:['5-a-side'],fac:['Floodlights','Parking'],hours:'08:00 – 22:00',policy:'Free cancellation up to 12 hours before kickoff.',deposit:false,pitches:[{n:'Pitch 1',f:'5-a-side',p:18000},{n:'Pitch 2',f:'5-a-side',p:18000}]},
  {im:"venue3",id:2,name:"Ikeja Sports Ground",area:'Ikeja GRA',km:7.3,rating:4.2,rev:41,from:30000,verified:false,fmts:['7-a-side','9-a-side','11-a-side'],fac:['Changing rooms','Seating'],hours:'07:00 – 21:00',policy:'Cancellation policy set by venue. Contact venue for refunds.',deposit:true,pitches:[{n:'Main Pitch',f:'11-a-side',p:90000},{n:'Mini Pitch',f:'7-a-side',p:30000}]},
  {im:"venue2",id:3,name:"Ipaja Mini Stadium",area:'Iyana Ipaja',km:11.2,rating:4.5,rev:53,from:20000,verified:true,fmts:['5-a-side','7-a-side','11-a-side'],fac:['Floodlights','Seating','Changing rooms','Parking'],hours:'06:30 – 22:00',policy:'Free cancellation up to 24 hours before kickoff.',deposit:true,pitches:[{n:'Main Pitch',f:'11-a-side',p:60000},{n:'5-a-side Turf',f:'5-a-side',p:20000},{n:'7-a-side Arena',f:'7-a-side',p:32000}]}
 ];
-const games=[
- {id:0,title:'Thursday Night 5s',v:0,pitch:'Pitch A',when:'Thu 12 Nov · 20:00–21:00',fmt:'5-a-side',need:10,left:2,price:2500,org:'Tunde A.',level:'Intermediate',approval:false},
- {id:1,title:'Sunday Kickabout',v:1,pitch:'Pitch 1',when:'Sun 15 Nov · 16:00–17:30',fmt:'5-a-side',need:10,left:4,price:2000,org:'Chidi O.',level:'All levels',approval:true},
- {id:2,title:'Lekki 7s Friendly',v:0,pitch:'Pitch C',when:'Sat 14 Nov · 18:00–19:00',fmt:'7-a-side',need:14,left:5,price:3500,org:'Femi K.',level:'Beginner friendly',approval:false},
- {id:3,title:'Ikeja Midweek 9s',v:2,pitch:'Mini Pitch',when:'Wed 18 Nov · 19:00–20:30',fmt:'9-a-side',need:18,left:3,price:3000,org:'Sadiq M.',level:'Intermediate',approval:false},
- {id:4,title:'Saturday Full-Pitch 11s',v:2,pitch:'Main Pitch',when:'Sat 21 Nov · 09:00–11:00',fmt:'11-a-side',need:22,left:4,price:4000,org:'Emeka O.',level:'Competitive',approval:true}
-];
-const events=[
- {im:"event1",id:0,title:"Lagos Grassroots Cup — Final",cat:'Grassroots',trust:'Verified event',venue:'Teslim Balogun Stadium',when:'Sat 14 Nov · 15:00',fee:'₦1,500',status:'Upcoming',org:'Lagos Grassroots Football Assoc.',tix:true,left:240,comp:0,b:'',going:48,attended:0},
- {im:"event2",id:1,title:"Campus 7s Tournament",cat:'University',trust:'Organiser-published',venue:'UNILAG Sports Centre',when:'Sun 22 Nov · 10:00',fee:'Free',status:'Upcoming',org:'Campus Football League',tix:false,left:0,comp:1,b:'b3',going:36,attended:0},
- {im:"event3",id:2,title:"Charity Match for Education",cat:'Charity',trust:'Community-submitted',venue:'Surulere Playground',when:'Sat 28 Nov · 14:00',fee:'₦1,000',status:'Pending review',org:'Submitted by a community member',tix:false,left:0,comp:-1,b:'b2',going:19,attended:0},
- {im:"event4",id:3,title:"Youth Academy Trials",cat:'Trials',trust:'Organiser-published',venue:'Ikeja Sports Ground',when:'Sat 5 Dec · 09:00',fee:'Free',status:'Upcoming',org:'Eagle Academy',tix:false,left:0,comp:-1,b:'b4',going:27,attended:0},
- {im:"event1",id:4,title:"Lagos City Derby — NPFL Matchday",cat:'Professional matches',trust:'Verified event',venue:'Mobolaji Johnson Arena, Onikan',when:'Sun 15 Nov · 16:00',fee:'₦2,500',status:'Upcoming',org:'Lagos State FA',tix:true,left:420,comp:0,b:'',going:112,attended:0},
- {im:"event2",id:5,title:"Lekki Weekend 5s Cup",cat:'Local tournaments',trust:'Organiser-published',venue:'Lekki Goal Arena',when:'Sat 21 Nov · 12:00',fee:'₦1,000',status:'Upcoming',org:'Island Football Collective',tix:true,left:85,comp:0,b:'',going:31,attended:0},
- {im:"event4",id:6,title:"U-17 Future Stars Showcase",cat:'Academy',trust:'Organiser-published',venue:'Yaba Turf Club',when:'Sun 29 Nov · 09:00',fee:'Free',status:'Upcoming',org:'Lagos Youth Academies',tix:false,left:0,comp:-1,b:'',going:22,attended:0},
- {im:"event2",id:7,title:"Lagos Secondary Schools Cup",cat:'School',trust:'Verified event',venue:'Campos Mini Stadium',when:'Wed 25 Nov · 14:00',fee:'Free',status:'Upcoming',org:'Schools Sports Federation',tix:false,left:0,comp:-1,b:'',going:64,attended:0},
- {im:"event3",id:8,title:"Lekki Lions vs Mainland FC",cat:'Friendly',trust:'Organiser-published',venue:'Lekki Goal Arena',when:'Fri 20 Nov · 19:00',fee:'Free',status:'Upcoming',org:'Lekki Lions FC',tix:false,left:0,comp:-1,b:'',going:29,attended:0},
- {im:"event1",id:9,title:"Lagos Street Football Festival",cat:'Festival',trust:'Verified event',venue:'Tafawa Balewa Square',when:'Sat 12 Dec · 11:00',fee:'₦2,000',status:'Upcoming',org:'Lagos Football Culture',tix:true,left:310,comp:-1,b:'',going:85,attended:0},
- {im:"event4",id:10,title:"Open Technical & Fitness Clinic",cat:'Training',trust:'Organiser-published',venue:'Ikeja Sports Ground',when:'Thu 19 Nov · 08:00',fee:'₦3,000',status:'Upcoming',org:'ProTouch Coaching',tix:true,left:24,comp:-1,b:'',going:14,attended:0}
-];
-const comps=[
- {id:0,name:'Lagos Grassroots Cup',type:'Grassroots competition',season:'2026 Edition',teams:8,format:'11-a-side',area:'Surulere',venue:'Teslim Balogun Stadium',fee:'Free',prize:'₦1,000,000 + Gold Trophy',verified:true,desc:'Premier grassroots knockout tournament for local academies.',rulesDoc:{name:'Lagos_Grassroots_Cup_Official_Rules_2026.pdf',size:'240 KB',type:'application/pdf',data:'data:text/plain;charset=utf-8,LAGOS%20GRASSROOTS%20CUP%202026%20-%20OFFICIAL%20RULES%20%26%20REGULATIONS%0A%0A1.%20FORMAT%20%26%20STRUCTURE%0A-%2011-a-side%20knockout%20tournament%0A-%20Match%20duration%3A%2090%20minutes%20(two%2045-minute%20halves)%0A-%20In%20case%20of%20a%20draw%20in%20knockout%20rounds%2C%20extra%20time%20(2x15m)%20followed%20by%20penalties%0A%0A2.%20SQUAD%20%26%20SUBSTITUTIONS%0A-%20Maximum%2023-man%20registered%20squad%0A-%20Up%20to%205%20substitutions%20permitted%20across%203%20substitution%20windows%0A%0A3.%20DISCIPLINARY%20CODE%0A-%20Two%20yellow%20cards%20result%20in%20a%20one-match%20suspension%0A-%20Straight%20red%20card%20results%20in%20an%20automatic%20two-match%20ban%0A%0A4.%20PRIZES%20%26%20AWARDS%0A-%20Champion%3A%20NGN%201%2C000%2C000%20%2B%20Gold%20Trophy%20%2B%20Gold%20Medals%0A-%20Runners-up%3A%20NGN%20400%2C000%20%2B%20Silver%20Medals%0A-%20Golden%20Boot%20and%20Golden%20Glove%20honours'},enrolledTeams:['Mainland FC','Surulere United','Lekki Lions','Yaba Rovers','Ikeja Stars','Akoka Boys FC','Bariga All-Stars','Festac Warriors'],standings:[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]]},
- {id:1,name:'Campus 7s League',type:'University competition',season:'2026/27',teams:6,format:'7-a-side',area:'Yaba',venue:'Unilag Sports Field',fee:'₦15,000 / team',prize:'₦400,000 + Trophy',verified:true,desc:'Inter-faculty campus league in Lagos.',enrolledTeams:['Mainland FC','Yaba Rovers','Surulere Social','Lekki Lions'],standings:[['Yaba Rovers',4,3,1,0,8,2],['Mainland FC',4,2,1,1,6,4],['Surulere Social',4,1,1,2,4,5],['Lekki Lions',4,0,1,3,2,9]]}
-];
-const standings=[['Mainland FC',6,5,1,0,14,3],['Surulere United',6,4,1,1,11,5],['Lekki Lions',6,3,1,2,9,8],['Yaba Rovers',6,2,0,4,6,10],['Ikeja Stars',6,0,1,5,2,16]];
-const fixtures=[
- {id:0,h:'Mainland FC',a:'Surulere United',t:'Sat 14 Nov · 15:00',s:'Upcoming',v:'Teslim Balogun Stadium',comp:'Lagos Grassroots Cup',going:34,attended:0,fee:'₦1,500',price:1500},
- {id:1,h:'Lekki Lions',a:'Yaba Rovers',t:'Today · 16:00',s:'Live',sc:'1 : 1',v:'Lagos Arena, Lekki',comp:'Lagos Grassroots Cup',going:58,attended:24,fee:'Free',price:0},
- {id:2,h:'Akoka Boys FC',a:'Bariga All-Stars',t:'Sun 15 Nov · 16:30',s:'Upcoming',v:'St. Finbarr\'s Field, Akoka',comp:'Lagos Grassroots Cup',going:29,attended:0,fee:'Free',price:0},
- {id:3,h:'Ikeja Stars',a:'Mainland FC',t:'Sat 7 Nov',s:'Completed',sc:'0 : 3',v:'Ikeja Sports Ground',comp:'Lagos Grassroots Cup',going:41,attended:32,fee:'Free',price:0}
-];
-const teams=[
- {id:0,name:'Lekki Lions',loc:'Lekki',fmt:'7-a-side',m:14,role:null},
- {id:1,name:'Mainland FC',loc:'Yaba',fmt:'11-a-side',m:22,role:null},
- {id:2,name:'Surulere Social',loc:'Surulere',fmt:'5-a-side',m:9,role:null},
- {id:3,name:'Ipaja Warriors',loc:'Iyana Ipaja',fmt:'7-a-side',m:16,role:null,desc:'Grassroots football club based in Ipaja/Alimosho, Lagos.'}
-];
-const players=[
- {n:'Emeka Obi',pos:'Midfielder',fmt:'5-a-side',area:'Lekki',av:'Weekday evenings'},
- {n:'Ayo Bello',pos:'Goalkeeper',fmt:'7-a-side',area:'Yaba',av:'Weekends'},
- {n:'Sadiq Musa',pos:'Forward',fmt:'5-a-side',area:'Ikeja',av:'Flexible'},
- {n:'Chidi Okonkwo',pos:'Defender',fmt:'7-a-side',area:'Surulere',av:'Weekends'},
- {n:'Femi Kuti-Ade',pos:'Midfielder',fmt:'11-a-side',area:'Victoria Island',av:'Weekday evenings'},
- {n:'Kunle Afolabi',pos:'Defender',fmt:'5-a-side',area:'Lekki',av:'Weekday mornings'},
- {n:'Babatunde Fashola',pos:'Midfielder',fmt:'7-a-side',area:'Iyana Ipaja',av:'Weekends'}
-];
+var games=[];
+var events=[];
+var comps=[];
+var standings=[];
+var fixtures=[];
+var teams=[];
+var players=[];
+window.venues=venues;
+window.games=games;
+window.events=events;
+window.comps=comps;
+window.standings=standings;
+window.fixtures=fixtures;
+window.teams=teams;
+window.players=players;
 
 /* ===== state & routing ===== */
-const S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Overview',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline',teamTab:'Squad & Matches',gameTab:'Game Details'},
+var S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',community:'Activity',activity:'Overview',compTab:'Fixtures',venue:'Overview',matchTab:'Timeline',teamTab:'Squad & Matches',gameTab:'Game Details'},
  b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All',tfilt:'All'},q:{pitch:'',game:'',event:'',comp:'',player:'',team:''},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},myVenues:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,isAdmin:false,adminTap:0,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
+window.S=S;
 
 /* ===== Save Drafts System (Comp, Team, Game, Event, Fixture) ===== */
 const DraftManager={
@@ -855,6 +825,7 @@ const getAllPlayers=()=>{
       if(!u||!u.full_name)continue;
       const fmtsArr=Array.isArray(u.formats)?u.formats:String(u.formats||'5-a-side').split(',').map(x=>x.trim()).filter(Boolean);
       const posArr=Array.isArray(u.positions)?u.positions:String(u.positions||'Midfielder').split(',').map(x=>x.trim()).filter(Boolean);
+      const ownedTeam=teams.find(t=>(t.owner_name&&t.owner_name.toLowerCase()===u.full_name.toLowerCase())||(t.owner_contact&&u.email_or_phone&&t.owner_contact.toLowerCase()===String(u.email_or_phone).toLowerCase()));
       addP({
         n:u.full_name,
         pos:posArr[0]||'Midfielder',
@@ -863,12 +834,11 @@ const getAllPlayers=()=>{
         area:String(u.location_cluster||u.area||'Lekki').split(' and ')[0],
         av:Array.isArray(u.availability)?u.availability.join(', '):(u.availability||'Flexible'),
         exp:u.experience||u.skill_level||'Intermediate',
-        team:'Community Player',
+        team:ownedTeam?ownedTeam.name:'Community Player',
         card:u.card||null
       });
     }
   }
-  for(const p of players)addP({...p,fmts:p.fmt,exp:p.exp||'Competitive',team:'Lagos Community'});
   return list;
 };
 
@@ -1291,10 +1261,14 @@ const getLiveFeedItems=()=>{
     if(out.length>=15)break;
   }
   if(!out.length){
-    out.push(
-      {ico:'ball',text:'Thursday Night 5s is open for players at Lekki Goal Arena',when:'Active',act:`go('game',0)`},
-      {ico:'trophy',text:'Lagos Grassroots Cup fixtures are open for spectators',when:'Active',act:`jump('events')`}
-    );
+    const firstGame=games[0];
+    if(firstGame){
+      out.push({ico:'ball',text:`${firstGame.title} is open for players at ${firstGame.venueName||'Lagos Pitch'}`,when:'Open',act:`go('game','${firstGame.id}')`});
+    }
+    const firstFix=fixtures[0];
+    if(firstFix){
+      out.push({ico:'trophy',text:`Upcoming fixture: ${firstFix.h} vs ${firstFix.a}`,when:'Active',act:`go('match','${firstFix.id}')`});
+    }
   }
   return out;
 };
@@ -1318,12 +1292,14 @@ const toast=m=>{S.toast=m;render();setTimeout(()=>{S.toast=null;render()},1800)}
 const showModal=(cfg)=>{S.modal=cfg;render()};
 const closeModal=(fn)=>{S.modal=null;if(fn)fn();render()};
 const findGame=id=>{
+  if(!games||!games.length)return null;
   if(id===undefined||id===null)return games[0];
-  return games.find(x=>String(x.id)===String(id))||games[+id]||games[0];
+  return games.find(x=>String(x.id)===String(id))||games[+id]||null;
 };
 const findEvent=id=>{
+  if(!events||!events.length)return null;
   if(id===undefined||id===null)return events[0];
-  return events.find(x=>String(x.id)===String(id))||events[+id]||events[0];
+  return events.find(x=>String(x.id)===String(id))||events[+id]||null;
 };
 const currentUserEmail=()=>((S.authUser&&S.authUser.email)||S.user.email||'').trim().toLowerCase();
 const currentUserId=()=>(S.authUser&&S.authUser.id)||'';
@@ -1362,8 +1338,9 @@ const isEventCreator=e=>{
   return Boolean(e.isMine||(S.myEvents&&S.myEvents[e.id]));
 };
 const findComp=id=>{
+  if(!comps||!comps.length)return null;
   if(id===undefined||id===null)return comps[0];
-  return comps.find(x=>String(x.id)===String(id))||comps[+id]||comps[0];
+  return comps.find(x=>String(x.id)===String(id))||comps[+id]||null;
 };
 const isCompCreator=c=>{
   if(!c)return false;
@@ -1430,12 +1407,14 @@ const getUserContext=()=>{
   };
 };
 const findTeam=id=>{
+  if(!teams||!teams.length)return null;
   if(id===undefined||id===null)return teams[0];
-  return teams.find(x=>String(x.id)===String(id))||teams[+id]||teams[0];
+  return teams.find(x=>String(x.id)===String(id))||teams[+id]||null;
 };
 const findFixture=id=>{
-  if(id===undefined||id===null)return fixtures[1]||fixtures[0];
-  return fixtures.find(x=>String(x.id)===String(id))||fixtures[+id]||fixtures[0];
+  if(!fixtures||!fixtures.length)return null;
+  if(id===undefined||id===null)return fixtures[0];
+  return fixtures.find(x=>String(x.id)===String(id))||fixtures[+id]||null;
 };
 const parseFee=feeStr=>{
   if(!feeStr||String(feeStr).toLowerCase()==='free')return 0;
@@ -1445,10 +1424,12 @@ const getAttendKey=(type,id)=>(type==='event'?'e_':'f_')+id;
 const getAttendItem=(type,id)=>{
   if(type==='event'){
     const e=findEvent(id);
+    if(!e)return {key:'e_'+id,type:'event',id,title:'Football Event',venue:'Lagos Venue',when:'Upcoming',status:'Upcoming',price:0,feeLabel:'Free',isPaid:false,obj:{going:0}};
     const price=parseFee(e.fee);
     return {key:'e_'+e.id,type:'event',id:e.id,title:e.title,venue:e.venue,when:e.when,status:e.status,price,feeLabel:price>0?N(price):'Free',isPaid:price>0,obj:e};
   }
   const f=findFixture(id);
+  if(!f)return {key:'f_'+id,type:'fixture',id,title:'Match Fixture',venue:'Lagos Pitch',when:'Upcoming',status:'Upcoming',price:0,feeLabel:'Free',isPaid:false,obj:{going:0}};
   const price=+f.price||parseFee(f.fee);
   return {key:'f_'+f.id,type:'fixture',id:f.id,title:f.h+' vs '+f.a,venue:f.v,when:f.t,status:f.s,price,feeLabel:price>0?N(price):'Free',isPaid:price>0,obj:f};
 };
@@ -1862,16 +1843,7 @@ async function finishOnb(){
   showModal({title:'Welcome to Football Community!',sub:'Your profile and official FIFA Player Rate Card have been generated.',meta:[['Player',S.user.name||'Player'],['FIFA Rate Card',`${myC.ovr} OVR · ${myC.posCode} (${myC.tier})`],['Location',S.user.loc],['Formats',fmts.join(', ')]],primary:'View My FIFA Rate Card',primaryFn:()=>go('player'),secondary:'Start Exploring'});
 }
 
-SC.home=()=>`<div class="row sp"><div class="row"><div class="av">TA</div><div><div class="sub">Hi, welcome back</div><div class="b">${ic('pin')} Lekki, Lagos</div></div></div><button class="round" onclick="go('notifs')">${ic('bell')}</button></div>
- <div class="search" style="margin:16px 0" onclick="tab('explore')">${ic('search')}<span>Search pitches, games, events</span></div>
- <div class="hero img has" style="height:auto;display:block;background-image:url(img/game1.jpg)" onclick="go('game',0)"><span class="tag gold">Open game · 2 slots left</span><div style="font-size:21px;font-weight:800;margin:10px 0 4px">Thursday Night 5s</div><div class="sub">Lekki Goal Arena · Thu 12 Nov · 20:00</div><button class="btn gold sm" style="margin-top:14px">Join now · ${N(2500)}</button></div>
- <div class="grid4" style="margin-top:14px">${[['Book','pin',"tab('explore')"],['Create Game','plus',"go('createGame')"],['Events','cal',"jump('events')"],['Teams','users',"tab('community')"]].map(a=>`<button class="col" style="align-items:center;gap:6px;font-size:12px;font-weight:600" onclick="${a[2]}"><div class="round" style="width:54px;height:54px;border-radius:18px;color:var(--brand)">${ic(a[1])}</div>${a[0]}</button>`).join('')}</div>
- <h2 class="sec">Nearby pitches <a onclick="jump('venues')">See all</a></h2><div class="hscroll">${venues.map(v=>`<div style="width:260px">${venueCard(v)}</div>`).join('')}</div>
- <h2 class="sec">Open games you can join <a onclick="jump('games')">See all</a></h2><div class="list">${games.slice(0,2).map(gameCard).join('')}</div>
- <h2 class="sec">Upcoming football events <a onclick="jump('events')">See all</a></h2><div class="hscroll">${events.slice(0,3).map(e=>`<div style="width:284px">${eventCard(e)}</div>`).join('')}</div>
- <h2 class="sec">Popular competitions</h2><div class="list">${comps.map(c=>`<div class="card row" onclick="go('comp',${c.id})"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div>${ic('chev')}</div>`).join('')}</div>
- <h2 class="sec">Teams <a onclick="S.sub.community='Teams';tab('community')">See all ${ic('chev')}</a></h2><div class="hscroll">${teams.map(teamMini).join('')}</div>
- <h2 class="sec">Recent community activity <a onclick="tab('community')">See all</a></h2><div class="card small">Lekki Lions created a new game · <span class="muted">12 min ago</span></div>`;
+
 
 SC.explore=()=>{const k=S.sub.explore;let body='';S.q=S.q||{};
  const fmts=['All','5-a-side','7-a-side','9-a-side','11-a-side'];
@@ -2231,7 +2203,9 @@ function publishGame(){
 }
 
 SC.event=id=>{
- const e=findEvent(id),sid=String(e.id),info=getAttendItem('event',e.id),gCount=e.going||30,cur=(S.attending&&S.attending[info.key])||null;
+ const e=findEvent(id);
+ if(!e)return `${hdr('Event')}<div class="card" style="text-align:center;padding:32px 16px"><p>Event not found.</p><button class="btn sm" onclick="jump('events')">Browse Events</button></div>`;
+ const sid=String(e.id),info=getAttendItem('event',e.id),gCount=e.going||1,cur=(S.attending&&S.attending[info.key])||null;
  const hasTix=S.tickets&&S.tickets[info.key],canEdit=isEventCreator(e);
  return `${hdr('Event',`<div class="row" style="gap:8px">${canEdit?`<button class="btn sm ghost" style="padding:8px 12px" onclick="openEditEvent('${sid}')">Edit</button>`:''}<button class="round" onclick="S.saved['${sid}']=!S.saved['${sid}'];render()" style="color:${S.saved[sid]?'#D94343':'inherit'}">${ic('heart')}</button><button class="round" onclick="openShare('event','${sid}')">${ic('share')}</button></div>`)}
  <div ${pic(e.im||'event1',160)}>${e.cat}</div><div class="row" style="margin:12px 0 6px;flex-wrap:wrap">${trust(e.trust)}<span class="tag">${e.status}</span></div>
@@ -2348,13 +2322,15 @@ SC.ticketPass=arg=>{
 };
 
 SC.comp=id=>{
-  const c=findComp(id),k=S.sub.compTab||'Fixtures',ctx=getUserContext();
+  const c=findComp(id);
+  if(!c)return `${hdr('Competition')}<div class="card" style="text-align:center;padding:32px 16px"><p>Competition not found.</p><button class="btn sm" onclick="tab('events')">Browse Competitions</button></div>`;
+  const k=S.sub.compTab||'Fixtures',ctx=getUserContext();
   const isCreator=isCompCreator(c);
   const adminOk=isAdminUser();
   const cFixtures=fixtures.filter(f=>(f.comp||'').toLowerCase()===c.name.toLowerCase());
   const cResults=cFixtures.filter(f=>f.s==='Completed');
   const enrolled=c.enrolledTeams||[];
-  const compStandings=(c.standings&&c.standings.length)?c.standings:(enrolled.length?enrolled.map(t=>[t,0,0,0,0,0,0]):standings);
+  const compStandings=(c.standings&&c.standings.length)?c.standings:(enrolled.length?enrolled.map(t=>[t,0,0,0,0,0,0]):[]);
 
   const orgConsole=isCreator?`
     <div class="card" style="border:1.5px solid var(--accent);background:var(--surface2);margin-bottom:14px">
@@ -2402,7 +2378,7 @@ SC.comp=id=>{
         </div>
       `}
     `,
-    Standings: `
+    Standings: compStandings.length ? `
       <div class="card" style="overflow-x:auto">
         <table style="width:100%;min-width:320px">
           <tr><th>#</th><th>Team</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>
@@ -2410,19 +2386,33 @@ SC.comp=id=>{
         </table>
       </div>
       <p class="small muted" style="margin-top:8px">Standings automatically update based on match results.</p>
+    ` : `
+      <div class="card" style="text-align:center;padding:24px">
+        <div class="b">No standings recorded yet</div>
+        <div class="sub small" style="margin-top:4px">Standings table will calculate points when teams enroll and complete matches.</div>
+        ${isCreator?`<button class="btn sm" style="margin-top:12px" onclick="startManageCompTeams('${c.id}')">${ic('plus')}Enroll Teams</button>`:''}
+      </div>
     `,
     Teams: `
       <div class="row sp" style="margin-bottom:10px">
         <h2 class="sec" style="margin:0">Enrolled Teams (${enrolled.length})</h2>
         ${isCreator?`<button class="btn sm ghost" onclick="startManageCompTeams('${c.id}')">${ic('plus')}Manage Teams</button>`:''}
       </div>
-      <div class="list">
-        ${enrolled.map(tName=>{
-          const regTeam=teams.find(x=>x.name.toLowerCase()===tName.toLowerCase());
-          if(regTeam)return teamCard(regTeam);
-          return `<div class="card row">${crest(tName,42)}<div class="grow"><div class="b">${tName}</div><div class="sub small">${c.format||'11-a-side'} · Enrolled Squad</div></div><span class="tag">Enrolled</span></div>`;
-        }).join('')}
-      </div>
+      ${enrolled.length ? `
+        <div class="list">
+          ${enrolled.map(tName=>{
+            const regTeam=teams.find(x=>x.name.toLowerCase()===tName.toLowerCase());
+            if(regTeam)return teamCard(regTeam);
+            return `<div class="card row">${crest(tName,42)}<div class="grow"><div class="b">${tName}</div><div class="sub small">${c.format||'11-a-side'} · Enrolled Squad</div></div><span class="tag">Enrolled</span></div>`;
+          }).join('')}
+        </div>
+      ` : `
+        <div class="card" style="text-align:center;padding:24px">
+          <div class="b">No teams enrolled yet</div>
+          <div class="sub small" style="margin-top:4px">Team captains can enroll their teams in this competition.</div>
+          ${isCreator?`<button class="btn sm" style="margin-top:12px" onclick="startManageCompTeams('${c.id}')">${ic('plus')}Enroll Teams</button>`:''}
+        </div>
+      `}
     `,
     Info: `
       <div class="card">
@@ -2515,21 +2505,22 @@ const orgUpdateMatch=(id,action)=>{
 };
 
 SC.match=id=>{
- const f=findFixture(id),sid=String(f.id),info=getAttendItem('fixture',f.id),k=S.sub.matchTab||'Timeline',gCount=f.going||34,cur=(S.attending&&S.attending[info.key])||null;
+ const f=findFixture(id);
+ if(!f)return `${hdr('Match details')}<div class="card" style="text-align:center;padding:32px 16px"><p>Match fixture not found.</p><button class="btn sm" onclick="jump('events')">Browse Matches</button></div>`;
+ const sid=String(f.id),info=getAttendItem('fixture',f.id),k=S.sub.matchTab||'Timeline',gCount=f.going||1,cur=(S.attending&&S.attending[info.key])||null;
  const hasTix=S.tickets&&S.tickets[info.key],canEdit=isFixtureCreator(f);
  const isLive=f.s==='Live',isDone=f.s==='Completed';
- const defaultTl=[["54'","Substitution · Sadiq M. on for "+f.h],["46'","Second half kick-off"],["31'","⚽ Goal · "+f.a+" (Femi K.)"],["19'","Yellow card · "+f.a],["12'","⚽ Goal · "+f.h+" (Emeka O.)"],["1'","First half kick-off"]];
- const tlItems=(f.timeline&&f.timeline.length)?f.timeline:(isLive||isDone?defaultTl:[]);
+ const tlItems=(f.timeline&&f.timeline.length)?f.timeline:[];
  const mbody={
   Timeline:tlItems.length
     ? `<div class="list">${tlItems.map(t=>`<div class="card small row"><span class="tag ${String(t[1]).includes('Goal')||t[0]==='FT'?'ok':''}">${t[0]}</span><span class="grow">${t[1]}</span></div>`).join('')}</div>`
-    : `<div class="card" style="text-align:center;padding:22px"><div class="b">Kickoff: ${f.t}</div><div class="sub small" style="margin-top:4px">Match timeline &amp; live updates will appear here once the referee blows for kickoff at ${f.v}.</div></div>`,
-  Lineups:`<div class="card"><div class="b" style="margin-bottom:8px">${f.h} (Starting XI)</div>${['Ayo Bello (GK)','Chidi Okonkwo','Tunde Adeyemi (C)','Emeka Obi','Sadiq Musa','Kunle Afolabi','Babatunde I.'].map((p,i)=>`<div class="kv"><span>#${i+1} ${p}</span><span class="muted small">Starter</span></div>`).join('')}</div><div class="card" style="margin-top:12px"><div class="b" style="margin-bottom:8px">${f.a} (Starting XI)</div>${['Deji O. (GK)','Femi K. (C)','Tobi A.','Segun M.','Kelechi N.','Dapo S.','Yemi B.'].map((p,i)=>`<div class="kv"><span>#${i+1} ${p}</span><span class="muted small">Starter</span></div>`).join('')}</div>`,
-  Stats:`<div class="card">${[['Goals',f.sc?f.sc.split(':')[0].trim():'0',f.sc?f.sc.split(':')[1].trim():'0'],['Shots on target',isLive||isDone?'5':'0',isLive||isDone?'4':'0'],['Corners',isLive||isDone?'3':'0',isLive||isDone?'2':'0'],['Fouls',isLive||isDone?'4':'0',isLive||isDone?'6':'0']].map(r=>`<div class="kv"><b>${r[1]}</b><span class="muted">${r[0]}</span><b>${r[2]}</b></div>`).join('')}</div>`,
-  Info:`<div class="card"><div class="kv"><span class="muted">Competition</span><b>${f.comp||'Lagos Grassroots Cup'}</b></div><div class="kv"><span class="muted">Field / Venue</span><b>${f.v}</b></div><div class="kv"><span class="muted">Kickoff</span><b>${f.t}</b></div><div class="kv"><span class="muted">Entry</span><b>${info.feeLabel}</b></div><div class="kv"><span class="muted">Status</span><span class="tag ${isLive?'live':''}">${isLive?'Live · In Play':f.s}</span></div><div class="kv"><span class="muted">Organiser</span><b>${f.org||'Competition Organiser'}</b></div><div class="kv"><span class="muted">Spectators</span><b>${gCount} going · ${f.attended||0} checked in</b></div></div>`
+    : `<div class="card" style="text-align:center;padding:22px"><div class="b">${isLive?'Match in progress':isDone?'Match concluded':`Kickoff: ${f.t}`}</div><div class="sub small" style="margin-top:4px">${isLive||isDone?'Timeline updates are recorded by the match organiser.':'Match timeline &amp; live updates will appear here once kickoff begins.'}</div></div>`,
+  Lineups:`<div class="card" style="text-align:center;padding:22px"><div class="b">Lineups &amp; Squads</div><div class="sub small" style="margin-top:4px">${f.h} and ${f.a} squad rosters are managed by team captains. Official team sheets will be published before kickoff.</div></div>`,
+  Stats:`<div class="card"><div class="kv"><span class="muted">Goals</span><b>${f.sc||'0 : 0'}</b></div><div class="kv"><span class="muted">Status</span><b>${f.s}</b></div><div class="kv"><span class="muted">Venue</span><b>${f.v}</b></div></div>`,
+  Info:`<div class="card"><div class="kv"><span class="muted">Competition</span><b>${f.comp||'Match Fixture'}</b></div><div class="kv"><span class="muted">Field / Venue</span><b>${f.v}</b></div><div class="kv"><span class="muted">Kickoff</span><b>${f.t}</b></div><div class="kv"><span class="muted">Entry</span><b>${info.feeLabel}</b></div><div class="kv"><span class="muted">Status</span><span class="tag ${isLive?'live':''}">${isLive?'Live · In Play':f.s}</span></div><div class="kv"><span class="muted">Organiser</span><b>${f.org||'Competition Organiser'}</b></div><div class="kv"><span class="muted">Spectators</span><b>${gCount} going · ${f.attended||0} checked in</b></div></div>`
  }[k];
  return `${hdr('Match details',`<div class="row" style="gap:8px">${canEdit?`<button class="btn sm ghost" style="padding:8px 12px" onclick="openEditFixture('${sid}')">Edit</button>`:''}<button class="round" onclick="openShare('match','${sid}')">${ic('share')}</button></div>`)}\
- <div class="hero" style="text-align:center"><span class="tag ${isLive?'live':'gold'}">${isLive?"LIVE":f.s+' · '+f.t}</span><div class="sub" style="margin:8px 0">${f.comp||'Lagos Grassroots Cup'} · ${f.v}</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest(f.h,44)}</div><b>${f.h}</b></div><span class="score">${f.sc||'VS'}</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest(f.a,44)}</div><b>${f.a}</b></div></div></div>
+ <div class="hero" style="text-align:center"><span class="tag ${isLive?'live':'gold'}">${isLive?"LIVE":f.s+' · '+f.t}</span><div class="sub" style="margin:8px 0">${f.comp||'Match Fixture'} · ${f.v}</div><div class="row sp"><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest(f.h,44)}</div><b>${f.h}</b></div><span class="score">${f.sc||'VS'}</span><div style="flex:1"><div style="margin:0 auto 6px;width:44px">${crest(f.a,44)}</div><b>${f.a}</b></div></div></div>
  ${canEdit?`<div class="org-box">
    <div class="row sp"><div><span class="tag gold">ORGANISER MATCH CONSOLE</span><div class="b small" style="margin-top:4px">Live updates sync to all spectators</div></div><button class="btn sm ghost" onclick="openEditFixture('${sid}')">Edit Match</button></div>
    <div class="mini-stats">
@@ -2702,11 +2693,12 @@ SC.community=()=>{
  if(k==='My Teams'){
   body=`<div class="list">${ctx.myTeams.map(teamCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="startCreateTeam()">${ic('plus')}Create Another Team</button>`;
  }
- if(k==='Invitations')body=`<div class="list"><div class="card"><div class="b">Team invitation</div><div class="sub">Mainland FC invited you to join as a player</div><div class="col" style="margin-top:12px"><button class="btn sm" onclick="teams[1].role='Player';showModal({title:'Joined Mainland FC!',sub:'You are now a member of Mainland FC and can participate in team games.',meta:[['Team','Mainland FC'],['Role','Player'],['Format','11-a-side']],primary:'View Team',primaryFn:()=>go('team',1)})">Accept Invitation</button><button class="btn sm ghost" onclick="toast('Invitation declined')">Decline</button></div></div><div class="card"><div class="b">Game invitation</div><div class="sub">Open game slot available in ${games[0].title}</div><div class="col" style="margin-top:12px"><button class="btn sm" onclick="go('game','${games[0].id}')">View Open Game</button><button class="btn sm ghost" onclick="toast('Dismissed')">Dismiss</button></div></div></div>`;
+ if(k==='Invitations')body=`<div class="card" style="text-align:center;padding:32px 16px"><div class="av md" style="margin:0 auto 12px;background:var(--surface2)">${ic('users')}</div><div class="b">No pending invitations</div><div class="sub small" style="margin-top:4px">When a team captain invites you or you are invited to an open match, it will appear here.</div><button class="btn sm ghost" style="margin-top:16px" onclick="S.sub.community='Teams';render()">Explore Teams</button></div>`;
  return `<h1>Community</h1>${tabsUI('community',cTabs)}${body}`};
 
 SC.team=id=>{
  const t=findTeam(id);
+ if(!t)return `${hdr('Team Details')}<div class="card" style="text-align:center;padding:32px 16px"><p>Team not found.</p><button class="btn sm" onclick="S.sub.community='Teams';tab('community')">Browse Teams</button></div>`;
  const tTabs=['Squad & Matches','Team Chat'];
  if(!S.sub.teamTab)S.sub.teamTab='Squad & Matches';
  const curTab=S.sub.teamTab;
@@ -2736,7 +2728,7 @@ SC.team=id=>{
      <!-- Squad notice -->
      <div style="background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.4">
        <div class="row sp" style="margin-bottom:3px">
-         <span style="font-weight:700;color:var(--brand)">Emeka Obi <span class="tag sm gold" style="font-size:9.5px;padding:1px 5px">Captain</span></span>
+         <span style="font-weight:700;color:var(--brand)">${t.owner_name||'Team Captain'} <span class="tag sm gold" style="font-size:9.5px;padding:1px 5px">Captain</span></span>
          <span class="muted" style="font-size:10px">Squad Notice</span>
        </div>
        <div>Welcome to ${t.name}! Check upcoming match schedules in the Squad tab. Keep active and let us know your availability. ⚽</div>
@@ -2761,6 +2753,15 @@ SC.team=id=>{
    </div>`;
  }
 
+ const squadMembers=[];
+ if(t.owner_name)squadMembers.push([t.owner_name,'Captain']);
+ if(t.role&&S.user&&S.user.name&&S.user.name.toLowerCase()!==(t.owner_name||'').toLowerCase()){
+   squadMembers.push([S.user.name,t.role]);
+ }
+ if(squadMembers.length===0)squadMembers.push(['Team Captain','Captain']);
+ const tUpcoming=fixtures.filter(f=>(f.h===t.name||f.a===t.name)&&f.s!=='Completed');
+ const tHistory=fixtures.filter(f=>(f.h===t.name||f.a===t.name)&&f.s==='Completed');
+
  return `${hdr('Team',`<button class="round" onclick="openShare('team','${t.id}')">${ic('share')}</button>`)}
  ${tabsUI('teamTab',tTabs)}
  <div class="hero" style="${heroStyle}">
@@ -2773,8 +2774,9 @@ SC.team=id=>{
      <button class="btn sm ghost" style="background:rgba(255,255,255,.14);color:#fff" onclick="openShare('team','${t.id}')">${ic('share')}Share team</button>
    </div>
  </div>
- <h2 class="sec">Members <span class="small muted">Tap to view FIFA card</span></h2><div class="list">${(t.role?[[S.user.name||'You',t.role],['Emeka Obi','Captain'],['Femi Kuti-Ade','Assistant captain'],['Chidi Okonkwo','Player']]:[['Emeka Obi','Captain'],['Femi Kuti-Ade','Assistant captain'],['Chidi Okonkwo','Player'],['Sadiq Musa','Player']]).map(m=>{const c=getPlayerFifaCard({n:m[0]});const safeM=m[0].replace(/'/g,"\\'");return `<div class="card row" style="cursor:pointer" onclick="go('player',${m[0]===(S.user.name||'You')?'null':`'${safeM}'`})"><div class="fc-mini-badge ${c.theme&&c.theme!=='epic'?'theme-'+c.theme:''}" style="width:38px;height:44px"><b style="font-size:14px">${c.ovr}</b><small style="font-size:8.5px">${c.posCode}</small></div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`}).join('')}</div>
- <h2 class="sec">Upcoming games</h2>${gameCard(games[0])}<h2 class="sec">Match history</h2><div class="list">${matchRow(fixtures[2])}</div>
+ <h2 class="sec">Members <span class="small muted">Tap to view FIFA card</span></h2><div class="list">${squadMembers.map(m=>{const c=getPlayerFifaCard({n:m[0]});const safeM=m[0].replace(/'/g,"\\'");return `<div class="card row" style="cursor:pointer" onclick="go('player',${m[0]===(S.user.name||'You')?'null':`'${safeM}'`})"><div class="fc-mini-badge ${c.theme&&c.theme!=='epic'?'theme-'+c.theme:''}" style="width:38px;height:44px"><b style="font-size:14px">${c.ovr}</b><small style="font-size:8.5px">${c.posCode}</small></div><b class="grow">${m[0]}</b><span class="tag">${m[1]}</span></div>`}).join('')}</div>
+ <h2 class="sec">Upcoming matches</h2>${tUpcoming.length?`<div class="list">${tUpcoming.map(matchRow).join('')}</div>`:`<div class="card small muted" style="text-align:center;padding:16px">No upcoming fixtures scheduled for ${t.name} yet.</div>`}
+ <h2 class="sec">Match history</h2>${tHistory.length?`<div class="list">${tHistory.map(matchRow).join('')}</div>`:`<div class="card small muted" style="text-align:center;padding:16px">No completed matches recorded yet.</div>`}
  ${t.role?'':`<button class="btn ghost" style="margin-top:14px" onclick="showModal({title:'Join Request Sent!',sub:'The team captain will review your request to join '+t.name+'.',meta:[['Team','${t.name}'],['Location','${t.loc}'],['Format','${t.fmt}']],primary:'Done'})">Request to join</button>`}<div style="text-align:center;margin-top:10px"><a class="small muted" style="cursor:pointer" onclick="showModal({title:'Report Submitted',sub:'Thank you. Our moderation team will review this team profile (PRD §15.5).',primary:'Close'})">Report team</a></div>`};
 
 SC.createTeam=()=>{
@@ -2874,13 +2876,17 @@ SC.createTeam=()=>{
 
 function createNewTeam(){
  const f=S.form||{}, newId=makeUUID();
- const teamName=(f.tname||'').trim()||'Lekki Lions FC';
+ const teamName=(f.tname||'').trim();
+ if(!teamName){
+   toast('Please enter a team name');
+   return;
+ }
  const t={
    id:newId,
    name:teamName,
-   loc:f.tloc||'Lekki',
+   loc:f.tloc||(S.user&&S.user.loc?S.user.loc.split(' ')[0]:'Lagos')||'Lagos',
    fmt:f.tfmt||'7-a-side',
-   desc:f.tdesc||'Grassroots football club in Lagos.',
+   desc:f.tdesc||'',
    logo:f.tlogo||'',
    banner:f.tbanner||'',
    m:1,
@@ -3315,7 +3321,7 @@ SC.notifs=()=>{
 
 /* ===== Real Fixture & Event Creation (Organiser Flows — Single & Multi-Fixture Batch Publishing) ===== */
 const makeFixtureDraftRow=(defVenue,defDate,defTime)=>({
- h:'',a:'',v:defVenue||"St. Finbarr's Field, Akoka",date:defDate||'Sat 21 Nov',time:defTime||'16:00–17:30',status:'Upcoming',score:''
+ h:'',a:'',v:defVenue||"Teslim Balogun Stadium, Surulere",date:defDate||'Sat 28 Nov',time:defTime||'16:00–17:30',status:'Upcoming',score:''
 });
 const startCreateFixture=(compName,resetDraft)=>{
  S.editingFixtureId=null;
@@ -3323,10 +3329,10 @@ const startCreateFixture=(compName,resetDraft)=>{
    S.form=DraftManager.get('fixture').data;
  }else{
    S.form={
-     fcomp:compName||'Lagos Grassroots Cup',
+     fcomp:compName||(comps[0]?comps[0].name:'Friendly Match'),
      ffree:true,
      fprice:1500,
-     frows:[{h:'Lekki Lions',a:'Ajah Warriors',v:"St. Finbarr's Field, Akoka",date:'Sat 21 Nov',time:'16:00–17:30',status:'Upcoming',score:''}]
+     frows:[makeFixtureDraftRow()]
    };
  }
  go('createFixture');
@@ -3350,24 +3356,24 @@ const openEditFixture=id=>{
  if(!f)return;
  if(!isFixtureCreator(f)){toast('Only the match organiser can edit this fixture');return}
  S.editingFixtureId=f.id;
- const parts=(f.t||'Sat 21 Nov · 16:00').split('·');
+ const parts=(f.t||'Sat 28 Nov · 16:00').split('·');
  const pVal=+f.price||parseFee(f.fee);
- S.form={fh:f.h,fa:f.a,fcomp:f.comp||'Lagos Grassroots Cup',fvenue:f.v,fdate:(parts[0]||'Sat 21 Nov').trim(),ftime:(parts[1]||'16:00–17:30').trim(),ffree:pVal===0,fprice:pVal||1500,fstatus:f.s||'Upcoming',fscore:f.sc||''};
+ S.form={fh:f.h,fa:f.a,fcomp:f.comp||(comps[0]?comps[0].name:'Friendly Match'),fvenue:f.v,fdate:(parts[0]||'Sat 28 Nov').trim(),ftime:(parts[1]||'16:00–17:30').trim(),ffree:pVal===0,fprice:pVal||1500,fstatus:f.s||'Upcoming',fscore:f.sc||''};
  go('createFixture');
 };
 SC.createFixture=()=>{
  const f=S.form,isEdit=!!S.editingFixtureId;
- if(!f.fcomp)f.fcomp='Lagos Grassroots Cup';
+ if(!f.fcomp)f.fcomp=comps[0]?comps[0].name:'Friendly Match';
  if(f.ffree===undefined)f.ffree=true;if(f.fprice===undefined)f.fprice=1500;
  if(isEdit){
-   if(!f.fh)f.fh='Lekki Lions';if(!f.fa)f.fa='Ajah Warriors';
-   if(!f.fvenue)f.fvenue="St. Finbarr's Field, Akoka";if(!f.fdate)f.fdate='Sat 21 Nov';if(!f.ftime)f.ftime='16:00–17:30';
+   if(!f.fh)f.fh='';if(!f.fa)f.fa='';
+   if(!f.fvenue)f.fvenue="Teslim Balogun Stadium, Surulere";if(!f.fdate)f.fdate='Sat 28 Nov';if(!f.ftime)f.ftime='16:00–17:30';
    if(!f.fstatus)f.fstatus='Upcoming';
    return `${hdr('Edit match fixture')}
-   <div class="field">Competition / Tournament<input value="${f.fcomp}" oninput="S.form.fcomp=this.value" placeholder="e.g. Lagos Grassroots Cup or Friendly"></div>
+   <div class="field">Competition / Tournament<input value="${f.fcomp}" oninput="S.form.fcomp=this.value" placeholder="e.g. Lagos Cup or Friendly"></div>
    <div class="row">
-     <div class="field grow">Home team<input value="${f.fh}" oninput="S.form.fh=this.value" placeholder="e.g. Lekki Lions"></div>
-     <div class="field grow">Away team<input value="${f.fa}" oninput="S.form.fa=this.value" placeholder="e.g. Ajah Warriors"></div>
+     <div class="field grow">Home team<input value="${f.fh}" oninput="S.form.fh=this.value" placeholder="e.g. Reality FA"></div>
+     <div class="field grow">Away team<input value="${f.fa}" oninput="S.form.fa=this.value" placeholder="e.g. Toteola FC"></div>
    </div>
    <div class="field">Field / Venue<input value="${f.fvenue}" oninput="S.form.fvenue=this.value" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
    <div class="row">
@@ -3400,12 +3406,12 @@ SC.createFixture=()=>{
        ${f.frows.length>1?`<button type="button" class="small b" style="color:var(--bad)" onclick="removeFixtureDraftRow(${idx})">Remove</button>`:''}
      </div>
      <div class="row">
-       <div class="field grow">Home team<input value="${r.h||''}" oninput="S.form.frows[${idx}].h=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Lekki Lions"></div>
-       <div class="field grow">Away team<input value="${r.a||''}" oninput="S.form.frows[${idx}].a=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Ajah Warriors"></div>
+       <div class="field grow">Home team<input value="${r.h||''}" oninput="S.form.frows[${idx}].h=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Reality FA"></div>
+       <div class="field grow">Away team<input value="${r.a||''}" oninput="S.form.frows[${idx}].a=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Toteola FC"></div>
      </div>
      <div class="field">Field / Venue<input value="${r.v||''}" oninput="S.form.frows[${idx}].v=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. Campos Mini Stadium or Local Field"></div>
      <div class="row">
-       <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('fdate_${idx}','${r.date||'Sat 21 Nov'}')"><span>${r.date||'Sat 21 Nov'}</span>${ic('cal')}</button></div>
+       <div class="field grow">Date<button type="button" class="picker-field" onclick="openDatePicker('fdate_${idx}','${r.date||'Sat 28 Nov'}')"><span>${r.date||'Sat 28 Nov'}</span>${ic('cal')}</button></div>
        <div class="field grow">Kickoff time<button type="button" class="picker-field" onclick="openTimePicker('ftime_${idx}','${r.time||'16:00–17:30'}')"><span>${r.time||'16:00–17:30'}</span>${ic('clock')}</button></div>
      </div>
      <div class="field" style="margin-bottom:${r.status&&r.status!=='Upcoming'?'12px':'0'}">Match status<select onchange="S.form.frows[${idx}].status=this.value;DraftManager.save('fixture',S.form);render()"><option ${(r.status||'Upcoming')==='Upcoming'?'selected':''}>Upcoming</option><option ${r.status==='Live'?'selected':''}>Live</option><option ${r.status==='Completed'?'selected':''}>Completed</option></select></div>
@@ -3425,7 +3431,7 @@ function publishFixture(){
  const priceVal=f.ffree?0:(+f.fprice||1500);
  const feeLabel=priceVal>0?N(priceVal):'Free';
  if(isEdit){
-   const kickoffStr=(f.fdate||'Sat 21 Nov')+' · '+(f.ftime||'16:00').split('–')[0].trim();
+   const kickoffStr=(f.fdate||'Sat 28 Nov')+' · '+(f.ftime||'16:00').split('–')[0].trim();
    const item=findFixture(S.editingFixtureId);
    if(item){
      item.h=(f.fh||item.h).trim();item.a=(f.fa||item.a).trim();item.comp=(f.fcomp||item.comp).trim();
@@ -3439,7 +3445,7 @@ function publishFixture(){
      return;
    }
  }
- const rows=(Array.isArray(f.frows)&&f.frows.length)?f.frows:[{h:f.fh||'Lekki Lions',a:f.fa||'Ajah Warriors',v:f.fvenue||"St. Finbarr's Field, Akoka",date:f.fdate||'Sat 21 Nov',time:f.ftime||'16:00–17:30',status:f.fstatus||'Upcoming',score:f.fscore||''}];
+ const rows=(Array.isArray(f.frows)&&f.frows.length)?f.frows:[{h:f.fh||'',a:f.fa||'',v:f.fvenue||"Teslim Balogun Stadium, Surulere",date:f.fdate||'Sat 28 Nov',time:f.ftime||'16:00–17:30',status:f.fstatus||'Upcoming',score:f.fscore||''}];
  for(let i=0;i<rows.length;i++){
    if(!(rows[i].h||'').trim()||!(rows[i].a||'').trim()){
      toast(`Please enter Home and Away team names for Fixture #${i+1}`);
@@ -3449,18 +3455,18 @@ function publishFixture(){
  S.myFixtures=S.myFixtures||{};
  const creatorEmail=currentUserEmail()||S.user.email||'';
  const creatorId=currentUserId();
- const compName=(f.fcomp||'Lagos Grassroots Cup').trim();
+ const compName=(f.fcomp||'Friendly Match').trim();
  const createdItems=[];
  for(let i=rows.length-1;i>=0;i--){
    const r=rows[i];
    const fid=makeUUID();
    S.myFixtures[fid]=true;
-   const kStr=(r.date||'Sat 21 Nov')+' · '+(r.time||'16:00').split('–')[0].trim();
+   const kStr=(r.date||'Sat 28 Nov')+' · '+(r.time||'16:00').split('–')[0].trim();
    const st=r.status||'Upcoming';
    const item={
      id:fid,h:r.h.trim(),a:r.a.trim(),
      t:kStr,s:st,sc:st==='Upcoming'?'':(r.score||'0 : 0'),
-     v:(r.v||"St. Finbarr's Field, Akoka").trim(),comp:compName,
+     v:(r.v||"Teslim Balogun Stadium, Surulere").trim(),comp:compName,
      fee:feeLabel,price:priceVal,going:1,attended:0,tixSold:0,timeline:[],
      org:S.user.name||'Organiser',creator_id:creatorId,creator_email:creatorEmail,isMine:true,fromCloud:true
    };
@@ -3640,7 +3646,7 @@ const startCreateComp=resetDraft=>{
       carea:'',
       cvenue:'',
       ccapacity:'',
-      c_enrolledTeams:['Mainland FC','Surulere United'],
+      c_enrolledTeams:[],
       cfree:null,
       cfee:'',
       cprize:'',
@@ -3706,7 +3712,7 @@ SC.createComp=()=>{
   const f=S.form||{};
   f.csec=f.csec||'details';
   if(f.creqVerify===undefined)f.creqVerify=true;
-  if(!Array.isArray(f.c_enrolledTeams))f.c_enrolledTeams=['Mainland FC','Surulere United'];
+  if(!Array.isArray(f.c_enrolledTeams))f.c_enrolledTeams=[];
 
   const compTypes=['Grassroots Tournament','League Table','Knockout Cup','Group Stage + Knockout','Friendly Tournament'];
   const formats=['5-a-side','7-a-side','9-a-side','11-a-side'];
@@ -3888,7 +3894,7 @@ function submitCreateComp(){
     return;
   }
   const venue=(f.cvenue||'').trim()||'Lagos Sports Complex';
-  const enrolled=Array.isArray(f.c_enrolledTeams)&&f.c_enrolledTeams.length?f.c_enrolledTeams:['Mainland FC'];
+  const enrolled=Array.isArray(f.c_enrolledTeams)?f.c_enrolledTeams:[];
   const cid=makeUUID();
   S.myComps=S.myComps||{};
   S.myComps[cid]=true;
@@ -4088,7 +4094,7 @@ SC.expired=()=>`${hdr('Slot expired')}<div style="text-align:center;padding-top:
 SC.welcome=()=>`<div class="welcome"><span class="tag" style="background:var(--color-accent);color:var(--color-primary);align-self:flex-start">Lagos, Nigeria</span><h1>The home of football communities</h1><p style="opacity:.85;margin-bottom:22px">Find places to play, people to play with, and matches to watch.</p><button class="btn" style="background:var(--color-accent);color:var(--color-primary)" onclick="S.onb=0;S.stack=[{s:'onb'}];render()">Get started</button><button class="btn ghost" style="margin-top:10px" onclick="S.stack=[];render()">I already have an account</button></div>`;
 
 SC.share=()=>{
-  const it=S.shareItem||{type:'Open Game',id:0,title:'Thursday Night 5s',sub:'Lekki Goal Arena · Thu 12 Nov · 20:00',tag:'5-a-side · ₦2,500/player',url:getShareBase()+'?game=0',img:'game1'};
+  const it=S.shareItem||{type:'Community',id:0,title:'Football Community Lagos',sub:'Play, organize & watch football across Lagos',tag:'Community',url:getShareBase(),img:'game1'};
   const chans=[
     ['WhatsApp','#25D366','WA'],
     ['Copy Link','#123D2B','🔗'],
@@ -4198,20 +4204,21 @@ SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style
 <h2 class="sec">Recommended for you <a onclick="jump('venues')">See all ${ic('chev')}</a></h2>
 <div class="deck" onclick="go('venue',0)"><div ${pic('venue1',200)}><span class="pill-w">2.1 km</span><div class="dk"><div><div class="dkt">Lekki Goal Arena</div><div class="dks">${ic('pin')} Lekki Phase 1 · ${ic('star')} 4.7</div></div><div class="dkp">${N(25000)}<small>/hr</small></div></div></div></div>
 <div class="qrow"><button class="qa" onclick="jump('venues')"><i>${ic('pin')}</i>Book Pitch</button><button class="qa" onclick="startCreateGame()"><i>${ic('plus')}</i>Create Game</button><button class="qa" onclick="jump('events')"><i>${ic('trophy')}</i>Events</button><button class="qa" onclick="S.sub.community='Teams';tab('community')"><i>${ic('users')}</i>Teams</button></div>
-<h2 class="sec">Open games near you <a onclick="jump('games')">See all ${ic('chev')}</a></h2><div class="hscroll">${games.map(g=>`<div style="width:276px">${gameCard(g)}</div>`).join('')}</div>
-<h2 class="sec">Fixtures to watch near you <a onclick="jump('events')">See all ${ic('chev')}</a></h2><div class="list">${fixtures.slice(0,2).map(matchRow).join('')}</div>
+<h2 class="sec">Open games near you <a onclick="jump('games')">See all ${ic('chev')}</a></h2>${games.length?`<div class="hscroll">${games.map(g=>`<div style="width:276px">${gameCard(g)}</div>`).join('')}</div>`:`<div class="card small muted" style="text-align:center;padding:16px">No open games yet. <a style="color:var(--brand);font-weight:600;cursor:pointer" onclick="startCreateGame()">Host the first game</a></div>`}
+${fixtures.length?`<h2 class="sec">Fixtures to watch near you <a onclick="jump('events')">See all ${ic('chev')}</a></h2><div class="list">${fixtures.slice(0,3).map(matchRow).join('')}</div>`:''}
 <h2 class="sec">Nearby pitches <a onclick="jump('venues')">See all ${ic('chev')}</a></h2><div class="list">${venues.map(v=>`<div class="card vrow" onclick="go('venue',${v.id})"><div class="img has th" style="background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${v.name}</div><div class="sub small">${ic('pin')} ${v.area} · ${v.km} km</div><div class="row" style="gap:8px;margin-top:8px"><span class="tag ${v.id==1?'warn':'ok'}">${slotsLeft[v.id]}</span><span class="rate small">${ic('star')}${v.rating}</span></div></div>${ic('chev')}</div>`).join('')}</div>
-<h2 class="sec">Upcoming football events <a onclick="jump('events')">See all ${ic('chev')}</a></h2><div class="hscroll">${events.slice(0,3).map(e=>`<div style="width:284px">${eventCard(e)}</div>`).join('')}</div>
-<h2 class="sec">Popular competitions</h2><div class="list">${comps.map(c=>`<div class="card row" onclick="go('comp',${c.id})"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div>${ic('chev')}</div>`).join('')}</div>
-<h2 class="sec">Teams <a onclick="S.sub.community='Teams';tab('community')">See all ${ic('chev')}</a></h2><div class="hscroll">${teams.map(teamMini).join('')}</div>
-<h2 class="sec">Recent community activity <a onclick="S.sub.community='Activity';tab('community')">See all ${ic('chev')}</a></h2><div class="list">${getLiveFeedItems().slice(0,2).map(item=>`<div class="card row small" style="cursor:pointer" onclick="${item.act||''}"><div class="av sm">${ic(item.ico||'ball')}</div><div class="grow"><b>${item.text}</b> · <span class="muted">${item.when}</span></div></div>`).join('')}</div>`;
+${events.length?`<h2 class="sec">Upcoming football events <a onclick="jump('events')">See all ${ic('chev')}</a></h2><div class="hscroll">${events.slice(0,3).map(e=>`<div style="width:284px">${eventCard(e)}</div>`).join('')}</div>`:''}
+${comps.length?`<h2 class="sec">Popular competitions</h2><div class="list">${comps.map(c=>`<div class="card row" onclick="go('comp',${c.id})"><div class="badge" style="background:var(--accent);color:var(--accent-ink)">${ic('trophy')}</div><div class="grow"><div class="b">${c.name}</div><div class="sub">${c.type} · ${c.season}</div></div>${ic('chev')}</div>`).join('')}</div>`:''}
+<h2 class="sec">Teams <a onclick="S.sub.community='Teams';tab('community')">See all ${ic('chev')}</a></h2>${teams.length?`<div class="hscroll">${teams.map(teamMini).join('')}</div>`:`<div class="card small muted" style="text-align:center;padding:16px">No teams created yet. <a style="color:var(--brand);font-weight:600;cursor:pointer" onclick="startCreateTeam()">Create your team</a></div>`}
+<h2 class="sec">Recent community activity <a onclick="S.sub.community='Activity';tab('community')">See all ${ic('chev')}</a></h2><div class="list">${getLiveFeedItems().slice(0,3).map(item=>`<div class="card row small" style="cursor:pointer" onclick="${item.act||''}"><div class="av sm">${ic(item.ico||'ball')}</div><div class="grow"><b>${item.text}</b> · <span class="muted">${item.when}</span></div></div>`).join('')}</div>`;
 
 SC.game=id=>{
  const exact=games.find(x=>String(x.id)===String(id))||games[+id];
  if(!exact&&window.FCData&&FCData.loading){
    return `<div style="text-align:center;padding-top:150px"><div class="spinner"></div><h1 style="margin-top:24px">Loading match details</h1><p class="sub" style="margin-top:6px">Fetching real-time game data…</p></div>`;
  }
- const g=findGame(id),isCustom=Boolean(g.isCustomVenue||+g.v<0||(g.venueName&&!venues.some(x=>x.name.toLowerCase()===String(g.venueName).toLowerCase()))),v=venues[g.v>=0?g.v:0]||venues[0],vName=g.venueName||v.name,j=S.joined&&S.joined[g.id],isFull=+g.left<=0,filled=Math.max(g.need-g.left,isFull?g.need:1),isFree=!g.price||+g.price===0,pLabel=isFree?'Free':N(g.price),canEdit=isGameCreator(g);
+ const g=findGame(id);
+ if(!g)return `${hdr('Game Details')}<div class="card" style="text-align:center;padding:32px 16px"><p>Game not found.</p><button class="btn sm" onclick="jump('games')">Browse Open Games</button></div>`;
  const roster=(window.FCData&&FCData.getGameRoster)?FCData.getGameRoster(g):[];
  const btnText=j?'Joined · View Permit Code':isFull?'Slot Full · Check Other Games':(g.approval?'Request to join · '+pLabel:'Join Game · '+pLabel);
  const venueRowHtml=isCustom
@@ -4243,9 +4250,9 @@ SC.welcome=()=>`<div class="welcome2"><button class="skip" onclick="S.stack=[];r
 
 /* ===== Round 6: welcome slides, sign in, sign out ===== */
 const SBW=`<div class="wl-sb"><span>9:41</span><span class="sbi"><svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5" width="3" height="7" rx="1"/><rect x="10" y="2.5" width="3" height="9.5" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg><svg width="16" height="12" viewBox="0 0 24 18" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M2 6a15 15 0 0 1 20 0M6 10.5a9 9 0 0 1 12 0M10 15a3 3 0 0 1 4 0"/></svg><svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="22" height="11" rx="3.5" stroke="currentColor" opacity=".5"/><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor"/><rect x="24" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".5"/></svg></span></div>`;
-const WS=[{tag:'LIVE PITCH RADAR',h1:'Find Football',h2:'Matches Near You',p:'Discover nearby games to watch at your leisure time.',img:'game1',card:{img:'event1',tag:'11-A-SIDE',title:'KiDave Media Cup',l1:'Oki pry school · Today, 4:00 PM<br>Sat, Nov 15 · 4:00 PM',l2:'',right:'● Free'}},
+const WS=[{tag:'LIVE PITCH RADAR',h1:'Find Football',h2:'Matches Near You',p:'Discover nearby games to watch at your leisure time.',img:'game1',card:{img:'event1',tag:'11-A-SIDE',title:'Reality FA vs New World FA',l1:'Oki primary school, Iyana Ipaja<br>Sat, Nov 21 · 4:00 PM',l2:'',right:'● Free'}},
  {tag:'PLAY · BOOK A PITCH',h1:'Book Pitches',h2:'Anytime, Anywhere',p:'See live availability, pick your slot and pay in full or by deposit in a few taps.',img:'venue1',card:{img:'venue2',tag:'5-A-SIDE',title:'Lekki Goal Arena',l1:'Lekki Phase 1 · 2.1 km away',l2:'From ₦25,000 / hour',right:'4 slots free'}},
- {tag:'CONNECT · OPEN GAMES',h1:'Join Games,',h2:'Build Your Squad',p:'No full team needed. Join open games, create your own and meet players near you.',img:'game1',card:{img:'game1',tag:'5-A-SIDE',title:'Thursday Night 5s',l1:'Lekki Goal Arena · Thu, 8:00 PM',l2:'2 slots left · ₦2,500 / player',right:'₦2,500'}}];
+ {tag:'CONNECT · OPEN GAMES',h1:'Join Games,',h2:'Build Your Squad',p:'No full team needed. Join open games, create your own and meet players near you.',img:'game1',card:{img:'game1',tag:'5-A-SIDE',title:'Monday Night Football',l1:'Yaba Turf Club · Mon, 8:00 PM',l2:'10 slots left · Free entry',right:'Free'}}];
 const prepFreshAuth=()=>{S.authErr=null};
 const wlNext=()=>{if(S.ws<2){S.ws++;render()}else{prepFreshAuth();S.onb=0;S.stack=[{s:'onb'}];render()}};
 const wlSkip=()=>{prepFreshAuth();S.onb=0;S.stack=[{s:'onb'}];render()};

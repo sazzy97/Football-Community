@@ -21,13 +21,42 @@ function normalizeSupabaseUrl(url) {
 const FCData = {
   cfg: { ...DEFAULT_FC_CONFIG },
   db: {
-    users: [],
-    bookings: [],
-    open_games: [],
-    game_joins: [],
+    users: [
+      { id: "fa3ea003-0de9-4e2c-b231-6959acf16056", full_name: "Tunde Adeyemi", email_or_phone: "tunde@example.com", location_cluster: "Victoria Island and Ikoyi", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekday evenings", "Weekends"] },
+      { id: "c1e33a32-a63d-4f45-b541-8939ee18b6f5", full_name: "Amos Abu", email_or_phone: "abuhaymusosaze@gmail.com", location_cluster: "Ikeja", formats: ["5-a-side", "11-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Flexible"] },
+      { id: "e2503b28-c724-4d2f-9107-d01f1d18a4da", full_name: "Abu Dulce", email_or_phone: "ogarmaria96@gmail.com", location_cluster: "Lekki and Ajah", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekday evenings", "Weekends"] },
+      { id: "92df3218-9d8a-4ba0-8301-d001503c52da", full_name: "DIVTEC SPORTS INTERNATIONAL", email_or_phone: "divtecsportsinternational@gmail.com", location_cluster: "Ikeja", formats: ["11-a-side", "9-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekends", "Weekday mornings"] },
+      { id: "dd90046b-f9fc-48af-997e-819c2bfd6bce", full_name: "Quyum Adebola Lawal", email_or_phone: "adebolalwl@gmail.com", location_cluster: "Ikeja", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder", "Defender"], experience: "Intermediate", availability: ["Weekday evenings", "Weekends"] },
+      { id: "8221c489-fe68-4c66-b3c9-232f257676ff", full_name: "Nana", email_or_phone: "nana@gmail.com", location_cluster: "Lekki and Ajah", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekday evenings", "Weekends"] },
+      { id: "2f7aafa8-7757-4945-8d20-0d8b91ea7652", full_name: "Temidayooluwa Toriola", email_or_phone: "toriola8@gmail.com", location_cluster: "Ikeja", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekday evenings", "Weekends"] },
+      { id: "ae471056-c1a4-43b3-8621-8ac88d7d0c26", full_name: "David Obasogie", email_or_phone: "kingdavidobas@gmail.com", location_cluster: "Ikeja", formats: ["11-a-side"], positions: ["Midfielder", "Defender"], experience: "Competitive", availability: ["Weekends"] },
+      { id: "e37e7c69-12dc-4244-be3c-816e62981b4b", full_name: "Adeyinka Crystal Adeoye", email_or_phone: "adeoye0017@gmail.com", location_cluster: "Ikeja", formats: ["5-a-side", "7-a-side", "9-a-side", "11-a-side"], positions: ["Midfielder", "Defender", "Forward"], experience: "Competitive", availability: ["Flexible"] },
+      { id: "644da05d-f9bd-4f08-a579-f492672dcf38", full_name: "Temitope Owoade", email_or_phone: "owoadetemmy@gmail.com", location_cluster: "Yaba and Surulere", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekday evenings", "Weekends"] },
+      { id: "839180ee-e0a8-40d0-82af-aa39fff4907d", full_name: "Reality Football Academy", email_or_phone: "realityfc2016@gmail.com", location_cluster: "Ikeja", formats: ["11-a-side", "9-a-side"], positions: ["Midfielder"], experience: "Intermediate", availability: ["Weekends", "Weekday mornings"] },
+      { id: "4f034ce0-d6ad-4499-9067-4e649dc66d0b", full_name: "Gideon Ikhenoba", email_or_phone: "gikhenoba@gmail.com", location_cluster: "Yaba and Surulere", formats: ["5-a-side", "7-a-side"], positions: ["Midfielder", "Forward", "Defender"], experience: "Competitive", availability: ["Weekday evenings", "Weekends"] }
+    ],
+    bookings: [
+      { id: "d05af07a-5325-403b-9802-c5fe05e075a1", booking_ref: "FCP-379343", user_name: "Amos Abu", user_contact: "abuhaymusosaze@gmail.com", venue_name: "Yaba Turf Club", pitch_name: "Pitch 1", format: "5-a-side", booking_date: "Wed 14 Nov", booking_time: "20:00", amount_ngn: 18000, payment_option: "full", status: "confirmed", created_at: "2026-11-16T22:30:21.392868+00:00" }
+    ],
+    open_games: [
+      { id: "d9e6777f-7071-4447-8b86-2f8ff6db7dab", title: "Friendly Match", organiser_name: "Amos Abu", organiser_contact: "abuhaymusosaze@gmail.com", venue_name: "Ikeja Sports Ground", pitch_name: "Main Pitch", match_when: "Sun 29 Nov · 16:00–18:00", format: "11-a-side", players_needed: 11, slots_left: 10, price_ngn: 2500, skill_level: "Intermediate", requires_approval: false, created_at: "2026-11-16T22:35:43.664367+00:00" },
+      { id: "62c1d5e3-83da-4173-834e-647c6351a526", title: "Monday Night Football", organiser_name: "Tunde Adeyemi", organiser_contact: "tunde@example.com", venue_name: "Yaba Turf Club", pitch_name: "Pitch 2", match_when: "Mon 23 Nov · 20:00–22:00", format: "5-a-side", players_needed: 12, slots_left: 10, price_ngn: 0, skill_level: "All levels", requires_approval: false, created_at: "2026-11-16T23:03:17.813293+00:00" },
+      { id: "b379b318-ac49-41fd-9c36-a1b8ca40b90d", title: "Tuesday Night Football ", organiser_name: "Tunde Adeyemi", organiser_contact: "tunde@example.com", venue_name: "Ikeja Sports Ground", pitch_name: "Main Pitch", match_when: "Tue 17 Nov · 19:00–21:00", format: "11-a-side", players_needed: 22, slots_left: 3, price_ngn: 0, skill_level: "All levels", requires_approval: false, created_at: "2026-11-16T23:40:40.667364+00:00" },
+      { id: "66a12456-5c1f-4033-9383-20fc2cd80bec", title: "Friday Floodlit 5s", organiser_name: "Guest Player", organiser_contact: "", venue_name: "Yaba Turf Club", pitch_name: "Pitch 1", match_when: "Sun 22 Nov · 20:00–21:00", format: "5-a-side", players_needed: 10, slots_left: 3, price_ngn: 2500, skill_level: "All levels", requires_approval: false, created_at: "2026-11-18T21:14:46.528599+00:00" }
+    ],
+    game_joins: [
+      { id: "519e5671-5864-47d5-9de6-db8e8a354d69", game_title: "Tuesday Night Football ", venue_name: "Ikeja Sports Ground · Main Pitch", match_when: "Tue 17 Nov · 19:00–21:00", player_name: "Tunde Adeyemi", player_contact: "tunde@example.com", price_ngn: 0, status: "confirmed", created_at: "2026-11-16T23:41:03.195553+00:00" },
+      { id: "5e68065a-289c-44ad-b737-54ba2190dd22", game_title: "Ikeja Midweek 9s", venue_name: "Lekki Goal Arena · Mini Pitch", match_when: "Wed 18 Nov · 19:00–20:30", player_name: "Sazzy", player_contact: "abuhaymusosaze@gmail.com", price_ngn: 3000, status: "confirmed", created_at: "2026-11-18T14:56:07.999188+00:00" },
+      { id: "141f733b-3d3f-4624-99f7-a4fb19178a47", game_title: "Thursday Night 5s", venue_name: "Lekki Goal Arena · Pitch A", match_when: "Thu 12 Nov · 20:00–21:00", player_name: "David Obasogie", player_contact: "kingdavidobas@gmail.com", price_ngn: 2500, status: "confirmed", created_at: "2026-11-23T18:20:17.190953+00:00" }
+    ],
     ticket_orders: [],
-    teams: [],
-    event_submissions: [],
+    teams: [
+      { id: "713a1d1a-2113-474d-866e-c6215aba6ef0", team_name: "Reality FA", location: "Iyana ipaja", format: "11-a-side", owner_name: "David Obasogie", owner_contact: "kingdavidobas@gmail.com", created_at: "2026-11-24T14:07:17.877519+00:00" },
+      { id: "89c463b3-0526-4ad5-b6a8-e3e63a244e27", team_name: "Toteola FC", location: "Ikeja", format: "5-a-side", owner_name: "Temidayooluwa Toriola", owner_contact: "toriola8@gmail.com", created_at: "2026-11-18T21:56:03.878677+00:00" }
+    ],
+    event_submissions: [
+      { id: "a1fd58cf-a168-443e-97a2-e5d1993495da", event_name: "Reality FA vs New World FA", category: "Lagos Grassroots Cup", venue: "Oki primary school, alaguntan, Iyana ipaja", event_date: "Sat 21 Nov · 16:00", event_time: "Free", submitted_by: "Sazzy", status: "published_fixture", created_at: "2026-11-18T15:37:39.06681+00:00" }
+    ],
     app_events: []
   },
   adminTab: 'Overview',
@@ -100,8 +129,8 @@ const FCData = {
       const savedDb = localStorage.getItem('fc_local_db');
       if (savedDb) {
         this.db = { ...this.db, ...JSON.parse(savedDb) };
-        this.mergeLiveIntoUI();
       }
+      this.mergeLiveIntoUI();
     } catch (e) {
       console.warn('Storage init warning:', e);
     }
@@ -1053,11 +1082,43 @@ const FCData = {
 
     // Reconstruct & merge real cloud Fixtures (published + live updates)
     if (window.fixtures) {
+      fixtures.length = 0;
+      const cloudFixMap = {};
+
+      // 1. From Supabase event_submissions table (published fixtures)
+      if (Array.isArray(this.db.event_submissions)) {
+        for (const es of this.db.event_submissions) {
+          if (es.status !== 'published_fixture' || !es.event_name || !es.event_name.includes(' vs ')) continue;
+          const parts = es.event_name.split(' vs ');
+          const sid = String(es.id);
+          cloudFixMap[sid] = {
+            id: sid,
+            h: parts[0].trim(),
+            a: parts[1].trim(),
+            t: es.event_date || 'Upcoming',
+            s: 'Upcoming',
+            sc: '',
+            v: es.venue || 'Lagos Pitch',
+            comp: es.category || 'Match Fixture',
+            fee: es.event_time || 'Free',
+            price: 0,
+            org: es.submitted_by || 'Organiser',
+            creator_id: '',
+            creator_email: '',
+            timeline: [],
+            going: 1,
+            attended: 0,
+            tixSold: 0,
+            fromCloud: true
+          };
+        }
+      }
+
+      // 2. From app_events (fixture_published)
       const pubFixEvs = allEvs
         .filter((ev) => ev.event_name === 'fixture_published' && ev.properties && ev.properties.fixture_id)
         .slice()
         .reverse();
-      const cloudFixMap = {};
       for (const ev of pubFixEvs) {
         const p = ev.properties;
         cloudFixMap[String(p.fixture_id)] = {
@@ -1123,6 +1184,7 @@ const FCData = {
 
     // Reconstruct & merge real cloud Events (published + updates)
     if (window.events) {
+      events.length = 0;
       const pubEvEvs = allEvs
         .filter((ev) => ev.event_name === 'event_published' && ev.properties && ev.properties.event_id)
         .slice()
@@ -1160,7 +1222,7 @@ const FCData = {
         .reverse();
       for (const ev of updEvEvs) {
         const p = ev.properties;
-        const target = cloudEvMap[String(p.event_id)] || events.find((e) => String(e.id) === String(p.event_id));
+        const target = cloudEvMap[String(p.event_id)];
         if (target) {
           if (p.title !== undefined) target.title = p.title;
           if (p.cat !== undefined) target.cat = p.cat;
@@ -1172,8 +1234,7 @@ const FCData = {
           if (p.about !== undefined) target.about = p.about;
         }
       }
-      const cloudEvents = Object.values(cloudEvMap);
-      for (const ce of cloudEvents) {
+      for (const ce of Object.values(cloudEvMap)) {
         const matchesAuth = Boolean(
           (authId && ce.creator_id && String(ce.creator_id) === authId) ||
             (authEmail && ce.creator_email && ce.creator_email.toLowerCase() === authEmail)
@@ -1182,13 +1243,8 @@ const FCData = {
           S.myEvents = S.myEvents || {};
           S.myEvents[ce.id] = true;
         }
-        const idx = events.findIndex((x) => String(x.id) === String(ce.id));
-        if (idx >= 0) {
-          events[idx] = { ...events[idx], ...ce, isMine: authEmail ? matchesAuth : Boolean(events[idx].isMine || (S.myEvents && S.myEvents[ce.id])) };
-        } else {
-          ce.isMine = authEmail ? matchesAuth : Boolean(S.myEvents && S.myEvents[ce.id]);
-          events.unshift(ce);
-        }
+        ce.isMine = authEmail ? matchesAuth : Boolean(S.myEvents && S.myEvents[ce.id]);
+        events.push(ce);
       }
     }
 
@@ -1249,39 +1305,29 @@ const FCData = {
       }
     }
 
-    // Reconstruct & merge real custom teams (from local storage, cloud teams table, and app_events)
+    // Reconstruct & merge real custom teams (from cloud teams table, app_events, and local storage)
     if (window.teams) {
-      // 1. Local custom teams
-      try {
-        const localCustom = JSON.parse(localStorage.getItem('fc_custom_teams') || '[]');
-        for (const lt of localCustom) {
-          if (!lt || !lt.name) continue;
-          const idx = teams.findIndex((t) => t.name.toLowerCase() === lt.name.toLowerCase());
-          if (idx < 0) {
-            teams.unshift(lt);
-          } else {
-            teams[idx] = { ...teams[idx], ...lt };
-          }
-        }
-      } catch (e) {}
+      teams.length = 0;
 
-      // 2. Cloud teams table
+      // 1. Cloud teams table (Supabase)
       if (Array.isArray(this.db.teams) && this.db.teams.length > 0) {
-        for (let i = this.db.teams.length - 1; i >= 0; i--) {
+        for (let i = 0; i < this.db.teams.length; i++) {
           const rt = this.db.teams[i];
           if (!rt.team_name) continue;
           const isMyTeam = Boolean(authEmail && rt.owner_contact && String(rt.owner_contact).toLowerCase() === authEmail);
           const existingIdx = teams.findIndex((t) => t.name.toLowerCase() === rt.team_name.toLowerCase());
           if (existingIdx < 0) {
-            teams.unshift({
+            teams.push({
               id: rt.id || 't_' + i,
               name: rt.team_name,
               loc: rt.location || 'Lagos',
               fmt: rt.format || '7-a-side',
               desc: rt.description || '',
-              logo: '',
-              banner: '',
+              logo: rt.logo || '',
+              banner: rt.banner || '',
               m: 1,
+              owner_name: rt.owner_name || 'Captain',
+              owner_contact: rt.owner_contact || '',
               role: isMyTeam ? 'Owner' : null,
               isCustom: true
             });
@@ -1291,7 +1337,7 @@ const FCData = {
         }
       }
 
-      // 3. Cloud team_created events in app_events (captures all custom teams across devices even if teams table was rejected)
+      // 2. Cloud team_created events in app_events
       const teamCreatedEvs = allEvs
         .filter((ev) => ev.event_name === 'team_created' && (ev.properties || ev.entity_id))
         .slice()
@@ -1313,11 +1359,13 @@ const FCData = {
           logo: p.logo || '',
           banner: p.banner || '',
           m: 1,
+          owner_name: p.owner_name || (ownerEmail ? ownerEmail.split('@')[0] : 'Captain'),
+          owner_contact: ownerEmail,
           role: isMyTeam ? 'Owner' : null,
           isCustom: true
         };
         if (existingIdx < 0) {
-          teams.unshift(teamObj);
+          teams.push(teamObj);
         } else {
           teams[existingIdx] = {
             ...teams[existingIdx],
@@ -1326,9 +1374,85 @@ const FCData = {
             desc: p.description || teams[existingIdx].desc,
             logo: p.logo || teams[existingIdx].logo,
             banner: p.banner || teams[existingIdx].banner,
+            owner_name: p.owner_name || teams[existingIdx].owner_name,
             role: isMyTeam ? 'Owner' : teams[existingIdx].role
           };
         }
+      }
+
+      // 3. Local custom teams
+      try {
+        const localCustom = JSON.parse(localStorage.getItem('fc_custom_teams') || '[]');
+        for (const lt of localCustom) {
+          if (!lt || !lt.name) continue;
+          const idx = teams.findIndex((t) => t.name.toLowerCase() === lt.name.toLowerCase());
+          if (idx < 0) {
+            teams.unshift(lt);
+          } else {
+            teams[idx] = { ...teams[idx], ...lt };
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Reconstruct & merge real cloud Competitions (from local storage, event_submissions, and app_events)
+    if (window.comps) {
+      comps.length = 0;
+      const cloudCompMap = {};
+
+      const pubCompEvs = allEvs
+        .filter((ev) => ev.event_name === 'competition_published' && ev.properties && (ev.properties.competition_id || ev.properties.name))
+        .slice()
+        .reverse();
+
+      for (const ev of pubCompEvs) {
+        const p = ev.properties;
+        const cid = String(p.competition_id || ev.id);
+        cloudCompMap[cid] = {
+          id: cid,
+          name: p.name || 'Community Competition',
+          type: p.type || 'Grassroots Tournament',
+          season: p.season || '2026/27',
+          teams: +p.teams || (p.enrolledTeams ? p.enrolledTeams.length : 8),
+          format: p.format || '11-a-side',
+          area: p.area || 'Lagos',
+          venue: p.venue || 'Lagos Pitch',
+          fee: p.fee || 'Free',
+          prize: p.prize || '',
+          verified: Boolean(p.verified),
+          verificationRequested: Boolean(p.verificationRequested),
+          desc: p.desc || '',
+          rulesDoc: p.rulesDoc || null,
+          enrolledTeams: Array.isArray(p.enrolledTeams) ? p.enrolledTeams : [],
+          standings: Array.isArray(p.standings) ? p.standings : [],
+          org: p.org || 'Organiser',
+          creator_id: p.creator_id || '',
+          creator_email: (p.creator_email || ev.user_contact || '').toLowerCase(),
+          fromCloud: true
+        };
+      }
+
+      // Also merge local custom competitions
+      try {
+        const localComps = JSON.parse(localStorage.getItem('fc_custom_comps') || '[]');
+        for (const lc of localComps) {
+          if (!lc || !lc.name) continue;
+          const cid = String(lc.id);
+          if (!cloudCompMap[cid]) cloudCompMap[cid] = lc;
+        }
+      } catch (e) {}
+
+      for (const cc of Object.values(cloudCompMap)) {
+        const matchesAuth = Boolean(
+          (authId && cc.creator_id && String(cc.creator_id) === authId) ||
+            (authEmail && cc.creator_email && cc.creator_email === authEmail)
+        );
+        if (matchesAuth && window.S) {
+          S.myComps = S.myComps || {};
+          S.myComps[cc.id] = true;
+        }
+        cc.isMine = authEmail ? matchesAuth : Boolean(S.myComps && S.myComps[cc.id]);
+        comps.push(cc);
       }
     }
 
@@ -2197,6 +2321,10 @@ window.testWelcomeEmailUI = async function (email) {
   }
 };
 
-window.addEventListener('DOMContentLoaded', () => {
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', () => {
+    FCData.init();
+  });
+} else {
   FCData.init();
-});
+}
