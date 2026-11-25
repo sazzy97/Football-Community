@@ -135,9 +135,10 @@ th{color:var(--muted);font-weight:600}tr+tr td{border-top:1px solid var(--line)}
 .img.has::before{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.55))}
 .img.has>*{position:relative}
 .hero .sub{color:rgba(255,255,255,.75)}
-@keyframes inUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes inUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @keyframes spin{to{transform:rotate(360deg)}}
-.screen.anim>*{animation:inUp .28s ease both}
+.screen.anim{animation:fadeIn .12s ease both}
+button,.btn,.card,.chip,.opt,.slot,.day,.round,.qa,.tabs button,.nav button,.time-pill,.cal-day,[onclick]{touch-action:manipulation;-webkit-tap-highlight-color:transparent;cursor:pointer}
 .btn,.card,.chip,.opt,.slot,.day,.round{transition:transform .12s,box-shadow .12s,background .15s}
 .btn:active,.card:active,.opt:active,.slot:active,.round:active{transform:scale(.97)}
 .btn:hover{background:var(--color-primary-hover);color:#fff}
@@ -672,7 +673,7 @@ eye:'<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy=
 eyeOff:'<path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><path d="M1 1l22 22"/>'
 };
 const ic=(n,c='')=>`<svg class="ico ${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">${P[n]}</svg>`;
-const pic=(n,h)=>`class="img has" style="height:${h}px;background-image:url(img/${n}.jpg)"`;
+const pic=(n,h)=>{const bg=(n&&(n.startsWith('data:')||n.startsWith('http')))?n:('img/'+(n||'venue1')+'.jpg');return `class="img has" style="height:${h}px;background-image:url('${bg}')"`};
 const crest=(n,z=44)=>{
  const tList=typeof teams!=='undefined'?teams:(window.teams||[]);
  const regTeam=tList.find(t=>t.name&&t.name.toLowerCase()===(n||'').toLowerCase());
@@ -712,8 +713,16 @@ var S={tab:'home',stack:[{s:'welcome'}],theme:'light',sub:{explore:'Pitches',com
  b:{v:0,p:0,d:2,t:null,pay:'full',ref:null},fil:{fmt:'All',view:'list',gfmt:'All',ecat:'All',pfilt:'All',tfilt:'All'},q:{pitch:'',game:'',event:'',comp:'',player:'',team:''},saved:{},followed:{},joined:{},myGames:{},myFixtures:{},myEvents:{},myVenues:{},attending:{},tickets:{},tixPayMethod:'card',onb:0,ws:0,sheet:null,toast:null,modal:null,shareItem:null,invited:{},tixQty:1,showPw:false,picker:null,authUser:null,authBusy:false,authErr:null,isAdmin:false,adminTap:0,user:{name:'',email:'',pass:'',phone:'',loc:'Lekki and Ajah',fmts:{'5-a-side':true,'7-a-side':true},pos:{'Midfielder':true},exp:'Intermediate',avail:{'Weekday evenings':true,'Weekends':true}},form:{}};
 window.S=S;
 
-/* ===== Save Drafts System (Comp, Team, Game, Event, Fixture) ===== */
+/* ===== Save Drafts System (Comp, Team, Game, Event, Fixture, Venue) ===== */
 const DraftManager={
+  types:[
+    {key:'comp',label:'Competition / Tournament',icon:'trophy',route:'startCreateComp()'},
+    {key:'team',label:'Team Profile',icon:'users',route:'startCreateTeam()'},
+    {key:'game',label:'Open Football Game',icon:'ball',route:'startCreateGame()'},
+    {key:'fixture',label:'Match Fixtures',icon:'trophy',route:'startCreateFixture()'},
+    {key:'event',label:'Football Event',icon:'cal',route:'startCreateEvent()'},
+    {key:'venue',label:'Pitch / Venue Facility',icon:'pin',route:'startCreateVenue()'}
+  ],
   save(type,data){
     try{
       const payload={data,savedAt:Date.now(),timeStr:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})};
@@ -732,15 +741,60 @@ const DraftManager={
   has(type){
     return Boolean(this.get(type));
   },
+  count(){
+    return this.types.filter(t=>this.has(t.key)).length;
+  },
+  getAll(){
+    const list=[];
+    for(const t of this.types){
+      const d=this.get(t.key);
+      if(!d||!d.data)continue;
+      let title=t.label;
+      let preview='';
+      if(t.key==='comp'){
+        title=d.data.cname||'Competition Draft';
+        preview=`${d.data.ctype||'Tournament'} · ${d.data.carea||'Lagos'} · ${d.data.cformat||'11-a-side'}`;
+      }else if(t.key==='team'){
+        title=d.data.tname||'Team Draft';
+        preview=`${d.data.tloc||'Lagos'} · ${d.data.tfmt||'7-a-side'}`;
+      }else if(t.key==='game'){
+        const f=d.data.form||d.data;
+        title=f.gtitle||'Open Game Draft';
+        preview=`${f.gfmt||'5-a-side'} · ${f.gdate||'Upcoming'}`;
+      }else if(t.key==='event'){
+        title=d.data.ename||'Event Draft';
+        preview=`${d.data.ecat||'Grassroots'} · ${d.data.evenue||'Lagos'}`;
+      }else if(t.key==='fixture'){
+        title=d.data.fcomp||'Fixture Schedule Draft';
+        const numMatches=(d.data.frows&&d.data.frows.length)||1;
+        preview=`${numMatches} match fixture${numMatches>1?'s':''} · ${d.data.fdate||'Upcoming'}`;
+      }else if(t.key==='venue'){
+        title=d.data.vname||'Pitch Facility Draft';
+        preview=`${d.data.varea||'Lagos'} · ${d.data.vfmt||'5-a-side'}`;
+      }
+      list.push({
+        type:t.key,
+        label:t.label,
+        icon:t.icon,
+        title,
+        preview,
+        savedAt:d.savedAt,
+        timeStr:d.timeStr,
+        route:t.route
+      });
+    }
+    return list;
+  },
   banner(type){
     const draft=this.get(type);
     if(!draft)return '';
-    return `<div class="card row sp" style="background:var(--surface2);border-left:4px solid var(--accent);margin:0 0 12px;padding:10px 14px">
+    const total=this.count();
+    return `<div class="card row sp" style="background:var(--surface2);border-left:4px solid var(--accent);margin:0 0 14px;padding:12px 14px">
       <div class="row" style="gap:8px">
         <span style="color:var(--brand)">${ic('draft')}</span>
-        <div class="small"><b>Draft Restored</b><div class="muted">Saved at ${draft.timeStr||'earlier'}</div></div>
+        <div class="small"><b>Draft Restored</b><div class="muted">Saved at ${draft.timeStr||'earlier'} · <a onclick="go('drafts')" style="color:var(--brand);font-weight:700;cursor:pointer">View all drafts (${total}) →</a></div></div>
       </div>
-      <button type="button" class="btn sm ghost" style="padding:4px 8px;font-size:11px" onclick="discardDraft('${type}')">Discard Draft</button>
+      <button type="button" class="btn sm ghost" style="padding:4px 8px;font-size:11px" onclick="discardDraft('${type}')">Discard</button>
     </div>`;
   }
 };
@@ -758,6 +812,8 @@ const discardDraft=type=>{
     startCreateEvent(true);
   }else if(type==='fixture'){
     startCreateFixture(null,true);
+  }else if(type==='venue'){
+    startCreateVenue(true);
   }
 };
 
@@ -768,10 +824,22 @@ const saveDraftManual=type=>{
   else if(type==='game')data={form:S.form,appr:S.p&&S.p.appr};
   else if(type==='event')data=S.form;
   else if(type==='fixture')data=S.form;
+  else if(type==='venue')data=S.form;
   if(data){
     DraftManager.save(type,data);
-    toast('Draft saved! You can resume anytime.');
-    render();
+    const itemInfo=DraftManager.types.find(x=>x.key===type);
+    showModal({
+      title:'Draft Saved! 📝',
+      sub:'Your work has been saved safely on your device. You can locate and continue your draft anytime from your Profile or Activity hub.',
+      meta:[
+        ['Draft Type',itemInfo?itemInfo.label:type],
+        ['Saved Location','Profile → Saved Drafts'],
+        ['Total Drafts',DraftManager.count()+' active draft(s)']
+      ],
+      primary:'Continue Editing',
+      secondary:'View Saved Drafts',
+      secFn:()=>go('drafts')
+    });
   }
 };
 const $=id=>document.getElementById(id);
@@ -1395,6 +1463,7 @@ const getUserContext=()=>{
   if(myBookings.length>0)activityTabs.push('Bookings');
   if(myVenues.length>0)activityTabs.push('My Pitches');
   if(payRows.length>0)activityTabs.push('Payments');
+  if(DraftManager.count()>0)activityTabs.push('Saved Drafts');
 
   return {
     myGames,joinedGames,myFixtures,myEvents,myWatching,myTickets,myBookings,myTeams,myVenues,myComps,payRows,roles,activityTabs,
@@ -1667,6 +1736,8 @@ const jump=s=>{S.stack=[];S.tab=s==='createGame'||s==='games'||s==='venues'||s==
   else if(s==='games'){tab('explore');S.sub.explore='Open Games'}
   else if(s==='events'){tab('explore');S.sub.explore='Matches & Events'}
   else if(s==='comps'){tab('explore');S.sub.explore='Competitions'}
+  else if(s==='drafts'){go('drafts')}
+  else if(s==='createVenue'){startCreateVenue()}
   else if(s==='createGame'){go('createGame')}
   else if(s==='createComp'){startCreateComp()}
   else if(s==='createTeam'){startCreateTeam()}
@@ -1852,6 +1923,7 @@ SC.explore=()=>{const k=S.sub.explore;let body='';S.q=S.q||{};
   const list=venues.filter(v=>(S.fil.fmt==='All'||v.fmts.includes(S.fil.fmt))&&(!q||v.name.toLowerCase().includes(q)||v.area.toLowerCase().includes(q)||v.fmts.join(' ').toLowerCase().includes(q)));
   body=`<div class="row"><div class="grow search">${ic('search')}<input id="q_pitch" value="${S.q.pitch||''}" oninput="setSearch('pitch',this.value,'q_pitch')" placeholder="Search location or venue name"></div>${q?`<button class="btn sm ghost" onclick="setSearch('pitch','','q_pitch')">Clear</button>`:`<button class="round" onclick="S.sheet='filter';render()">${ic('filter')}</button>`}</div>
   <div class="hscroll" style="margin-top:10px">${fmts.map(f=>`<button class="chip ${S.fil.fmt===f?'on':''}" onclick="S.fil.fmt='${f}';render()">${f}</button>`).join('')}</div>
+  <div class="card row sp" style="margin:10px 0 6px;padding:12px 14px;background:var(--surface2);border:1px dashed var(--brand);cursor:pointer" onclick="startCreateVenue()"><div class="row" style="gap:10px"><span style="color:var(--brand)">${ic('pin')}</span><div><div class="b small">Pitch or Turf Facility Manager?</div><div class="sub small">List your arena to get bookings &amp; open games</div></div></div><button type="button" class="btn sm" style="flex:none;width:auto;padding:6px 14px;font-size:12px" onclick="event.stopPropagation();startCreateVenue()">${ic('plus')}List Pitch</button></div>
   <div class="row sp" style="margin:4px 0 12px"><span class="sub">${list.length} venue${list.length===1?'':'s'}</span><div class="seg" style="margin:0;width:150px"><button class="${S.fil.view==='list'?'on':''}" onclick="S.fil.view='list';render()">List</button><button class="${S.fil.view==='map'?'on':''}" onclick="S.fil.view='map';render()">Map</button></div></div>
   ${list.length===0?`<div class="card" style="text-align:center;padding:22px"><div class="b">No pitches match "${S.q.pitch}"</div><div class="sub small" style="margin-top:4px">Try searching Lekki, Yaba, Ikeja or clear the filter.</div></div>`:S.fil.view==='map'?`<div class="map"><span class="pin" style="top:40px;left:60px" onclick="go('venue',0)">${N(25000)}</span><span class="pin" style="top:110px;left:190px" onclick="go('venue',1)">${N(18000)}</span><span class="pin" style="top:60px;left:250px" onclick="go('venue',2)">${N(30000)}</span></div><div class="list" style="margin-top:12px">${list.map(venueCard).join('')}</div>`:`<div class="list">${list.map(venueCard).join('')}</div>`}`}
  if(k==='Open Games'){
@@ -1918,12 +1990,13 @@ SC.venue=arg=>{
  const v=venues[id]||venues[0];
  if(fromGame&&S.sub.venue==='Pitches')S.sub.venue='Overview';
  const k=S.sub.venue;
- const b={Overview:`<p class="sub">Floodlit football facility with multiple pitches. Opening hours and pricing are set by the venue.</p><div class="map" style="height:120px;margin:12px 0"><span class="pin" style="top:46px;left:140px">${ic('pin')}</span></div><div class="kv"><span class="muted">Address</span><b>${v.area}, Lagos</b></div><div class="kv"><span class="muted">Opening hours</span><b>${v.hours}</b></div><div class="kv"><span class="muted">Formats</span><b>${v.fmts.join(', ')}</b></div><div class="kv"><span class="muted">Contact</span><b>Call venue</b></div><h2 class="sec">Facilities</h2><div class="row" style="flex-wrap:wrap">${v.fac.map(f=>`<span class="tag">${f}</span>`).join('')}</div><h2 class="sec">Booking policy</h2><div class="note">${v.policy}</div>`,
-  Pitches:`<div class="list">${v.pitches.map(p=>`<div class="card row"><div class="img has" style="width:64px;height:64px;background-image:url(img/${v.im}.jpg)"></div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.f}</div></div><div class="b">${N(p.p)}<span class="muted small">/hr</span></div></div>`).join('')}</div>`,
+ const vImg=v.customPhoto||v.im;
+ const b={Overview:`<p class="sub">Floodlit football facility with multiple pitches. Opening hours and pricing are set by the venue.</p><div class="map" style="height:120px;margin:12px 0"><span class="pin" style="top:46px;left:140px">${ic('pin')}</span></div><div class="kv"><span class="muted">Address</span><b>${v.area}, Lagos</b></div><div class="kv"><span class="muted">Opening hours</span><b>${v.hours}</b></div><div class="kv"><span class="muted">Formats</span><b>${v.fmts.join(', ')}</b></div><div class="kv"><span class="muted">Contact</span><b>${v.contact?`<a href="tel:${v.contact}" style="color:var(--brand)">${v.contact}</a>`:'Call venue'}</b></div><h2 class="sec">Facilities</h2><div class="row" style="flex-wrap:wrap">${v.fac.map(f=>`<span class="tag">${f}</span>`).join('')}</div><h2 class="sec">Booking policy</h2><div class="note">${v.policy}</div>`,
+  Pitches:`<div class="list">${v.pitches.map(p=>`<div class="card row"><div class="img has" style="width:64px;height:64px;background-image:url(${v.customPhoto?v.customPhoto:`img/${v.im}.jpg`})"></div><div class="grow"><div class="b">${p.n}</div><div class="sub">${p.f}</div></div><div class="b">${N(p.p)}<span class="muted small">/hr</span></div></div>`).join('')}</div>`,
   Reviews:`<div class="row"><span class="score">${v.rating}</span><div class="sub">${v.rev} reviews<br>Verified booking reviews only</div></div><div class="list" style="margin-top:12px">${['Great pitch and lighting.','Easy booking, clean changing rooms.'].map(t=>`<div class="card small"><div class="b">${ic('star')} 5.0</div>${t}</div>`).join('')}</div>`}[k];
  const tabItems=fromGame?['Overview','Reviews']:['Overview','Pitches','Reviews'];
  const ctaHtml=fromGame?'':`<div class="cta"><div><div class="small muted">From</div><div class="b">${N(v.from)}/hr</div></div><button class="btn sm" onclick="S.b={v:${id},p:0,d:2,t:null,pay:'full',ref:null};go('book')">Book a pitch</button></div>`;
- return `${hdr(v.name,`<button class="round" onclick="openShare('venue',${id})">${ic('share')}</button>`)}<div ${pic(v.im,170)}>${v.verified?`<span class="tag ok" style="position:absolute;top:12px;left:12px">${ic('shield')}Verified venue</span>`:''}${v.name}</div>
+ return `${hdr(v.name,`<button class="round" onclick="openShare('venue',${id})">${ic('share')}</button>`)}<div ${pic(vImg,170)}>${v.verified?`<span class="tag ok" style="position:absolute;top:12px;left:12px">${ic('shield')}Verified venue</span>`:''}${v.name}</div>
  <div class="row sp" style="margin-top:12px"><div class="sub">${ic('pin')} ${v.area} · ${v.km} km</div><div class="b">${ic('star')} ${v.rating} <span class="muted small">(${v.rev})</span></div></div>
  <div class="hscroll" style="margin-top:10px">${[1,2,3].map(i=>`<div class="img has" style="width:96px;height:66px;background-image:url(img/venue${i}.jpg)"></div>`).join('')}</div>${tabsUI('venue',tabItems)}${b}${ctaHtml}`};
 
@@ -2140,9 +2213,9 @@ SC.createGame=()=>{
  <div class="field">Additional instructions<input value="${f.gnotes||''}" oninput="S.form.gnotes=this.value;DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})" placeholder="Bring bibs, white and dark shirts…"></div>
  <div class="opt" style="margin-bottom:10px" onclick="flipTog('appr',false,event);DraftManager.save('game',{form:S.form,appr:S.p&&S.p.appr})"><div class="grow"><b>Approve join requests</b><div class="sub">Otherwise players join directly</div></div>${tog(false,'appr')}</div>
  <div class="opt" onclick="flipTog('pub',true,event)"><div class="grow"><b>Public game</b><div class="sub">Visible in Open Games discovery</div></div>${tog(true,'pub')}</div>
- <div class="row" style="gap:10px;margin-top:20px">
-   <button class="btn grow" onclick="publishGame()">${isEdit?'Save changes':'Publish game'}</button>
-   <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('game')">${ic('draft')} Save Draft</button>
+ <div class="col" style="gap:10px;margin-top:20px;width:100%">
+   <button class="btn" style="width:100%" onclick="publishGame()">${isEdit?'Save changes':'Publish game'}</button>
+   <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('game')">${ic('draft')} Save Draft</button>
  </div>`};
 function publishGame(){
  const f=S.form,isEdit=!!S.editingGameId;
@@ -2868,9 +2941,9 @@ SC.createTeam=()=>{
    </div>
    ${tog(true,'tv')}
  </div>
- <div class="row" style="gap:10px;margin-top:16px">
-   <button type="button" class="btn grow" onclick="createNewTeam()">Create team</button>
-   <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('team')">${ic('draft')} Save Draft</button>
+ <div class="col" style="gap:10px;margin-top:16px;width:100%">
+   <button type="button" class="btn" style="width:100%" onclick="createNewTeam()">Create team</button>
+   <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('team')">${ic('draft')} Save Draft</button>
  </div>`;
 };
 
@@ -3228,33 +3301,272 @@ SC.activity=()=>{
  if(k==='Bookings')body=`<div class="list">${renderBookingsList(ctx.myBookings)}</div>`;
  if(k==='My Pitches')body=`<div class="list">${ctx.myVenues.map(venueCard).join('')}</div><button class="btn" style="margin-top:14px" onclick="startCreateVenue()">${ic('plus')}List Another Pitch</button>`;
  if(k==='Payments')body=`<div class="list">${ctx.payRows.map(p=>`<div class="card row sp"><div><b>${p.title}</b><div class="small muted">Ref ${p.ref}</div></div><div style="text-align:right"><b>${p.amt}</b><div><span class="tag ${p.cls}">${p.st}</span></div></div></div>`).join('')}</div>`;
+ if(k==='Saved Drafts')body=renderSavedDraftsList();
 
  return `<h1>My Activity</h1>${aTabs.length>1?tabsUI('activity',aTabs):''}${body}`};
 
-const startCreateVenue=()=>{
- S.form={vname:'',varea:S.user.loc.split(' and ')[0]||'Lekki',vprice:25000,vfmt:'5-a-side',vhours:'07:00 – 23:00',vpolicy:'Free cancellation up to 24 hours before kickoff.'};
- go('createVenue');
+const renderSavedDraftsList=()=>{
+  const list=DraftManager.getAll();
+  if(!list.length)return `<div class="card" style="text-align:center;padding:28px 14px"><div class="b">No saved drafts</div><div class="sub small" style="margin-top:4px">Your drafts will appear here when you tap "Save Draft" in any form.</div></div>`;
+  return `<div class="list">${list.map(d=>`
+    <div class="card">
+      <div class="row sp" style="margin-bottom:6px">
+        <div class="row" style="gap:8px">
+          <div class="av sm" style="background:var(--accent);color:var(--accent-ink)">${ic(d.icon)}</div>
+          <div>
+            <div class="b">${d.title}</div>
+            <span class="tag gold" style="font-size:10px">${d.label}</span>
+          </div>
+        </div>
+        <span class="small muted">${d.timeStr||'Saved'}</span>
+      </div>
+      <div class="sub small" style="margin:6px 0 14px">${d.preview}</div>
+      <div class="col" style="gap:8px;width:100%">
+        <button type="button" class="btn" style="width:100%" onclick="${d.route}">Continue Draft →</button>
+        <button type="button" class="btn ghost" style="width:100%" onclick="DraftManager.clear('${d.type}');toast('Draft deleted');render()">Discard Draft</button>
+      </div>
+    </div>
+  `).join('')}</div>`;
 };
+
+SC.drafts=()=>{
+  const list=DraftManager.getAll();
+  return `${hdr('Saved Drafts')}
+  <p class="sub small" style="margin:4px 0 16px">Pick up right where you left off. Saved drafts are stored safely on your device so you can continue whenever you're ready.</p>
+  ${list.length?`<div class="list">${list.map(d=>`
+    <div class="card">
+      <div class="row sp" style="margin-bottom:6px">
+        <div class="row" style="gap:8px">
+          <div class="av sm" style="background:var(--accent);color:var(--accent-ink)">${ic(d.icon)}</div>
+          <div>
+            <div class="b" style="font-size:15px">${d.title}</div>
+            <span class="tag gold" style="font-size:10px">${d.label}</span>
+          </div>
+        </div>
+        <span class="small muted">${d.timeStr||'Saved'}</span>
+      </div>
+      <div class="sub small" style="margin:6px 0 14px">${d.preview}</div>
+      <div class="col" style="gap:8px;width:100%">
+        <button type="button" class="btn" style="width:100%" onclick="${d.route}">Continue Draft →</button>
+        <button type="button" class="btn ghost" style="width:100%" onclick="DraftManager.clear('${d.type}');toast('Draft deleted');render()">Discard Draft</button>
+      </div>
+    </div>
+  `).join('')}</div>`:`
+    <div class="card" style="text-align:center;padding:36px 18px">
+      <div style="font-size:36px;margin-bottom:8px">📝</div>
+      <div class="b" style="font-size:16px">No Saved Drafts</div>
+      <p class="sub small" style="margin:8px 0 18px">When you tap "Save Draft" on any form (Competition, Team, Game, Fixture, Event, or Pitch), it will be kept here so you can continue anytime.</p>
+      <button class="btn sm" onclick="back()">Return</button>
+    </div>
+  `}`;
+};
+
+const handleVenuePhotoUpload=input=>{
+  if(!input.files||!input.files[0])return;
+  const file=input.files[0];
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const canvas=document.createElement('canvas');
+      let w=img.width,h=img.height;
+      const max=900;
+      if(w>max||h>max){
+        if(w>h){h=Math.round(h*max/w);w=max}else{w=Math.round(w*max/h);h=max}
+      }
+      canvas.width=w;canvas.height=h;
+      const ctx=canvas.getContext('2d');
+      ctx.drawImage(img,0,0,w,h);
+      S.form=S.form||{};
+      S.form.vphoto=canvas.toDataURL('image/jpeg',0.85);
+      DraftManager.save('venue',S.form);
+      render();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+};
+
+const startCreateVenue=resetDraft=>{
+  if(!resetDraft&&DraftManager.has('venue')){
+    S.form=DraftManager.get('venue').data;
+  }else{
+    S.form={
+      vname:'',
+      varea:(S.user&&S.user.loc?S.user.loc.split(' and ')[0]:'')||'Lekki',
+      vprice:25000,
+      vfmt:'5-a-side',
+      vhours:'07:00 – 23:00',
+      vcontact:S.user.phone||currentUserEmail()||'',
+      vphoto:'',
+      vfac:{'Floodlights':true,'Parking':true,'Changing rooms':true},
+      vpolicy:'Free cancellation up to 24 hours before kickoff.'
+    };
+  }
+  go('createVenue');
+};
+
 SC.createVenue=()=>{
- const f=S.form;
- return `${hdr('List your pitch / venue')}
- <div class="note" style="margin-bottom:14px">List your football turf or local facility on Football Community so players and organisers can discover and book it.</div>
- <div class="field">Venue / facility name<input value="${f.vname||''}" oninput="S.form.vname=this.value" placeholder="e.g. Lekki Phase 1 Turf Arena"></div>
- <div class="field">Area in Lagos<input value="${f.varea||''}" oninput="S.form.varea=this.value" placeholder="e.g. Lekki Phase 1, Surulere, Ikeja"></div>
- <div class="field">Primary pitch format<select onchange="S.form.vfmt=this.value"><option ${f.vfmt==='5-a-side'?'selected':''}>5-a-side</option><option ${f.vfmt==='7-a-side'?'selected':''}>7-a-side</option><option ${f.vfmt==='9-a-side'?'selected':''}>9-a-side</option><option ${f.vfmt==='11-a-side'?'selected':''}>11-a-side</option></select></div>
- <div class="field">Hourly rate (₦)<input type="number" value="${f.vprice||25000}" oninput="S.form.vprice=+this.value" placeholder="e.g. 25000"></div>
- <div class="field">Opening hours<input value="${f.vhours||'07:00 – 23:00'}" oninput="S.form.vhours=this.value"></div>
- <div style="margin-top:20px"><button class="btn" onclick="publishVenue()">Publish Pitch Facility</button></div>`;
+  const f=S.form||{};
+  f.vfac=f.vfac||{};
+  const allFacs=['Floodlights','Parking','Changing rooms','Seating / Stands','Refreshments','Bibs & Balls provided'];
+  const photoUI=f.vphoto?`
+    <div style="position:relative;height:140px;border-radius:14px;overflow:hidden;background:url('${f.vphoto}') center/cover no-repeat;margin-bottom:14px;border:1px solid var(--line);box-shadow:var(--sh-1)">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0.1) 0%,rgba(0,0,0,0.7) 100%)"></div>
+      <span class="tag ok" style="position:absolute;top:8px;left:8px;font-size:11px">${ic('check')} Pitch Photo Attached</span>
+      <div style="position:absolute;bottom:8px;right:8px;display:flex;gap:6px">
+        <label class="btn sm" style="cursor:pointer;margin:0;padding:0 10px;height:28px;line-height:28px;font-size:11px;background:rgba(0,0,0,0.65);color:#fff;border:1px solid rgba(255,255,255,0.3)">
+          Change
+          <input type="file" accept="image/*" style="display:none" onchange="handleVenuePhotoUpload(this)">
+        </label>
+        <button type="button" class="btn sm" style="cursor:pointer;margin:0;padding:0 8px;height:28px;line-height:28px;font-size:12px;background:rgba(220,38,38,0.85);color:#fff;border:none" onclick="S.form.vphoto='';DraftManager.save('venue',S.form);render()">✕</button>
+      </div>
+    </div>
+  `:`
+    <label class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100px;border:1.5px dashed var(--line);background:var(--surface2);border-radius:14px;cursor:pointer;margin-bottom:14px;text-align:center">
+      <span style="font-size:24px;margin-bottom:4px">🏟️</span>
+      <span class="b small">Upload Pitch / Turf Photo</span>
+      <span class="sub" style="font-size:11px">High-resolution turf, pitch aerial, or facility arena photo (PNG, JPG)</span>
+      <input type="file" accept="image/*" style="display:none" onchange="handleVenuePhotoUpload(this)">
+    </label>
+  `;
+
+  return `${hdr('List Your Pitch Facility')}
+  ${DraftManager.banner('venue')}
+  <div class="note" style="margin-bottom:14px">
+    <b>Pitch Owners &amp; Facility Managers:</b> List your football facility on Football Community. Local players, clubs, and game hosts can discover and book pitch slots directly.
+  </div>
+
+  ${photoUI}
+
+  <div class="field">Facility / Turf name
+    <input value="${f.vname||''}" oninput="S.form.vname=this.value;DraftManager.save('venue',S.form)" placeholder="e.g. Lekki Goal Arena, Campos Stadium Turf">
+  </div>
+  <div class="field">Area in Lagos
+    <input value="${f.varea||''}" oninput="S.form.varea=this.value;DraftManager.save('venue',S.form)" placeholder="e.g. Lekki Phase 1, Victoria Island, Surulere, Ikeja, Yaba, Iyana Ipaja">
+  </div>
+  <div class="row">
+    <div class="field grow">Primary pitch format
+      <select onchange="S.form.vfmt=this.value;DraftManager.save('venue',S.form);render()">
+        <option ${f.vfmt==='5-a-side'?'selected':''}>5-a-side</option>
+        <option ${f.vfmt==='7-a-side'?'selected':''}>7-a-side</option>
+        <option ${f.vfmt==='9-a-side'?'selected':''}>9-a-side</option>
+        <option ${f.vfmt==='11-a-side'?'selected':''}>11-a-side</option>
+      </select>
+    </div>
+    <div class="field grow">Hourly rate (₦)
+      <input type="number" value="${f.vprice||25000}" oninput="S.form.vprice=+this.value;DraftManager.save('venue',S.form)" placeholder="e.g. 25000">
+    </div>
+  </div>
+  <div class="field">Operating hours
+    <input value="${f.vhours||'07:00 – 23:00'}" oninput="S.form.vhours=this.value;DraftManager.save('venue',S.form)" placeholder="e.g. 07:00 – 23:00">
+  </div>
+  <div class="field">Manager WhatsApp / Phone (for booking contact)
+    <input value="${f.vcontact||''}" oninput="S.form.vcontact=this.value;DraftManager.save('venue',S.form)" placeholder="e.g. 08012345678">
+  </div>
+
+  <div class="card" style="margin-bottom:14px;background:var(--surface2)">
+    <div class="b small" style="margin-bottom:6px">Amenities &amp; Facilities</div>
+    <div class="row" style="flex-wrap:wrap;gap:6px">
+      ${allFacs.map(fac=>{
+        const on=!!f.vfac[fac];
+        return `<button type="button" class="chip ${on?'on':''}" onclick="S.form.vfac['${fac}']=!S.form.vfac['${fac}'];DraftManager.save('venue',S.form);render()">${on?ic('check'):ic('plus')} ${fac}</button>`;
+      }).join('')}
+    </div>
+  </div>
+
+  <div class="field">Cancellation &amp; refund policy
+    <input value="${f.vpolicy||'Free cancellation up to 24 hours before kickoff.'}" oninput="S.form.vpolicy=this.value;DraftManager.save('venue',S.form)" placeholder="e.g. Free cancellation up to 24 hours before kickoff.">
+  </div>
+
+  <div class="col" style="gap:10px;margin-top:20px;width:100%">
+    <button type="button" class="btn" style="width:100%" onclick="publishVenue()">Publish Pitch Facility Live</button>
+    <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('venue')">${ic('draft')} Save Draft</button>
+  </div>`;
 };
+
 function publishVenue(){
- const f=S.form;
- if(!(f.vname||'').trim()){toast('Please enter your venue name');return}
- const newId=venues.length;
- const v={im:'venue1',id:newId,name:f.vname.trim(),area:(f.varea||'Lagos').trim(),km:1.5,rating:5.0,rev:1,from:+f.vprice||25000,verified:true,fmts:[f.vfmt||'5-a-side'],fac:['Floodlights','Parking'],hours:f.vhours||'07:00 – 23:00',policy:f.vpolicy||'Free cancellation up to 24 hours before kickoff.',deposit:true,pitches:[{n:'Main Pitch',f:f.vfmt||'5-a-side',p:+f.vprice||25000}],creator_id:currentUserId(),creator_email:currentUserEmail(),isMine:true};
- venues.unshift(v);
- S.myVenues=S.myVenues||{};S.myVenues[newId]=true;
- replaceTop('venue',newId);
- showModal({title:'Pitch Facility Listed!',sub:'Your pitch is now live in Explore → Pitches and in your My Pitches dashboard.',meta:[['Venue',v.name],['Area',v.area],['Format',v.fmts[0]],['Rate',N(v.from)+'/hr']],primary:'View Venue'});
+  const f=S.form||{};
+  const vName=(f.vname||'').trim();
+  if(!vName){toast('Please enter your pitch facility name');return}
+  const vArea=(f.varea||'Lagos').trim();
+  const vPrice=+f.vprice||25000;
+  const vFmt=f.vfmt||'5-a-side';
+  const newId=venues.length;
+  const chosenFacs=Object.keys(f.vfac||{}).filter(k=>f.vfac[k]);
+  const creatorEmail=currentUserEmail()||S.user.email||'';
+  const creatorId=currentUserId();
+
+  const v={
+    im:f.vphoto?'user_venue':'venue1',
+    customPhoto:f.vphoto||'',
+    id:newId,
+    name:vName,
+    area:vArea,
+    km:1.5,
+    rating:5.0,
+    rev:1,
+    from:vPrice,
+    verified:true,
+    fmts:[vFmt],
+    fac:chosenFacs.length?chosenFacs:['Floodlights','Parking'],
+    hours:f.vhours||'07:00 – 23:00',
+    contact:f.vcontact||'',
+    policy:f.vpolicy||'Free cancellation up to 24 hours before kickoff.',
+    deposit:true,
+    pitches:[{n:'Main Pitch',f:vFmt,p:vPrice}],
+    creator_id:creatorId,
+    creator_email:creatorEmail,
+    isMine:true
+  };
+
+  venues.unshift(v);
+  S.myVenues=S.myVenues||{};
+  S.myVenues[newId]=true;
+
+  try {
+    const customVenues=JSON.parse(localStorage.getItem('fc_custom_venues')||'[]');
+    customVenues.unshift(v);
+    localStorage.setItem('fc_custom_venues',JSON.stringify(customVenues));
+  } catch(e){}
+
+  if(window.FCData){
+    FCData.persistLocal();
+    FCData.supabaseInsert('app_events',{
+      event_name:'venue_created',
+      screen:'createVenue',
+      user_contact:creatorEmail,
+      properties:{
+        venue_id:v.id,
+        name:v.name,
+        area:v.area,
+        from:v.from,
+        fmt:vFmt,
+        fac:v.fac,
+        hours:v.hours,
+        contact:v.contact,
+        creator_id:creatorId,
+        creator_email:creatorEmail
+      }
+    });
+  }
+
+  DraftManager.clear('venue');
+  replaceTop('venue',newId);
+  showModal({
+    title:'Pitch Facility Listed Live! 🏟️',
+    sub:'Your pitch is now live in Explore → Pitches. Players and game organizers can book your slots.',
+    meta:[
+      ['Facility',v.name],
+      ['Area',v.area],
+      ['Format',v.fmts[0]],
+      ['Hourly Rate',N(v.from)+'/hr'],
+      ['Manager Contact',v.contact||'Provided']
+    ],
+    primary:'View My Pitch',
+    secondary:'Manage Pitches',
+    secFn:()=>{S.sub.activity='My Pitches';tab('activity')}
+  });
 }
 
 SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14px;cursor:pointer" onclick="${fn||`toast('${t}')`}"><div style="color:var(--brand)">${ic(i)}</div><b class="grow" style="font-weight:600">${t}</b>${ic('chev')}</div>`;
@@ -3285,7 +3597,7 @@ SC.profile=()=>{const it=(i,t,fn)=>`<div class="card row" style="padding:12px 14
    ${it('ball','Football preferences',"S.onb=2;S.authErr=null;go('onb')")}
  </div>
  ${activeMgmtRows.length?`<h2 class="sec">Your active management views</h2><div class="list">${activeMgmtRows.join('')}</div>`:''}
- <h2 class="sec">Create, organise or list</h2><div class="list">${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Create a Competition / League',"startCreateComp()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"startCreateTeam()")}${it('pin','List a Pitch (Pitch Owners)',"startCreateVenue()")}</div>
+ <h2 class="sec">Create, organise or list</h2><div class="list">${it('draft','My Saved Drafts' + (DraftManager.count()?` (${DraftManager.count()} active)`:''),"go('drafts')")}${it('plus','Create an Open Game',"startCreateGame()")}${it('trophy','Create a Competition / League',"startCreateComp()")}${it('trophy','Publish Match Fixture(s)',"startCreateFixture()")}${it('cal','Publish a Football Event',"startCreateEvent()")}${it('users','Create a Team',"startCreateTeam()")}${it('pin','List a Pitch / Turf Facility (Pitch Owners)',"startCreateVenue()")}</div>
  <h2 class="sec">Settings</h2><div class="list">${adminOk?it('list','Admin: Owner Data & Cloud Setup (Supabase + PostHog)',"go('admin')"):''}${it('star','Watch 30s Animated Video Promo',"window.open('promo.html','_blank')")}${it('bell','Notifications',"go('notifs')")}${it('lock','Privacy settings',"go('privacy')")}${it('heart','Saved events',"S.sub.explore='Matches & Events';tab('explore')")}${it('share','Share Football Community',"openShare('app',0)")}${it('logout',signedIn?'Sign out':'Sign in / Switch account',signedIn?'confirmSignOut()':"S.authErr=null;go('signin')")}</div>
  <div class="row sp" style="margin-top:16px"><b>Dark mode</b><div class="tog ${S.theme==='dark'?'on':''}" onclick="setTheme(S.theme==='dark'?'light':'dark')"><i></i></div></div>`};
 
@@ -3418,12 +3730,10 @@ SC.createFixture=()=>{
      ${r.status&&r.status!=='Upcoming'?`<div class="field" style="margin-bottom:0">Current / Final Score<input value="${r.score||''}" oninput="S.form.frows[${idx}].score=this.value;DraftManager.save('fixture',S.form)" placeholder="e.g. 2 : 1"></div>`:''}
    </div>
  `).join('')}
- <div class="col" style="margin-top:16px">
-   <button type="button" class="btn ghost" onclick="addFixtureDraftRow()">${ic('plus')}Add Another Fixture</button>
-   <div class="row" style="gap:10px">
-     <button type="button" class="btn grow" onclick="publishFixture()">Publish ${f.frows.length>1?f.frows.length+' Fixtures Live':'Fixture Live'}</button>
-     <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('fixture')">${ic('draft')} Save Draft</button>
-   </div>
+ <div class="col" style="gap:10px;margin-top:16px;width:100%">
+   <button type="button" class="btn" style="width:100%" onclick="publishFixture()">Publish ${f.frows.length>1?f.frows.length+' Fixtures Live':'Fixture Live'}</button>
+   <button type="button" class="btn ghost" style="width:100%" onclick="addFixtureDraftRow()">${ic('plus')}Add Another Fixture</button>
+   <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('fixture')">${ic('draft')} Save Draft</button>
  </div>`;
 };
 function publishFixture(){
@@ -3476,6 +3786,7 @@ function publishFixture(){
      FCData.publishFixture(item);
    }
  }
+ DraftManager.clear('fixture');
  if(window.FCData)FCData.persistLocal();
  const firstId=createdItems[0].id;
  if(createdItems.length===1){
@@ -3535,9 +3846,9 @@ SC.createEvent=()=>{
  </div>
  ${f.efree?'':`<div class="field">Ticket price (₦)<input type="number" value="${f.eprice}" oninput="S.form.eprice=+this.value;DraftManager.save('event',S.form)" placeholder="e.g. 1500"></div>`}
  <div class="field">About / Entry details<input value="${f.eabout||''}" oninput="S.form.eabout=this.value;DraftManager.save('event',S.form)" placeholder="Rules, dress code, prizes, contact info…"></div>
- <div class="row" style="gap:10px;margin-top:18px">
-   <button class="btn grow" onclick="publishEvent()">${isEdit?'Save Event Changes':'Publish Event Live'}</button>
-   <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('event')">${ic('draft')} Save Draft</button>
+ <div class="col" style="gap:10px;margin-top:18px;width:100%">
+   <button class="btn" style="width:100%" onclick="publishEvent()">${isEdit?'Save Event Changes':'Publish Event Live'}</button>
+   <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('event')">${ic('draft')} Save Draft</button>
  </div>`;
 };
 SC.submitEvent=()=>SC.createEvent();
@@ -3761,9 +4072,9 @@ SC.createComp=()=>{
       </div>
     </div>
 
-    <div class="row" style="gap:10px;margin-top:20px">
-      <button type="button" class="btn grow" onclick="nextCompSection()">Continue to Teams &amp; Rules →</button>
-      <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('comp')">${ic('draft')} Save Draft</button>
+    <div class="col" style="gap:10px;margin-top:20px;width:100%">
+      <button type="button" class="btn" style="width:100%" onclick="nextCompSection()">Continue to Teams &amp; Rules →</button>
+      <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('comp')">${ic('draft')} Save Draft</button>
     </div>
   `;
 
@@ -3861,12 +4172,10 @@ SC.createComp=()=>{
       ${tog(Boolean(f.creqVerify),'creq_tog')}
     </div>
 
-    <div class="col" style="gap:10px;margin-top:20px">
-      <div class="row" style="gap:10px">
-        <button type="button" class="btn grow" onclick="submitCreateComp()">Publish Competition Instantly</button>
-        <button type="button" class="btn sm ghost" style="flex:none" onclick="saveDraftManual('comp')">${ic('draft')} Save Draft</button>
-      </div>
-      <button type="button" class="btn ghost" onclick="S.form.csec='details';render()">← Back to Competition Details</button>
+    <div class="col" style="gap:10px;margin-top:20px;width:100%">
+      <button type="button" class="btn" style="width:100%" onclick="submitCreateComp()">Publish Competition Instantly</button>
+      <button type="button" class="btn ghost" style="width:100%" onclick="saveDraftManual('comp')">${ic('draft')} Save Draft</button>
+      <button type="button" class="btn ghost" style="width:100%" onclick="S.form.csec='details';render()">← Back to Competition Details</button>
     </div>
   `;
 
@@ -4182,7 +4491,16 @@ function render(){
     $('phone').insertAdjacentHTML('beforeend',`<div class="modal-backdrop" onclick="closeModal()"><div class="modal-card" onclick="event.stopPropagation()"><div class="modal-ico ${m.tone||''}">${ic(m.icon||'check')}</div><h2>${m.title}</h2><div class="sub">${m.sub||''}</div>${metaHtml}<div class="modal-actions"><button class="btn ${m.danger?'danger':''}" onclick="closeModal(S.modal&&S.modal.primaryFn)">${m.primary||'Done'}</button>${m.secondary?`<button class="btn ghost" onclick="const fn=S.modal&&S.modal.secFn;closeModal(fn)">${m.secondary}</button>`:''}</div></div></div>`);
   }
   const key=S.tab+'|'+S.stack.length+(cur?cur.s+cur.a:'');
-  if(key!==S.last){sc.classList.remove('anim');void sc.offsetWidth;sc.classList.add('anim');S.last=key;sc.scrollTop=0;if(window.FCData)FCData.captureAnalytics('$pageview',{screen:cur?cur.s:S.tab})}else{sc.scrollTop=top0}
+  if(key!==S.last){
+    sc.classList.add('anim');
+    S.last=key;
+    sc.scrollTop=0;
+    if(window.FCData){
+      setTimeout(()=>{FCData.captureAnalytics('$pageview',{screen:cur?cur.s:S.tab})},120);
+    }
+  }else{
+    sc.scrollTop=top0;
+  }
 }
 function setTheme(t){S.theme=t;document.body.dataset.theme=t;document.documentElement.dataset.theme=t;
   document.querySelectorAll('#themeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));render()}
@@ -4194,13 +4512,14 @@ setInterval(()=>{const c=S.stack[S.stack.length-1];if(S.hold===1&&c&&c.s==='revi
 const faces=(n,extra)=>{const c=['#26734D','#2878C7','#D98B16','#7A3FA0','#D94343'];return `<span class="faces">${['TA','EO','AB','CK','SM'].slice(0,n).map((t,k)=>`<i style="background:${c[k%5]}">${t}</i>`).join('')}${extra>0?`<i class="more">+${extra}</i>`:''}</span>`};
 const teamMini=t=>`<div class="card tmini" onclick="go('team','${t.id}')">${crest(t.name,48)}<div class="b t1" style="margin-top:6px">${t.name}</div><div class="sub small">${t.loc} · ${t.fmt}</div><div class="sub small">${t.m} members</div><button class="btn sm ${S.followed['t'+t.id]||t.role?'ghost':''}" onclick="event.stopPropagation();S.followed['t${t.id}']=!S.followed['t${t.id}'];render()">${t.role?'Your team':S.followed['t'+t.id]?'Following':'Follow'}</button></div>`;
 const slotsLeft={0:'4 slots free',1:'2 slots free',2:'6 slots free'};
-venueCard=v=>`<div class="card vcard" onclick="go('venue',${v.id})"><div ${pic(v.im,128)}><span class="pill-w">${v.km} km</span>${v.verified?`<span class="tag vtag">${ic('shield')}Verified</span>`:''}</div><div class="vbody"><div class="row sp"><div class="b t1">${v.name}</div><div class="rate">${ic('star')}${v.rating}</div></div><div class="sub">${v.area} · ${v.fmts.join(' · ')}</div><div class="row sp" style="margin-top:8px"><span class="tag ${v.id==1?'warn':'ok'}">${slotsLeft[v.id]}</span><span class="price">${N(v.from)}<small>/hr</small></span></div></div></div>`;
+venueCard=v=>{const vImg=v.customPhoto||v.im;const sLeft=slotsLeft[v.id]||'Available slots';return `<div class="card vcard" onclick="go('venue',${v.id})"><div ${pic(vImg,128)}><span class="pill-w">${v.km} km</span>${v.verified?`<span class="tag vtag">${ic('shield')}Verified</span>`:''}</div><div class="vbody"><div class="row sp"><div class="b t1">${v.name}</div><div class="rate">${ic('star')}${v.rating}</div></div><div class="sub">${v.area} · ${v.fmts.join(' · ')}</div><div class="row sp" style="margin-top:8px"><span class="tag ${v.id==1?'warn':'ok'}">${sLeft}</span><span class="price">${N(v.from)}<small>/hr</small></span></div></div></div>`};
 gameCard=g=>{const vObj=venues[g.v]||venues[0],vName=g.venueName||vObj.name,filled=Math.max(g.need-g.left,1),isFree=!g.price||+g.price===0;return `<div class="card gcard" onclick="go('game','${g.id}')"><div ${pic('game1',110)}><span class="pill-w l">${g.fmt}</span><span class="pill-w">${g.left} left</span></div><div class="vbody"><div class="b t1">${g.title}</div><div class="sub">${vName} · ${g.pitch}</div><div class="sub">${g.when}</div><div class="bar" style="margin:10px 0 8px"><i style="width:${Math.min(100,filled/g.need*100)}%"></i></div><div class="row sp">${faces(Math.min(filled,3),Math.max(filled-3,0))}${isFree?`<span class="price" style="color:var(--ok)">Free</span>`:`<span class="price">${N(g.price)}<small>/player</small></span>`}</div></div></div>`};
 eventCard=e=>{const sid=String(e.id),gCount=e.going||28,info=getAttendItem('event',e.id);return `<div class="card vcard" onclick="go('event','${sid}')"><div ${pic(e.im||'event1',120)}><span class="pill-w l">${e.cat}</span><button class="pill-w sv" onclick="event.stopPropagation();S.saved['${sid}']=!S.saved['${sid}'];render()" style="color:${S.saved[sid]?'#D94343':'#17211B'}">${ic('heart')}</button></div><div class="vbody"><div class="b t1">${e.title}</div><div class="sub">${e.venue}</div><div class="sub">${e.when}</div><div class="row sp" style="margin-top:8px">${trust(e.trust)}<span class="price">${e.fee}</span></div><div class="will-foot"><div class="row" style="gap:6px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> ${info.isPaid?'attending':'going'}</span></div>${willBeThereBtn('event',sid)}</div></div></div>`};
 matchRow=f=>{const gCount=f.going||34,fid=String(f.id!==undefined?f.id:0),info=getAttendItem('fixture',fid);return `<div class="card mrow" onclick="go('match','${fid}')"><div class="row sp small muted"><span>${f.t}</span><div class="row" style="gap:6px"><span class="tag ${info.isPaid?'gold':'ok'}">${info.feeLabel}</span>${f.s==='Live'?'<span class="tag live">LIVE</span>':`<span class="tag">${f.s}</span>`}</div></div><div class="mrow-main"><div class="side">${crest(f.h,40)}<b>${f.h}</b></div><div class="mid">${f.sc?`<span class="scorepill">${f.sc}</span>`:`<span class="timepill">${f.t.split('·').pop().trim()}</span>`}</div><div class="side">${crest(f.a,40)}<b>${f.a}</b></div></div><div class="small muted" style="text-align:center">${ic('pin')} ${f.v}</div><div class="will-foot"><div class="row" style="gap:8px">${faces(3,Math.max(0,gCount-3))}<span class="small muted"><b>${gCount}</b> ${info.isPaid?'attending':'going'}</span></div>${willBeThereBtn('fixture',fid)}</div></div>`};
 
 SC.home=()=>`<div class="row sp"><div class="row" onclick="tab('profile')" style="cursor:pointer"><div class="av ring">${ini(S.user.name||'Guest')}</div><div><div class="b" style="font-size:17px">${S.user.name||'Guest'}</div><button class="locl" onclick="event.stopPropagation();S.onb=1;go('onb')">${ic('pin')}${(S.user.loc||'Lekki').split(' and ')[0]}, Lagos${ic('chev')}</button></div></div><button class="round dotted" onclick="go('notifs')">${ic('bell')}</button></div>
 <div class="search full" onclick="tab('explore')" style="margin:20px 0 0">${ic('search')}<span>Search pitches, games or events</span></div>
+${DraftManager.count()?`<div class="card row sp" style="margin:14px 0 0;padding:10px 14px;background:var(--surface2);border-left:4px solid var(--accent);cursor:pointer" onclick="go('drafts')"><div class="row" style="gap:8px"><span style="color:var(--brand)">${ic('draft')}</span><div class="small"><b>You have ${DraftManager.count()} saved draft${DraftManager.count()>1?'s':''}</b><div class="muted">Tap to continue where you left off</div></div></div><button class="btn sm" style="width:auto;padding:5px 12px;font-size:11px" onclick="event.stopPropagation();go('drafts')">Resume →</button></div>`:''}
 <h2 class="sec">Recommended for you <a onclick="jump('venues')">See all ${ic('chev')}</a></h2>
 <div class="deck" onclick="go('venue',0)"><div ${pic('venue1',200)}><span class="pill-w">2.1 km</span><div class="dk"><div><div class="dkt">Lekki Goal Arena</div><div class="dks">${ic('pin')} Lekki Phase 1 · ${ic('star')} 4.7</div></div><div class="dkp">${N(25000)}<small>/hr</small></div></div></div></div>
 <div class="qrow"><button class="qa" onclick="jump('venues')"><i>${ic('pin')}</i>Book Pitch</button><button class="qa" onclick="startCreateGame()"><i>${ic('plus')}</i>Create Game</button><button class="qa" onclick="jump('events')"><i>${ic('trophy')}</i>Events</button><button class="qa" onclick="S.sub.community='Teams';tab('community')"><i>${ic('users')}</i>Teams</button></div>

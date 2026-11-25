@@ -146,14 +146,24 @@ const FCData = {
         this.checkDeepLinkFullAlert();
         if (typeof render === 'function') render();
       });
-      // Keep laptop & mobile in sync automatically
-      window.addEventListener('focus', () => this.pullLiveRecords());
+      // Keep laptop & mobile in sync automatically without swamping thread
+      let focusThrottle = null;
+      window.addEventListener('focus', () => {
+        if (focusThrottle) clearTimeout(focusThrottle);
+        focusThrottle = setTimeout(() => {
+          if (!this._isPulling) this.pullLiveRecords();
+        }, 300);
+      });
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') this.pullLiveRecords();
+        if (document.visibilityState === 'visible' && !this._isPulling) {
+          this.pullLiveRecords();
+        }
       });
       setInterval(() => {
-        if (document.visibilityState === 'visible') this.pullLiveRecords();
-      }, 12000);
+        if (document.visibilityState === 'visible' && !this._isPulling) {
+          this.pullLiveRecords();
+        }
+      }, 45000);
     } else {
       this.loading = false;
     }
@@ -1527,10 +1537,58 @@ const FCData = {
         localStorage.setItem('fc_rating_notifs', JSON.stringify(localNotifs.slice(0, 30)));
       } catch (e) {}
     }
+
+    // Reconstruct & merge user-created custom venues / pitches
+    if (window.venues) {
+      const venueCreatedEvs = allEvs
+        .filter((ev) => ev.event_name === 'venue_created' && ev.properties)
+        .slice()
+        .reverse();
+      for (const ev of venueCreatedEvs) {
+        const p = ev.properties;
+        const vName = p.name;
+        if (!vName) continue;
+        const exists = venues.some((v) => v.name.toLowerCase() === vName.toLowerCase());
+        if (!exists) {
+          venues.push({
+            im: p.im || 'venue1',
+            id: venues.length,
+            name: vName,
+            area: p.area || 'Lagos',
+            km: p.km || 2.5,
+            rating: p.rating || 5.0,
+            rev: p.rev || 1,
+            from: +p.from || 25000,
+            verified: Boolean(p.verified),
+            fmts: Array.isArray(p.fmts) ? p.fmts : [p.fmt || '5-a-side'],
+            fac: Array.isArray(p.fac) ? p.fac : ['Floodlights', 'Parking'],
+            hours: p.hours || '07:00 – 23:00',
+            policy: p.policy || 'Free cancellation up to 24 hours before kickoff.',
+            deposit: true,
+            pitches: p.pitches || [{ n: 'Main Pitch', f: p.fmt || '5-a-side', p: +p.from || 25000 }],
+            creator_id: p.creator_id || ev.user_contact || '',
+            creator_email: p.creator_email || ev.user_contact || '',
+            isMine: Boolean(authEmail && (p.creator_email === authEmail || ev.user_contact === authEmail))
+          });
+        }
+      }
+      try {
+        const locVenues = JSON.parse(localStorage.getItem('fc_custom_venues') || '[]');
+        for (const lv of locVenues) {
+          if (!lv || !lv.name) continue;
+          const exists = venues.some((v) => v.name.toLowerCase() === lv.name.toLowerCase());
+          if (!exists) {
+            lv.id = venues.length;
+            venues.push(lv);
+          }
+        }
+      } catch (e) {}
+    }
   },
 
   async pullLiveRecords() {
-    if (!this.isSupabaseConfigured()) return;
+    if (!this.isSupabaseConfigured() || this._isPulling) return;
+    this._isPulling = true;
     const baseUrl = this.cfg.supabaseUrl.replace(/\/+$/, '');
     const headers = {
       apikey: this.cfg.supabaseKey,
@@ -1557,9 +1615,21 @@ const FCData = {
       this.mergeLiveIntoUI();
       this.refreshActiveDeepLinkGame();
       this.persistLocal();
-      if (typeof render === 'function') render();
+
+      // Guard UI render: do not disrupt active input focus, active modals/pickers, or creation flows
+      const activeEl = document.activeElement;
+      const isTyping = activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName);
+      const hasModal = window.S && (S.modal || S.picker || S.sheet);
+      const curScreen = (window.S && S.stack && S.stack.length > 0) ? S.stack[S.stack.length - 1].s : null;
+      const isFormScreen = ['createGame', 'createTeam', 'createComp', 'createFixture', 'createEvent', 'createVenue', 'signin', 'onb', 'editProfile'].includes(curScreen);
+
+      if (!isTyping && !hasModal && !isFormScreen && typeof render === 'function') {
+        render();
+      }
     } catch (e) {
       console.warn('Supabase pull warning:', e);
+    } finally {
+      this._isPulling = false;
     }
   },
 
